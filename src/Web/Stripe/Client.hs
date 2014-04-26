@@ -26,8 +26,7 @@ data StripeRequest = StripeRequest
     } deriving (Show)
 
 data StripeConfig = StripeConfig
-    { publicKey  :: S.ByteString
-    , secretKey  :: S.ByteString
+    { secretKey  :: S.ByteString
     , apiVersion :: S.ByteString
     } deriving (Show)
 
@@ -53,14 +52,11 @@ sendStripeRequest StripeRequest{..} StripeConfig{..} = withOpenSSL $ do
          print $ ("code", getStatusCode p)
          print $ ("msg", getStatusMessage p)
          case xm of
-             Just x  -> print (decode (strictToLazy x) :: Maybe Object)
+             Just x  -> print (decodeStrict x :: Maybe Object)
              Nothing -> return ()
   print res
   closeConnection c
   return res
-
-lazyToStrict = S.concat . BL.toChunks
-strictToLazy = BL.fromChunks . (:[])
 
 convertToString :: RequestParams -> S.ByteString
 convertToString ((x,y) : []) = x <> "=" <> y
@@ -68,11 +64,11 @@ convertToString ((x,y) : xs) = x <> "=" <> y <> "&" <> convertToString xs
 
 makeRequest :: IO ()
 makeRequest = sendStripeRequest req config
-  where req = StripeRequest GET "customers" [("expand[]", "customer")]
-        config = StripeConfig "" "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
+  where req    = StripeRequest GET "customers" [("expand[]", "customer")]
+        config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
 makeBadRequest :: IO ()
 makeBadRequest = sendStripeRequest req config
   where req = StripeRequest GET "customersasdfkljsadf" [("expand[]", "customer")]
-        config = StripeConfig "" "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
+        config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
