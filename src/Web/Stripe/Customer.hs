@@ -37,7 +37,11 @@ data Customer = Customer {
     , customerDescription :: Maybe Text
     , customerEmail :: Maybe Text
     , customerMetaData :: Maybe Object
+    } | DeletedCustomer { 
+      isDeleted :: Bool
+    , deletionId :: Text 
     } deriving (Show, Eq)
+
 
 -------------------------------------------------------------
 createCustomer :: IO (Either StripeError Customer)
@@ -54,7 +58,7 @@ updateCustomer (CustomerId cid) = sendStripeRequest req config
   where req = StripeRequest POST url []
         url = "customers/" <> cid 
 
-deleteCustomer :: CustomerId ->  IO (Either StripeError StripeDeletionResult) 
+deleteCustomer :: CustomerId ->  IO (Either StripeError Customer) 
 deleteCustomer (CustomerId cid) = sendStripeRequest req config
   where req = StripeRequest DELETE url []
         url = "customers/" <> cid 
@@ -65,22 +69,19 @@ getCustomers = sendStripeRequest req config
         url = "customers"
 
 -------------------------------------------------------------
-data StripeDeletionResult = StripeDeletionResult { 
-      isDeleted :: Bool
-    , deletionId :: Text 
-    } deriving (Show, Eq)
-
-instance FromJSON StripeDeletionResult where
-    parseJSON (Object o) = 
-      StripeDeletionResult <$> o .: "deleted" 
-                           <*> o .: "id"
 
 instance FromJSON Customer where
     parseJSON (Object o) = 
-        Customer <$> (fromSeconds <$> o .: "created")
-                 <*> o .: "id" 
-                 <*> o .: "livemode" 
-                 <*> o .: "delinquent"
-                 <*> o .:? "description" 
-                 <*> o .:? "email"
-                 <*> o .:? "metadata"
+        Customer 
+           <$> (fromSeconds <$> o .: "created")
+           <*> o .: "id" 
+           <*> o .: "livemode" 
+           <*> o .: "delinquent"
+           <*> o .:? "description" 
+           <*> o .:? "email"
+           <*> o .:? "metadata" 
+           <|> 
+        DeletedCustomer 
+           <$> o .: "deleted" 
+           <*> o .: "id"
+                          

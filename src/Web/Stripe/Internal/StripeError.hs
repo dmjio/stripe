@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Web.Stripe.Internal.StripeError where
 
 import qualified Data.Text as T
