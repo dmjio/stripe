@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.Util
     ( fromSeconds
     , convertToString
@@ -5,17 +7,17 @@ module Web.Stripe.Util
     , toBS
     ) where
 
-import           Data.Time.Clock 
-import           Data.Time.Clock.POSIX  (posixSecondsToUTCTime,
-                                         utcTimeToPOSIXSeconds)
-import qualified Data.ByteString as S
+import           Data.ByteString       (ByteString)
+import qualified Data.ByteString       as S
 import qualified Data.ByteString.Char8 as BC8
-import Data.ByteString (ByteString)
-import qualified Data.ByteString.Lazy as BL
-import Data.Monoid
+import qualified Data.ByteString.Lazy  as BL
+import           Data.Monoid
+import           Data.Time.Clock
+import           Data.Time.Clock.POSIX (posixSecondsToUTCTime,
+                                        utcTimeToPOSIXSeconds)
 
 toBS :: Show a => a -> S.ByteString
-toBS = BC8.pack . show 
+toBS = BC8.pack . show
 
 strictToLazy :: S.ByteString -> BL.ByteString
 strictToLazy = BL.fromChunks . (:[])
