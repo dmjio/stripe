@@ -19,6 +19,7 @@ import           Network.Http.Client
 import           Data.Time.Clock
 
 import           Web.Stripe.Util
+import           Web.Stripe.Internal.StripeError
 -- import           Web.Stripe.Card
 
 config :: StripeConfig
@@ -38,29 +39,27 @@ data Customer = Customer {
     , customerMetaData :: Maybe Object
     } deriving (Show, Eq)
 
-
 -------------------------------------------------------------
-
-createCustomer :: IO (Either StripeFailure Customer)
+createCustomer :: IO (Either StripeError Customer)
 createCustomer = sendStripeRequest req config
   where req = StripeRequest POST "customers" []
 
-getCustomer :: CustomerId -> IO (Either StripeFailure Customer)
+getCustomer :: CustomerId -> IO (Either StripeError Customer)
 getCustomer (CustomerId cid) = sendStripeRequest req config
   where req = StripeRequest GET url []
         url = "customers/" <> cid 
 
-updateCustomer :: CustomerId -> IO (Either StripeFailure Customer)
+updateCustomer :: CustomerId -> IO (Either StripeError Customer)
 updateCustomer (CustomerId cid) = sendStripeRequest req config
   where req = StripeRequest POST url []
         url = "customers/" <> cid 
 
-deleteCustomer :: CustomerId ->  IO (Either StripeFailure StripeDeletionResult) 
+deleteCustomer :: CustomerId ->  IO (Either StripeError StripeDeletionResult) 
 deleteCustomer (CustomerId cid) = sendStripeRequest req config
   where req = StripeRequest DELETE url []
         url = "customers/" <> cid 
 
-getCustomers ::  IO (Either String Customer)
+getCustomers ::  IO (Either StripeError Customer)
 getCustomers = sendStripeRequest req config
   where req = StripeRequest GET url []
         url = "customers"

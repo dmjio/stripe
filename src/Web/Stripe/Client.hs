@@ -23,8 +23,9 @@ import           Data.Text                  (Text)
 import           Data.Typeable
 import           Network.Http.Client
 import           OpenSSL                    (withOpenSSL)
-import Data.Maybe (mapMaybe)
-import qualified System.IO.Streams          as Streams
+import           Data.Maybe (mapMaybe)
+import           qualified System.IO.Streams          as Streams
+import           Web.Stripe.Internal.StripeError
 
 type URL = S.ByteString
 type RequestParams = [(S.ByteString, S.ByteString)]
@@ -39,58 +40,6 @@ data StripeConfig = StripeConfig
     { secretKey  :: S.ByteString
     , apiVersion :: S.ByteString
     } deriving (Show)
-
-data StripeErrorType = 
-          InvalidRequest 
-        | APIError 
-        | CardError 
-        | UnknownErrorType deriving (Show)
-
-data StripeErrorCode = 
-          IncorrectNumber
-        | InvalidNumber
-        | InvalidExpiryMonth
-        | InvalidExpiryYear
-        | InvalidCVC
-        | ExpiredCard
-        | IncorrectCVC
-        | IncorrectZIP
-        | CardDeclined
-        | Missing
-        | ProcessingError
-        | RateLimit
-        | UnknownError deriving (Show)
-
-data StripeError = StripeError {
-      errorType :: StripeErrorType
-    , errorMsg :: Text
-    , errorCode :: Maybe StripeErrorCode
-    , errorParam :: Maybe Text
-    } deriving (Show)
-
-
-toErrorType :: Text -> StripeErrorType 
-toErrorType "invalid_request_error" = InvalidRequest
-toErrorType "api_error" = APIError
-toErrorType "card_error" = CardError
-toErrorType _ = UnknownErrorType
-
-toErrorCode :: Text -> StripeErrorCode
-toErrorCode "incorrect_number" = IncorrectNumber
-toErrorCode "invalid_number" = InvalidNumber
-toErrorCode "invalid_expiry_month" = InvalidExpiryMonth
-toErrorCode "invalid_expiry_year" = InvalidExpiryYear
-toErrorCode "invalid_cvc" = InvalidCVC
-toErrorCode "expired_card" = ExpiredCard
-toErrorCode "incorrect_cvc" = IncorrectCVC
-toErrorCode "incorrect_zip" = IncorrectZIP
-toErrorCode "card_declined" = CardDeclined
-toErrorCode "missing" = Missing
-toErrorCode "processing_error" = ProcessingError
-toErrorCode "rate_limit" = RateLimit
-
-
-data StripeResult = Stripe
 
 sendStripeRequest ::
   FromJSON b =>
@@ -112,29 +61,14 @@ sendStripeRequest StripeRequest{..} StripeConfig{..} = withOpenSSL $ do
         handleStream p x = do
           print (x, p)
           return $ case getStatusCode p of
-           200 -> case decodeStrict x of
-                    Nothing -> error "oops"
-                    Just res -> Right res 
-           400 -> case decodeStrict x :: Maybe StripeError of
-                    Nothing -> error "oops"
-                    Just res  -> Left res
-           -- 401 -> eitherDecode (strictToLazy x) 
-           -- 402 -> eitherDecode (strictToLazy x) 
-           -- 404 -> eitherDecode (strictToLazy x) 
-           -- 500 -> eitherDecode (strictToLazy x) 
-           -- 502 -> eitherDecode (strictToLazy x) 
-           -- 503 -> eitherDecode (strictToLazy x) 
-           -- 504 -> eitherDecode (strictToLazy x) 
-           _ -> undefined
+                     c | c == 200 -> case decodeStrict x of
+                                       Nothing -> error "oops"
+                                       Just res -> Right res 
+                       | c >= 400 -> case decodeStrict x :: Maybe StripeError of
+                                       Nothing -> error "oops"
+                                       Just res  -> Left res
+                       | otherwise -> undefined
 
-instance FromJSON StripeError where
-    parseJSON (Object o) = do
-        e <- o .: "error" 
-        typ <- toErrorType <$> e .: "type"
-        msg <- e .: "message"
-        code <- fmap toErrorCode <$> e .:? "code"
-        param <- e .:? "param"
-        return $ StripeError typ msg code param
 
 strictToLazy :: S.ByteString -> BL.ByteString
 strictToLazy = BL.fromChunks . (:[])
