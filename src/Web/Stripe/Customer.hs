@@ -71,8 +71,8 @@ getCustomers = sendStripeRequest req config
 -------------------------------------------------------------
 
 instance FromJSON Customer where
-    parseJSON (Object o) = 
-        Customer 
+    parseJSON (Object o) 
+        = Customer 
            <$> (fromSeconds <$> o .: "created")
            <*> o .: "id" 
            <*> o .: "livemode" 
@@ -80,8 +80,7 @@ instance FromJSON Customer where
            <*> o .:? "description" 
            <*> o .:? "email"
            <*> o .:? "metadata" 
-           <|> 
-        DeletedCustomer 
+      <|> DeletedCustomer 
            <$> o .: "deleted" 
            <*> o .: "id"
                           
