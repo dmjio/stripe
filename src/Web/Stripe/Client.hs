@@ -1,39 +1,40 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
-module Web.Stripe.Client 
+module Web.Stripe.Client
     ( sendStripeRequest
     , StripeRequest (..)
     , StripeConfig (..)
     ) where
 
+import           Control.Applicative
 import           Data.Aeson
-import Control.Applicative
 import           Data.Aeson.Types
-import qualified Data.ByteString            as S
-import qualified Data.ByteString.Lazy       as BL
-import Data.Time.Clock
-import qualified Data.ByteString.Lazy.Char8 as BL8
-import Text.Printf
-import qualified Data.Text.Encoding as T
-import qualified Data.Text as T
-import           Data.HashMap.Strict        as H
-import           Data.Monoid                ((<>))
-import           Data.Text                  (Text)
+import           Data.HashMap.Strict             as H
+import           Data.Maybe                      (mapMaybe)
+import           Data.Monoid                     ((<>))
+import           Data.Text                       (Text)
+import           Data.Time.Clock
 import           Data.Typeable
 import           Network.Http.Client
-import           OpenSSL                    (withOpenSSL)
-import           Data.Maybe (mapMaybe)
-import           qualified System.IO.Streams          as Streams
+import           OpenSSL                         (withOpenSSL)
+import           Text.Printf
+import           Web.Stripe.Internal.Class
 import           Web.Stripe.Internal.StripeError
+import           Web.Stripe.Util
+
+import qualified Data.ByteString                 as S
+import qualified Data.ByteString.Lazy            as BL
+import qualified Data.ByteString.Lazy.Char8      as BL8
+import qualified Data.Text                       as T
+import qualified Data.Text.Encoding              as T
+import qualified System.IO.Streams               as Streams
 
 type URL = S.ByteString
-type RequestParams = [(S.ByteString, S.ByteString)]
 
 data StripeRequest = StripeRequest
     { method :: Method
     , url    :: Text
-    , params :: RequestParams
     } deriving (Show)
 
 data StripeConfig = StripeConfig
@@ -41,10 +42,12 @@ data StripeConfig = StripeConfig
     , apiVersion :: S.ByteString
     } deriving (Show)
 
-sendStripeRequest ::
-  FromJSON b =>
-  StripeRequest -> StripeConfig -> IO (Either StripeError b)
-sendStripeRequest StripeRequest{..} StripeConfig{..} = withOpenSSL $ do
+sendStripeRequest :: (URLDecodeable a, FromJSON b) =>
+                     StripeConfig ->
+                     StripeRequest ->
+                     a ->
+                     IO (Either StripeError b)
+sendStripeRequest StripeConfig{..} StripeRequest{..} params = withOpenSSL $ do
   ctx <- baselineContextSSL
   c <- openConnectionSSL ctx "api.stripe.com" 443
   q <- buildRequest $ do
@@ -52,31 +55,23 @@ sendStripeRequest StripeRequest{..} StripeConfig{..} = withOpenSSL $ do
           setAuthorizationBasic secretKey ""
           setContentType "application/x-www-form-urlencoded"
           setHeader "Stripe-Version" apiVersion
-  body <- Streams.fromByteString $ convertToString params
+  body <- Streams.fromByteString $ convertToString $ formEncode params
   sendRequest c q (inputStreamBody body)
-  receiveResponse c $ \response inputStream -> 
-           Streams.read inputStream >>= 
-                  maybe (error "couldn't read stream") (handleStream response) 
+  receiveResponse c $ \response inputStream ->
+           Streams.read inputStream >>=
+                  maybe (error "couldn't read stream") (handleStream response)
       where
         handleStream p x = do
           print (x, p)
           return $ case getStatusCode p of
                      c | c == 200 -> case decodeStrict x of
                                        Nothing -> error "oops"
-                                       Just res -> Right res 
+                                       Just res -> Right res
                        | c >= 400 -> case decodeStrict x :: Maybe StripeError of
                                        Nothing -> error "oops"
                                        Just res  -> Left res
                        | otherwise -> undefined
 
-
-strictToLazy :: S.ByteString -> BL.ByteString
-strictToLazy = BL.fromChunks . (:[])
-
-convertToString :: RequestParams -> S.ByteString
-convertToString [] = ""
-convertToString ((x,y) : []) = x <> "=" <> y
-convertToString ((x,y) : xs) = x <> "=" <> y <> "&" <> convertToString xs
 
 config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
@@ -94,11 +89,11 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 --   where req = StripeRequest POST "charges" params
 --         params = result : [ ("amount", "400")
 --                           , ("currency", "usd")
---                           ] 
+--                           ]
 --         result = case param of
---                    Right (CustomerId custId) -> 
+--                    Right (CustomerId custId) ->
 --                        ("customer", T.encodeUtf8 custId)
---                    Left (Card cardId) -> 
+--                    Left (Card cardId) ->
 --                        ("card", T.encodeUtf8 cardId)
 
 -- chargeByCardId :: Card -> IO ()
@@ -162,7 +157,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 -- createCard :: CustomerId -> Token -> IO ()
 -- createCard (CustomerId cid) (Token token_id) = sendStripeRequest req config
 --   where req = StripeRequest POST url []
---         url = "customers/" <> cid 
+--         url = "customers/" <> cid
 --         params = [("card", token_id)] -- card is required
 
 -- -- See all the optional arguments here, lots of them
@@ -213,16 +208,15 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 --         url = "customers/" <> custId <> "/subscriptions/" <> subId
 
 -- -- Plans
--- -- newtype Plan = Plan Text deriving (Show, Eq)
+-- newtype Plan = Plan Text deriving (Show, Eq)
 
 -- newtype PlanId = PlanId Text deriving (Show, Eq)
 -- type Amount = Int
 
--- -- check all the optional ones as well
--- createPlan :: PlanId -> Amount -> IO ()
+-- check all the optional ones as well
 -- createPlan (PlanId planId) amount = sendStripeRequest req config
 --   where req = StripeRequest POST url params
---         url = "plans" 
+--         url = "plans"
 --         params = [ ("id", "basic") -- required
 --                  , ("amount", "0") -- required
 --                  , ("currency", "usd") -- required
@@ -230,23 +224,19 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 --                  , ("name","Gold Special") -- required
 --                  ]
 
--- getPlan :: PlanId -> IO () 
 -- getPlan (PlanId planId) = sendStripeRequest req config
 --   where req = StripeRequest GET url []
 --         url = "plans/" <> planId
 
 -- -- optional :: name, metadata, statement_description
--- updatePlan :: PlanId -> IO () 
 -- updatePlan (PlanId planId) = sendStripeRequest req config
 --   where req = StripeRequest POST url []
 --         url = "plans/" <> planId
-  
--- deletePlan :: PlanId -> IO () 
+
 -- deletePlan (PlanId planId) = sendStripeRequest req config
 --   where req = StripeRequest DELETE url []
 --         url = "plans/" <> planId
 
--- getPlans :: IO () 
 -- getPlans = sendStripeRequest req config
 --   where req = StripeRequest GET url []
 --         url = "plans"
@@ -255,7 +245,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 
 -- -- see optional
 -- -- You must set either percent_off or amount_off and currency
--- createCoupon :: IO () 
+-- createCoupon :: IO ()
 -- createCoupon = sendStripeRequest req config
 --   where req = StripeRequest POST url params
 --         url = "coupons"
@@ -288,7 +278,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 --         url = "customers/" <> customerId <> "/discount"
 
 -- deleteSubscriptionDiscount :: CustomerId -> SubscriptionId -> IO ()
--- deleteSubscriptionDiscount (CustomerId customerId) (SubscriptionId subId) = 
+-- deleteSubscriptionDiscount (CustomerId customerId) (SubscriptionId subId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest DELETE url []
 --         url = T.concat ["customers/"
@@ -304,14 +294,14 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 
 -- -- unsure this one is correct
 -- getInvoice :: InvoiceId -> IO ()
--- getInvoice (InvoiceId invoiceId) =  
+-- getInvoice (InvoiceId invoiceId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest GET url []
 --         url = "invoices/" <> invoiceId
 
 -- -- see optional params
 -- getInvoiceLineItems :: InvoiceId -> IO ()
--- getInvoiceLineItems (InvoiceId invoiceId) =  
+-- getInvoiceLineItems (InvoiceId invoiceId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest GET url []
 --         url = T.concat ["invoices/"
@@ -320,25 +310,25 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 --                        ]
 
 -- createInvoice :: CustomerId -> IO ()
--- createInvoice (CustomerId customerId) = 
+-- createInvoice (CustomerId customerId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest POST "invoices" params
 --         params = [ ("customer", T.encodeUtf8 customerId) ]
 
 -- payInvoice :: InvoiceId -> IO ()
--- payInvoice (InvoiceId invoiceId) = 
+-- payInvoice (InvoiceId invoiceId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest POST url []
 --         url = "invoices/" <> invoiceId <> "/pay"
 
 -- -- see optional params
 -- updateInvoice :: InvoiceId -> IO ()
--- updateInvoice (InvoiceId invoiceId) = 
+-- updateInvoice (InvoiceId invoiceId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest POST url []
---         url = "invoices/" <> invoiceId 
-            
--- -- see optional for customer and date  
+--         url = "invoices/" <> invoiceId
+
+-- -- see optional for customer and date
 -- getInvoices :: IO ()
 -- getInvoices = sendStripeRequest req config
 --   where req = StripeRequest GET url []
@@ -346,7 +336,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 
 -- -- see customer and subscription as optional
 -- getUpcomingInvoice :: CustomerId -> IO ()
--- getUpcomingInvoice (CustomerId customerId) = 
+-- getUpcomingInvoice (CustomerId customerId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest GET url []
 --         url = "invoices/upcoming?customer=" <> customerId
@@ -357,27 +347,27 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 --     sendStripeRequest req config
 --   where req = StripeRequest POST "invoiceitems" params
 --         params = [ ("customer", T.encodeUtf8 customerId)
---                  , ("amount", "1000") 
---                  , ("currency", "usd") 
+--                  , ("amount", "1000")
+--                  , ("currency", "usd")
 --                  ]
 
--- newtype InvoiceItemId = InvoiceItemId Text deriving (Eq, Show)                        
+-- newtype InvoiceItemId = InvoiceItemId Text deriving (Eq, Show)
 
 -- getInvoiceItem :: InvoiceItemId -> IO ()
--- getInvoiceItem (InvoiceItemId itemId) = 
+-- getInvoiceItem (InvoiceItemId itemId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest GET url []
---         url = "invoiceitems/" <> itemId 
+--         url = "invoiceitems/" <> itemId
 
 -- -- see additional parameters
 -- updateInvoiceItem :: InvoiceItemId -> IO ()
--- updateInvoiceItem (InvoiceItemId itemId) = 
+-- updateInvoiceItem (InvoiceItemId itemId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest POST url []
 --         url = "invoiceitems/" <> itemId
 
 -- deleteInvoiceItem :: InvoiceItemId -> IO ()
--- deleteInvoiceItem (InvoiceItemId itemId) = 
+-- deleteInvoiceItem (InvoiceItemId itemId) =
 --     sendStripeRequest req config
 --   where req = StripeRequest DELETE url []
 --         url = "invoiceitems/" <> itemId
@@ -445,8 +435,8 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 -- createRecipient name recipientType  = sendStripeRequest req config
 --   where req = StripeRequest POST "recipients" params
 --         params = [ ("name", T.encodeUtf8 name)
---                  , ("type", if recipientType == Individual 
---                             then "individual" 
+--                  , ("type", if recipientType == Individual
+--                             then "individual"
 --                             else "corporation")
 --                  ]
 
@@ -470,7 +460,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 -- getRecipients :: IO ()
 -- getRecipients = sendStripeRequest req config
 --   where req =  StripeRequest GET "recipients" []
-                                  
+
 -- -------------- application fees
 -- newtype FeeId = FeeId { feeId :: Text } deriving (Show, Eq)
 
@@ -501,7 +491,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 -- newtype TransactionId = TransactionId { transactionId :: Text } deriving (Show, Eq)
 
 -- getBalanceTransaction :: TransactionId -> IO ()
--- getBalanceTransaction (TransactionId transactionId) = 
+-- getBalanceTransaction (TransactionId transactionId) =
 --     sendStripeRequest req config
 --   where req =  StripeRequest GET url []
 --         url = "balance/history/" <> transactionId
@@ -510,7 +500,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 -- getBalanceHistory :: IO ()
 -- getBalanceHistory = sendStripeRequest req config
 --   where req = StripeRequest GET url []
---         url = "balance/history" 
+--         url = "balance/history"
 
 -- ---- Retrieve an event
 -- newtype EventId = EventId { eventId :: Text } deriving (Show, Eq)
@@ -540,7 +530,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 -- createCardToken :: IO ()
 -- createCardToken = sendStripeRequest req config
 --   where req = StripeRequest POST url params
---         url = "tokens" 
+--         url = "tokens"
 --         params = [ ("card[number]", "4242424242424242")
 --                  , ("card[exp_month]", "12")
 --                  , ("card[exp_year]", "2015")
@@ -550,7 +540,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 -- createBankAccountToken :: IO ()
 -- createBankAccountToken = sendStripeRequest req config
 --   where req = StripeRequest POST url params
---         url = "tokens" 
+--         url = "tokens"
 --         params = [ ("bank_account[country]", "US")
 --                  , ("bank_account[routing_number]", "110000000")
 --                  , ("bank_account[account_number]", "000123456789")
@@ -561,7 +551,7 @@ toParams = mapMaybe . uncurry $ fmap . (,)
 --   where req = StripeRequest GET url params
 --         url = "tokens/" <> token
 --         params = []
---- 
+---
 
 
 

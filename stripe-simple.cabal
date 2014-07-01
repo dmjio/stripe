@@ -29,3 +29,4 @@ library
                      , time
   default-language:    Haskell2010
   exposed-modules:     Web.Stripe.Client
+
