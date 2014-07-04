@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Web.Stripe.Util
     ( fromSeconds
     , convertToString

@@ -39,6 +39,7 @@ data Customer = Customer {
     , customerEmail          :: Maybe Text
     , customerMetaData       :: Maybe Object
     , customerAccountBalance :: Maybe Int
+    , customerCurrency       :: Maybe Text
     , customerDiscount       :: Maybe Discount
     } | DeletedCustomer {
       isDeleted  :: Bool
@@ -126,6 +127,7 @@ instance FromJSON Customer where
            <*> o .:? "email"
            <*> o .:? "metadata"
            <*> o .:? "account_balance"
+           <*> o .:? "currency"
            <*> o .:? "discount"
       <|> DeletedCustomer
            <$> o .: "deleted"

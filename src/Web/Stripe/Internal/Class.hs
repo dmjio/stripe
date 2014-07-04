@@ -1,11 +1,11 @@
 module Web.Stripe.Internal.Class
-    ( URLDecodeable (..)
+    ( URLEncodeable (..)
     , ByteString
     ) where
 
 import Data.ByteString (ByteString)
 
-class URLDecodeable a where
+class URLEncodeable a where
     formEncode :: a -> [(ByteString, ByteString)]
 
 

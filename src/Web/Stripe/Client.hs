@@ -42,7 +42,7 @@ data StripeConfig = StripeConfig
     , apiVersion :: S.ByteString
     } deriving (Show)
 
-sendStripeRequest :: (URLDecodeable a, FromJSON b) =>
+sendStripeRequest :: (URLEncodeable a, FromJSON b) =>
                      StripeConfig ->
                      StripeRequest ->
                      a ->
@@ -72,58 +72,12 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} params = withOpenSSL $ do
                                        Just res  -> Left res
                        | otherwise -> undefined
 
-
 config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
 -- util
 toParams :: [(a, Maybe b)] -> [(a, b)]
 toParams = mapMaybe . uncurry $ fmap . (,)
 --
-
--- -- charges, lots of optional fields as well
--- newtype Charge = Charge Text deriving (Show, Eq)
--- newtype RefundId = RefundId { refundId :: Text } deriving (Show, Eq)
-
--- charge :: Either Card CustomerId -> IO ()
--- charge param = sendStripeRequest req config
---   where req = StripeRequest POST "charges" params
---         params = result : [ ("amount", "400")
---                           , ("currency", "usd")
---                           ]
---         result = case param of
---                    Right (CustomerId custId) ->
---                        ("customer", T.encodeUtf8 custId)
---                    Left (Card cardId) ->
---                        ("card", T.encodeUtf8 cardId)
-
--- chargeByCardId :: Card -> IO ()
--- chargeByCardId card = charge $ Left card
-
--- chargeByCustomerId :: CustomerId -> IO ()
--- chargeByCustomerId customerId = charge $ Right customerId
-
--- getCharge :: Charge -> IO ()
--- getCharge (Charge charge) = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "charges/" <> charge
-
--- -- description + metadata == options
--- updateCharge :: Charge -> IO ()
--- updateCharge (Charge charge) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "charges/" <> charge
-
--- -- optional params
--- captureCharge :: Charge -> IO ()
--- captureCharge (Charge charge) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "charges/" <> charge <> "/capture"
-
--- -- optional params
--- getCharges :: IO ()
--- getCharges = sendStripeRequest req config
---   where req = StripeRequest GET "charges" []
--- --
 
 -- -- create a refund
 -- createRefund :: Charge -> IO ()
