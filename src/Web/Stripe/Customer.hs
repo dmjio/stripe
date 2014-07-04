@@ -78,7 +78,7 @@ defaultCustomerOptions :: CustomerOptions
 defaultCustomerOptions =
     CustomerOptions Nothing Nothing Nothing Nothing  Nothing
 
-instance URLDecodeable CustomerOptions where
+instance URLEncodeable CustomerOptions where
     formEncode CustomerOptions{..} =
         [ (a, b) | (a, Just b) <- [
            ("account_balance", fmap toBS customerAccountBalanceOptions)
@@ -89,7 +89,7 @@ instance URLDecodeable CustomerOptions where
          ]
         ]
 
-instance URLDecodeable () where
+instance URLEncodeable () where
     formEncode ()   = []
 
 createDefaultCustomer :: IO (Either StripeError Customer)
