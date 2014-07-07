@@ -74,10 +74,6 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} params = withOpenSSL $ do
 
 config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
--- util
-toParams :: [(a, Maybe b)] -> [(a, b)]
-toParams = mapMaybe . uncurry $ fmap . (,)
---
 
 -- -- create a refund
 -- createRefund :: Charge -> IO ()
