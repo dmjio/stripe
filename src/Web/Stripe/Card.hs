@@ -339,21 +339,33 @@ createPlan (PlanId planId) (Amount amount) (Currency currency) interval (Name na
                    ]
                  ]
 
+-- gets plan * works
 getPlan :: PlanId -> IO (Either StripeError Plan)
 getPlan (PlanId planId) = sendStripeRequest config req []
   where req = StripeRequest GET url 
         url = "plans/" <> planId
 
--- -- optional :: name, metadata, statement_description
--- updatePlan (PlanId planId) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "plans/" <> planId
+-- optional :: name, metadata, statement_description * works
+updatePlan :: PlanId ->
+              Maybe Name -> 
+              Maybe Description ->
+              IO (Either StripeError Plan)
+updatePlan (PlanId planId) name description = sendStripeRequest config req params
+  where req = StripeRequest POST $ "plans/" <> planId
+        params = [ (k,v) | (k, Just v) <- [
+                     ("name", (\(Name x) -> T.encodeUtf8 x) <$> name )
+                   , ("statement_description", (\(Description x) -> T.encodeUtf8 x) <$> description )
+                   ]
+                 ]
+-- works
+deletePlan :: PlanId -> IO (Either StripeError StripeResult)                 
+deletePlan (PlanId planId) = sendStripeRequest config req []
+  where req = StripeRequest DELETE $ "plans/" <> planId
 
--- deletePlan (PlanId planId) = sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = "plans/" <> planId
+type Plans = StripeList Plan
 
--- getPlans = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "plans"
+-- works
+getPlans :: IO (Either StripeError Plans)
+getPlans = sendStripeRequest config req []
+  where req = StripeRequest GET "plans"
 
