@@ -79,29 +79,6 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} params = withOpenSSL $ do
 config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
 
--- -- create a refund
--- createRefund :: Charge -> IO ()
--- createRefund (Charge chargeId) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "charges/" <> chargeId <> "/refunds"
-
--- getRefund :: Charge -> RefundId -> IO ()
--- getRefund (Charge chargeId) (RefundId refId) = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "charges/" <> chargeId <> "/refunds/" <> refId
-
--- -- optional metadata
--- updateRefund :: Charge -> RefundId -> IO ()
--- updateRefund (Charge chargeId) (RefundId refId) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "charges/" <> chargeId <> "/refunds/" <> refId
-
--- -- optional, limit, etc
--- getRefunds :: Charge -> IO ()
--- getRefunds (Charge chargeId) = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "charges/" <> chargeId <> "/refunds"
--- ---
 
 -- ---- Customer
 
@@ -110,32 +87,6 @@ config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
 -- ---------- Coupons
 
--- -- see optional
--- -- You must set either percent_off or amount_off and currency
--- createCoupon :: IO ()
--- createCoupon = sendStripeRequest req config
---   where req = StripeRequest POST url params
---         url = "coupons"
---         params = [ ("duration", "once")
---                  , ("percent_off", "25")
---                  ]
-
--- newtype CouponId = CouponId { couponId :: Text } deriving (Show, Eq)
-
--- getCoupon :: CouponId -> IO ()
--- getCoupon (CouponId couponId) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "coupons/" <> couponId
-
--- deleteCoupon :: CouponId -> IO ()
--- deleteCoupon (CouponId couponId) = sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = "coupons/" <> couponId
-
--- getCoupons :: IO ()
--- getCoupons = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "coupons"
 
 -- --------------- Discounts
 

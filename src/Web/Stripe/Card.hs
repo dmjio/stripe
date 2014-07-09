@@ -369,3 +369,149 @@ getPlans :: IO (Either StripeError Plans)
 getPlans = sendStripeRequest config req []
   where req = StripeRequest GET "plans"
 
+--------------- Coupons ------------------
+
+-- -- see optional
+-- -- You must set either percent_off or amount_off and currency
+
+data Duration = Forever | Once | Repeating deriving Eq
+
+instance Show Duration where
+    show Forever = "forever"
+    show Once = "once"
+    show Repeating = "repeating"
+
+instance FromJSON Duration where
+   parseJSON (String x) 
+       | x == "forever" = pure Forever
+       | x == "once" = pure Once
+       | x == "repeating" = pure Repeating
+       | otherwise = error "Invalid Duration"
+
+data Coupon = Coupon {
+      couponId :: Text
+    , couponCreated :: UTCTime
+    , couponPercentOff :: Int
+    , couponAmountOff :: Maybe Int
+    , couponCurrency :: Maybe Text
+    , couponLiveMode :: Bool
+    , couponDuration :: Duration
+    , couponRedeemBy :: Maybe UTCTime
+    , couponMaxRedemptions :: Maybe Int
+    , couponTimesRedeemed :: Maybe Int
+    , couponDurationInMonths :: Maybe Int
+    , couponValid :: Bool
+    } deriving (Show, Eq)
+
+instance FromJSON Coupon where
+   parseJSON (Object o) = 
+        Coupon <$> o .: "id"
+               <*> (fromSeconds <$> o .: "created")
+               <*> o .: "percent_off"
+               <*> o .:? "amount_off"
+               <*> o .:? "currency"
+               <*> o .: "livemode"
+               <*> o .: "duration"
+               <*> (fmap fromSeconds <$> o .:? "redeem_by")
+               <*> o .:? "max_redemptions"
+               <*> o .:? "times_redeemed"
+               <*> o .:? "duration_in_months"
+               <*> o .: "valid"
+
+newtype CouponId = CouponId Text deriving (Show, Eq)
+newtype AmountOff = AmountOff Int deriving (Show, Eq)
+newtype MaxRedemptions = MaxRedemptions Int deriving (Show, Eq)
+newtype PercentOff = PercentOff Int deriving (Show, Eq)
+newtype RedeemBy = RedeemBy UTCTime deriving (Show, Eq)
+newtype DurationInMonths = DurationInMonths Int deriving (Show, Eq)
+
+createCoupon :: Maybe CouponId -> 
+                Duration ->
+                Maybe AmountOff ->
+                Maybe Currency ->
+                Maybe DurationInMonths ->
+                Maybe MaxRedemptions ->
+                Maybe PercentOff ->
+                Maybe RedeemBy ->
+                IO (Either StripeError Coupon)                 
+createCoupon couponId duration amountOff currency durationInMonths maxRedemptions percentOff redeemBy
+    = sendStripeRequest config req params
+  where req = StripeRequest POST url 
+        url = "coupons"
+        params = [(k,v) | (k, Just v) <- [ 
+                    ("id", (\(CouponId x) -> toBS x) <$> couponId )
+                  , ("duration", Just $ toBS duration )
+                  , ("amount_off", (\(AmountOff x) -> toBS x) <$> amountOff )
+                  , ("currency", (\(Currency x) -> T.encodeUtf8 x) <$> currency )
+                  , ("duration_in_months", (\(DurationInMonths x) -> toBS x) <$> durationInMonths )
+                  , ("max_redemptions", (\(MaxRedemptions x) -> toBS x) <$> maxRedemptions )
+                  , ("percent_off", (\(PercentOff x) -> toBS x) <$> percentOff )
+                  , ("redeem_by", (\(RedeemBy x) -> toBS x) <$> redeemBy )
+                  ]
+                 ]
+-- works
+getCoupon :: CouponId -> IO (Either StripeError Coupon)
+getCoupon (CouponId couponId) = sendStripeRequest config req []
+  where req = StripeRequest POST url 
+        url = "coupons/" <> couponId
+
+-- delete coupon
+deleteCoupon :: CouponId -> IO (Either StripeError StripeResult)
+deleteCoupon (CouponId couponId) = sendStripeRequest config req []
+  where req = StripeRequest DELETE $ "coupons/" <> couponId
+
+type Coupons = StripeList Coupon
+
+-- works but needs more options, like ending and starting
+getCoupons :: IO (Either StripeError Coupons)
+getCoupons = sendStripeRequest config req []
+  where req = StripeRequest GET "coupons"
+
+
+-- refunds
+-- -- create a refund
+data Refund = Refund {
+      refundId :: Text
+    , refundAmount :: Int
+    , refundCurrency :: Text
+    , refundCreated :: UTCTime
+    , refundCharge :: Text
+    , refundBalanceTransaction :: Maybe Text
+    } deriving (Show, Eq)
+
+instance FromJSON Refund where
+   parseJSON (Object o) = 
+        Refund <$> o .: "id"
+               <*> o .: "amount"
+               <*> o .: "currency"
+               <*> (fromSeconds <$> o .: "created")
+               <*> o .: "charge"
+               <*> o .:? "balance_transaction"
+
+newtype ChargeId = ChargeId Text deriving (Show, Eq)
+newtype RefundId = RefundId Text deriving (Show, Eq)
+
+-- works, see optional parameters
+createRefund :: ChargeId -> IO (Either StripeError Refund)
+createRefund (ChargeId chargeId) = sendStripeRequest config req []
+  where req = StripeRequest POST url 
+        url = "charges/" <> chargeId <> "/refunds"
+
+getRefund :: ChargeId -> RefundId -> IO (Either StripeError Refund)
+getRefund (ChargeId chargeId) (RefundId refId) = sendStripeRequest config req []
+   where req = StripeRequest GET $ "charges/" <> chargeId <> "/refunds/" <> refId
+
+-- -- optional metadata
+-- updateRefund :: Charge -> RefundId -> IO ()
+-- updateRefund (Charge chargeId) (RefundId refId) = sendStripeRequest req config
+--   where req = StripeRequest POST url []
+--         url = "charges/" <> chargeId <> "/refunds/" <> refId
+
+-- -- optional, limit, etc
+type Refunds = StripeList Refund
+
+-- works but needs more parameters
+getRefunds :: ChargeId -> IO (Either StripeError Refunds)
+getRefunds (ChargeId chargeId) = sendStripeRequest config req []
+  where req = StripeRequest GET $ "charges/" <> chargeId <> "/refunds"
+
