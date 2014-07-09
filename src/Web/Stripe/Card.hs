@@ -339,9 +339,10 @@ createPlan (PlanId planId) (Amount amount) (Currency currency) interval (Name na
                    ]
                  ]
 
--- getPlan (PlanId planId) = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "plans/" <> planId
+getPlan :: PlanId -> IO (Either StripeError Plan)
+getPlan (PlanId planId) = sendStripeRequest config req []
+  where req = StripeRequest GET url 
+        url = "plans/" <> planId
 
 -- -- optional :: name, metadata, statement_description
 -- updatePlan (PlanId planId) = sendStripeRequest req config
