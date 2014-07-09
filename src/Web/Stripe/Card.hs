@@ -1,5 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE RecordWildCards           #-}
 
 module Web.Stripe.Card where
 
@@ -129,8 +130,8 @@ instance FromJSON Token where
              <*> o .: "card"
 
 instance FromJSON a => FromJSON (StripeList a) where
-   parseJSON (Object o) = 
-       StripeList <$> o .: "has_more" 
+   parseJSON (Object o) =
+       StripeList <$> o .: "has_more"
                   <*> o .: "data"
 
 -- | Create card
@@ -206,14 +207,14 @@ deleteCard (CustomerId custId) (CardId cardId) = sendStripeRequest config req []
   where req = StripeRequest DELETE url
         url = "customers/" <> custId <> "/cards/" <> cardId
 
-getCards :: CustomerId -> 
+getCards :: CustomerId ->
             Maybe Limit -> -- Default is 10
             Maybe EndingBefore -> -- For use in pagination
             Maybe StartingAfter -> -- For use in pagination
             IO (Either StripeError (StripeList Card))
-getCards (CustomerId custId) limit endingBefore startingAfter = 
+getCards (CustomerId custId) limit endingBefore startingAfter =
     sendStripeRequest config req params
-  where req = StripeRequest GET url 
+  where req = StripeRequest GET url
         url = "customers/" <> custId <> "/cards"
         params = [ (k, v) | (k, Just v) <- [
                      ("ending_before",  (\(EndingBefore x) -> toBS x) <$> endingBefore)
@@ -234,28 +235,124 @@ instance FromJSON Subscription where
    parseJSON (Object o) = Subscription <$> o .: "id"
 
 createSubscription :: CustomerId -> PlanId -> IO (Either StripeError Subscription)
-createSubscription (CustomerId custId) (PlanId plan) = 
+createSubscription (CustomerId custId) (PlanId plan) =
     sendStripeRequest config req params
   where req = StripeRequest POST url
         url = "customers/" <> custId <> "/subscriptions"
         params = [("plan", T.encodeUtf8 plan)]
 
--- getSubscription :: CustomerId -> SubscriptionId -> IO ()
--- getSubscription (CustomerId custId) (SubscriptionId subId) = sendStripeRequest req config
+getSubscription :: CustomerId -> SubscriptionId -> IO (Either StripeError Subscription)
+getSubscription (CustomerId custId) (SubscriptionId subId) =
+    sendStripeRequest config req []
+  where req = StripeRequest GET url
+        url = "customers/" <> custId <> "/subscriptions/" <> subId
+
+-- see parameters on this one
+updateSubscription :: CustomerId -> SubscriptionId -> IO (Either StripeError Subscription)
+updateSubscription (CustomerId custId) (SubscriptionId subId) =
+    sendStripeRequest config req []
+  where req = StripeRequest POST url
+        url = "customers/" <> custId <> "/subscriptions/" <> subId
+
+deleteSubscription :: CustomerId -> SubscriptionId -> IO (Either StripeError Subscription)
+deleteSubscription (CustomerId custId) (SubscriptionId subId) =
+    sendStripeRequest config req []
+  where req = StripeRequest DELETE url
+        url = "customers/" <> custId <> "/subscriptions/" <> subId
+
+--- ===== plans ====== --
+
+data Interval = Week | Month | Year 
+                deriving (Eq)
+
+instance Show Interval where
+    show Week = "week"
+    show Month = "month"
+    show Year = "year"
+
+-- Plans
+data Plan = Plan {
+      planId              :: Text
+    , planAmount          :: Int
+    , planInterval        :: Interval
+    , planCreated         :: UTCTime
+    , planCurrency        :: Text
+    , planLiveMode        :: Bool
+    , planName            :: Text
+    , planIntervalCount   :: Maybe Int -- optional, max of 1 year intervals allowed, default 1
+    , planTrialPeriodDays :: Maybe Int
+    , planMetaData        :: Maybe Object
+    , planDescription      :: Maybe Text
+} deriving (Show, Eq)
+
+
+instance FromJSON Plan where
+   parseJSON (Object o) =
+       do planId <- o .: "id"
+          planAmount <- o .: "amount"
+          result <- o .: "interval"
+          let planInterval = 
+                  case String result of
+                    "month" -> Month
+                    "week" -> Week
+                    "year" -> Year
+          planCreated <- fromSeconds <$> o .: "created"
+          planCurrency <- o .: "currency"
+          planLiveMode <- o .: "livemode"
+          planName <- o .: "name"
+          planIntervalCount <- o .:? "interval_count"
+          planTrialPeriodDays <- o .:? "trial_period_days"
+          planMetaData <- o .:? "meta_data"
+          planDescription <- o .:? "statement_description"
+          return Plan {..}
+
+-- check all the optional ones as well
+newtype Currency = Currency Text deriving (Show, Eq)
+newtype IntervalCount = IntervalCount Int deriving (Show, Eq)
+newtype TrialPeriodDays = TrialPeriodDays Int deriving (Show, Eq)
+newtype Description = Description Text deriving (Show, Eq)
+newtype Amount = Amount Int deriving (Show, Eq)
+
+createPlan :: PlanId -> 
+              Amount -> 
+              Currency ->
+              Interval ->
+              Name ->
+              Maybe IntervalCount ->
+              Maybe TrialPeriodDays ->
+              Maybe Description ->
+              IO (Either StripeError Plan)
+createPlan (PlanId planId) (Amount amount) (Currency currency) interval (Name name) 
+           intervalCount trialPeriodDays description
+    = sendStripeRequest config req params
+  where req = StripeRequest POST url
+        url = "plans"
+        params = [ (k,v) | (k, Just v) <- [ 
+                     ("id", Just $ T.encodeUtf8 planId) -- required
+                   , ("amount", Just $ toBS amount) -- required
+                   , ("currency", Just $ T.encodeUtf8 currency) -- required
+                   , ("interval", Just $ toBS interval) -- required
+                   , ("name", Just $ T.encodeUtf8 name) -- required
+                   , ("interval_count", (\(IntervalCount x) -> toBS x) <$> intervalCount )
+                   , ("trial_period_days", (\(TrialPeriodDays x) -> toBS x) <$> trialPeriodDays )
+                   , ("statement_description", (\(Description x) -> T.encodeUtf8 x) <$> description )
+                   ]
+                 ]
+
+-- getPlan (PlanId planId) = sendStripeRequest req config
 --   where req = StripeRequest GET url []
---         url = "customers/" <> custId <> "/subscriptions/" <> subId
+--         url = "plans/" <> planId
 
--- -- see parameters on this one
--- updateSubscription :: CustomerId -> SubscriptionId -> IO ()
--- updateSubscription (CustomerId custId) (SubscriptionId subId) = sendStripeRequest req config
+-- -- optional :: name, metadata, statement_description
+-- updatePlan (PlanId planId) = sendStripeRequest req config
 --   where req = StripeRequest POST url []
---         url = "customers/" <> custId <> "/subscriptions/" <> subId
+--         url = "plans/" <> planId
 
--- deleteSubscription :: CustomerId -> SubscriptionId -> IO ()
--- deleteSubscription (CustomerId custId) (SubscriptionId subId) = sendStripeRequest req config
+-- deletePlan (PlanId planId) = sendStripeRequest req config
 --   where req = StripeRequest DELETE url []
---         url = "customers/" <> custId <> "/subscriptions/" <> subId
+--         url = "plans/" <> planId
 
-
-
+-- getPlans = sendStripeRequest req config
+--   where req = StripeRequest GET url []
+--         url = "plans"
 

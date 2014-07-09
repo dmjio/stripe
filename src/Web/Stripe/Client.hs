@@ -59,6 +59,7 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} params = withOpenSSL $ do
           setHeader "Stripe-Version" apiVersion
   print q
   body <- Streams.fromByteString $ convertToString params
+  print $ convertToString params
   sendRequest c q (inputStreamBody body)
   receiveResponse c $ \response inputStream ->
            Streams.read inputStream >>=
@@ -106,39 +107,6 @@ config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
 
 
--- -- Plans
--- newtype Plan = Plan Text deriving (Show, Eq)
-
--- newtype PlanId = PlanId Text deriving (Show, Eq)
--- type Amount = Int
-
--- check all the optional ones as well
--- createPlan (PlanId planId) amount = sendStripeRequest req config
---   where req = StripeRequest POST url params
---         url = "plans"
---         params = [ ("id", "basic") -- required
---                  , ("amount", "0") -- required
---                  , ("currency", "usd") -- required
---                  , ("interval", "month") -- required
---                  , ("name","Gold Special") -- required
---                  ]
-
--- getPlan (PlanId planId) = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "plans/" <> planId
-
--- -- optional :: name, metadata, statement_description
--- updatePlan (PlanId planId) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "plans/" <> planId
-
--- deletePlan (PlanId planId) = sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = "plans/" <> planId
-
--- getPlans = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "plans"
 
 -- ---------- Coupons
 
