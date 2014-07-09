@@ -57,6 +57,7 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} params = withOpenSSL $ do
           setAuthorizationBasic secretKey ""
           setContentType "application/x-www-form-urlencoded"
           setHeader "Stripe-Version" apiVersion
+  print q
   body <- Streams.fromByteString $ convertToString params
   sendRequest c q (inputStreamBody body)
   receiveResponse c $ \response inputStream ->
@@ -104,29 +105,6 @@ config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 -- ---- Customer
 
 
--- --- Subscriptions
--- newtype SubscriptionId = SubscriptionId { subscriptionId :: Text } deriving (Show, Eq)
--- createSubscription :: CustomerId -> PlanId -> IO ()
--- createSubscription (CustomerId custId) (PlanId plan) = sendStripeRequest req config
---   where req = StripeRequest POST url params
---         url = "customers/" <> custId <> "/subscriptions"
---         params = [("plan", T.encodeUtf8 plan)]
-
--- getSubscription :: CustomerId -> SubscriptionId -> IO ()
--- getSubscription (CustomerId custId) (SubscriptionId subId) = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "customers/" <> custId <> "/subscriptions/" <> subId
-
--- -- see parameters on this one
--- updateSubscription :: CustomerId -> SubscriptionId -> IO ()
--- updateSubscription (CustomerId custId) (SubscriptionId subId) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "customers/" <> custId <> "/subscriptions/" <> subId
-
--- deleteSubscription :: CustomerId -> SubscriptionId -> IO ()
--- deleteSubscription (CustomerId custId) (SubscriptionId subId) = sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = "customers/" <> custId <> "/subscriptions/" <> subId
 
 -- -- Plans
 -- newtype Plan = Plan Text deriving (Show, Eq)

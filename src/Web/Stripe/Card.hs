@@ -1,8 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE OverloadedStrings         #-}
+
 module Web.Stripe.Card where
 
 import           Control.Applicative
 import           Data.Aeson
+import           Data.ByteString                 (ByteString)
+import qualified Data.ByteString                 as B
 import           Data.Monoid
 import           Data.Text                       (Text)
 import qualified Data.Text                       as T
@@ -13,40 +17,17 @@ import           Web.Stripe.Client
 import           Web.Stripe.Internal.StripeError
 import           Web.Stripe.Util
 
+config :: StripeConfig
 config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
--- Create card
-newtype CardId = CardId Text deriving (Show, Eq)
-newtype TokenId = TokenId Text deriving (Show, Eq, Ord)
-newtype CustomerId = CustomerId Text deriving (Show, Eq, Ord)
-
-createCardByTokenId :: FromJSON a => CustomerId -> TokenId -> IO (Either StripeError a)
-createCardByTokenId (CustomerId cid) (TokenId tokenId) = sendStripeRequest config req []
-  where req = StripeRequest POST url
-        url = "customers/" <> cid
-        params = [("card", T.encodeUtf8 tokenId)] -- card is required
-
-createCard :: FromJSON a => CustomerId -> TokenId -> IO (Either StripeError a)
-createCard (CustomerId cid) (TokenId tokenId) = sendStripeRequest config req []
-  where req = StripeRequest POST url
-        url = "customers/" <> cid
-        params = [("card", T.encodeUtf8 tokenId)] -- card is required
-
-data Brand = Visa | AMEX | MasterCard
-           | Discover | JCB | DinersClub | Unknown deriving (Show, Eq)
-
-instance FromJSON Brand where
-   parseJSON (Object o) = 
-       do typ <- o .: "brand"
-          return $ case typ of
-            "Visa" -> Visa
-            "American Express" -> AMEX
-            "MasterCard" -> MasterCard
-            "Discover" -> Discover
-            "JCB" -> JCB
-            "DinersClub" -> DinersClub
-            otherwise -> Unknown
-                          
+data Brand = Visa
+           | AMEX
+           | MasterCard
+           | Discover
+           | JCB
+           | DinersClub
+           | Unknown
+             deriving (Show, Eq)
 
 data Card = Card {
       cardId                  :: Text
@@ -70,7 +51,46 @@ data Card = Card {
     , cardCustomer            :: Maybe Text
 } deriving (Show, Eq)
 
+newtype CardId = CardId Text deriving (Show, Eq)
+newtype TokenId = TokenId Text deriving (Show, Eq, Ord)
+newtype CustomerId = CustomerId Text deriving (Show, Eq, Ord)
+newtype CardNumber = CardNumber Int deriving (Show, Eq, Ord)
+newtype ExpMonth   = ExpMonth Int deriving (Show, Eq, Ord)
+newtype ExpYear    = ExpYear Int deriving (Show, Eq, Ord)
+newtype CVC        = CVC Int deriving (Show, Eq, Ord)
+newtype AddressCity    = AddressCity Text deriving (Show, Eq)
+newtype AddressCountry = AddressCountry Text deriving (Show, Eq)
+newtype AddressLine1   = AddressLine1 Text deriving (Show, Eq)
+newtype AddressLine2   = AddressLine2 Text deriving (Show, Eq)
+newtype AddressState   = AddressState Text deriving (Show, Eq)
+newtype AddressZip     = AddressZip Text deriving (Show, Eq)
+newtype Name           = Name Text deriving (Show, Eq)
+newtype EndingBefore = EndingBefore Text deriving (Show, Eq)
+newtype StartingAfter = StartingAfter Text deriving (Show, Eq)
+newtype Limit = Limit Int deriving (Show, Eq)
 
+data StripeResult = StripeResult { deleted :: Bool, deletedId :: Text } deriving (Show, Eq)
+data StripeList a = StripeList { hasMore :: Bool, stripeList :: [a] } deriving (Show, Eq)
+
+data Token = Token {
+      tokenId       :: Text
+    , tokenLiveMode :: Bool
+    , tokenCreated  :: UTCTime
+    , tokenUsed     :: Bool
+    , tokenType     :: Text
+    , tokenCard     :: Card
+} deriving (Show, Eq)
+
+instance FromJSON Brand where
+    parseJSON (String result) =
+        return $ case result of
+                   "American Express" -> AMEX
+                   "MasterCard" -> MasterCard
+                   "Discover" -> Discover
+                   "JCB" -> JCB
+                   "Visa" -> Visa
+                   "DinersClub" -> DinersClub
+                   otherwise -> Unknown
 
 instance FromJSON Card where
     parseJSON (Object o) =
@@ -94,31 +114,10 @@ instance FromJSON Card where
              <*> o .:? "address_zip_check"
              <*> o .:? "customer"
 
-
-newtype CardNumber = CardNumber Int deriving (Show, Eq, Ord)
-newtype CardExpMonth = CardExpMonth Int deriving (Show, Eq, Ord)
-newtype CardExpYear = CardExpYear Int deriving (Show, Eq, Ord)
-newtype CardCVC = CardCVC Int deriving (Show, Eq, Ord)
-
-createCardToken :: CardNumber -> CardExpMonth -> CardExpYear -> CardCVC -> 
-                   IO (Either StripeError Token)
-createCardToken (CardNumber num) (CardExpMonth month) (CardExpYear year) (CardCVC cvc)
-    = sendStripeRequest config req params
-  where req = StripeRequest POST "tokens"
-        params = [ ("card[number]", toBS num)
-                 , ("card[exp_month]", toBS month)
-                 , ("card[exp_year]", toBS year)
-                 , ("card[cvc]", toBS cvc)
-                 ]
-
-data Token = Token {
-      tokenId       :: Text
-    , tokenLiveMode :: Bool
-    , tokenCreated  :: UTCTime
-    , tokenUsed     :: Bool
-    , tokenType     :: Text
-    , tokenCard     :: Card
-} deriving (Show, Eq)
+instance FromJSON StripeResult where
+   parseJSON (Object o) =
+       StripeResult <$> o .: "deleted"
+                    <*> o .: "id"
 
 instance FromJSON Token where
    parseJSON (Object o) =
@@ -129,27 +128,134 @@ instance FromJSON Token where
              <*> o .: "type"
              <*> o .: "card"
 
+instance FromJSON a => FromJSON (StripeList a) where
+   parseJSON (Object o) = 
+       StripeList <$> o .: "has_more" 
+                  <*> o .: "data"
 
--- See all the optional arguments here, lots of them
--- updateCard :: CustomerId -> Card -> IO ()
--- updateCard (CustomerId custId) (Card cardId) = sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = "customers/" <> custId <> "/cards/" <> cardId
+-- | Create card
+addCardToCustomer :: FromJSON a => CustomerId -> TokenId -> IO (Either StripeError a)
+addCardToCustomer (CustomerId cid) (TokenId tokenId) =
+    sendStripeRequest config req params
+  where req = StripeRequest POST url
+        url = "customers/" <> cid <> "/cards"
+        params = [("card", toBS tokenId)]
 
--- deleteCard :: CustomerId -> Card -> IO ()
--- deleteCard (CustomerId custId) (Card cardId) = sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = "customers/" <> custId <> "/cards/" <> cardId
+-- | Create a Stripe token from a credit card
+createCardToken :: CardNumber ->
+                   ExpMonth ->
+                   ExpYear ->
+                   CVC ->
+                   IO (Either StripeError Token)
+createCardToken (CardNumber num) (ExpMonth month) (ExpYear year) (CVC cvc)
+    = sendStripeRequest config req params
+  where req = StripeRequest POST "tokens"
+        params = [ ("card[number]", toBS num)
+                 , ("card[exp_month]", toBS month)
+                 , ("card[exp_year]", toBS year)
+                 , ("card[cvc]", toBS cvc)
+                 ]
 
--- -- optional args
--- -- ending_before
--- -- limit
--- -- starting_after
+-- | Get card by CustomerID and CardID
+getCard :: CustomerId -> CardId -> IO (Either StripeError Card)
+getCard (CustomerId custId) (CardId cardId) = sendStripeRequest config req []
+  where req = StripeRequest GET url
+        url = "customers/" <> custId <> "/cards/" <> cardId
 
--- getCards :: CustomerId -> IO ()
--- getCards (CustomerId custId) = sendStripeRequest req config
+
+updateCard :: CustomerId ->
+              CardId ->
+              Maybe AddressCity -> -- addressCity
+              Maybe AddressCountry -> -- addressCountry
+              Maybe AddressLine1 -> -- addressLine1
+              Maybe AddressLine2 -> -- addressLine2
+              Maybe AddressState -> -- addressState
+              Maybe AddressZip -> -- addressZip
+              Maybe ExpMonth -> -- expMonth
+              Maybe ExpYear -> -- expYear
+              Maybe Name -> -- name
+              IO (Either StripeError Card)
+updateCard (CustomerId custId)
+           (CardId cardId)
+           addressCity
+           addressCountry
+           addressLine1
+           addressLine2
+           addressState
+           addressZip
+           expMonth
+           expYear
+           name = sendStripeRequest config req params
+  where req = StripeRequest POST url
+        url = "customers/" <> custId <> "/cards/" <> cardId
+        params = [ (k, v) | (k, Just v) <- [
+                     ("address_city",  (\(AddressCity x) -> toBS x) <$> addressCity)
+                   , ("address_country", (\(AddressCountry x) -> toBS x) <$> addressCountry)
+                   , ("address_line1", (\(AddressLine1 x) -> toBS x) <$> addressLine1 )
+                   , ("address_line2", (\(AddressLine2 x) -> toBS x) <$> addressLine2 )
+                   , ("address_state", (\(AddressState x) -> toBS x) <$> addressState )
+                   , ("address_zip", (\(AddressZip x) -> toBS x) <$> addressZip )
+                   , ("exp_month", (\(ExpMonth x) -> toBS x) <$> expMonth )
+                   , ("exp_year", (\(ExpYear x) -> toBS x) <$> expYear )
+                   , ("name", (\(Name x) -> toBS x) <$> name )
+                   ]
+                 ]
+
+deleteCard :: CustomerId -> CardId -> IO (Either StripeError StripeResult)
+deleteCard (CustomerId custId) (CardId cardId) = sendStripeRequest config req []
+  where req = StripeRequest DELETE url
+        url = "customers/" <> custId <> "/cards/" <> cardId
+
+getCards :: CustomerId -> 
+            Maybe Limit -> -- Default is 10
+            Maybe EndingBefore -> -- For use in pagination
+            Maybe StartingAfter -> -- For use in pagination
+            IO (Either StripeError (StripeList Card))
+getCards (CustomerId custId) limit endingBefore startingAfter = 
+    sendStripeRequest config req params
+  where req = StripeRequest GET url 
+        url = "customers/" <> custId <> "/cards"
+        params = [ (k, v) | (k, Just v) <- [
+                     ("ending_before",  (\(EndingBefore x) -> toBS x) <$> endingBefore)
+                   , ("starting_after",  (\(StartingAfter x) -> toBS x) <$> startingAfter)
+                   , ("limit", (\(Limit x) -> toBS x) <$> limit)
+                   ]
+                 ]
+
+--------------- Subscriptions ----------------
+newtype SubscriptionId = SubscriptionId Text deriving (Show, Eq)
+newtype PlanId = PlanId Text deriving (Show, Eq)
+
+data Subscription = Subscription {
+      subscriptionId :: Text
+} deriving (Show, Eq)
+
+instance FromJSON Subscription where
+   parseJSON (Object o) = Subscription <$> o .: "id"
+
+createSubscription :: CustomerId -> PlanId -> IO (Either StripeError Subscription)
+createSubscription (CustomerId custId) (PlanId plan) = 
+    sendStripeRequest config req params
+  where req = StripeRequest POST url
+        url = "customers/" <> custId <> "/subscriptions"
+        params = [("plan", T.encodeUtf8 plan)]
+
+-- getSubscription :: CustomerId -> SubscriptionId -> IO ()
+-- getSubscription (CustomerId custId) (SubscriptionId subId) = sendStripeRequest req config
 --   where req = StripeRequest GET url []
---         url = "customers/" <> custId <> "/cards"
+--         url = "customers/" <> custId <> "/subscriptions/" <> subId
+
+-- -- see parameters on this one
+-- updateSubscription :: CustomerId -> SubscriptionId -> IO ()
+-- updateSubscription (CustomerId custId) (SubscriptionId subId) = sendStripeRequest req config
+--   where req = StripeRequest POST url []
+--         url = "customers/" <> custId <> "/subscriptions/" <> subId
+
+-- deleteSubscription :: CustomerId -> SubscriptionId -> IO ()
+-- deleteSubscription (CustomerId custId) (SubscriptionId subId) = sendStripeRequest req config
+--   where req = StripeRequest DELETE url []
+--         url = "customers/" <> custId <> "/subscriptions/" <> subId
+
 
 
 
