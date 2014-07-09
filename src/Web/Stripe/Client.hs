@@ -42,11 +42,13 @@ data StripeConfig = StripeConfig
     , apiVersion :: S.ByteString
     } deriving (Show)
 
-sendStripeRequest :: (URLEncodeable a, FromJSON b) =>
+type Params = [(ByteString, ByteString)]
+
+sendStripeRequest :: FromJSON a =>
                      StripeConfig ->
                      StripeRequest ->
-                     a ->
-                     IO (Either StripeError b)
+                     Params ->
+                     IO (Either StripeError a)
 sendStripeRequest StripeConfig{..} StripeRequest{..} params = withOpenSSL $ do
   ctx <- baselineContextSSL
   c <- openConnectionSSL ctx "api.stripe.com" 443
@@ -55,7 +57,7 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} params = withOpenSSL $ do
           setAuthorizationBasic secretKey ""
           setContentType "application/x-www-form-urlencoded"
           setHeader "Stripe-Version" apiVersion
-  body <- Streams.fromByteString $ convertToString $ formEncode params
+  body <- Streams.fromByteString $ convertToString params
   sendRequest c q (inputStreamBody body)
   receiveResponse c $ \response inputStream ->
            Streams.read inputStream >>=
@@ -100,37 +102,6 @@ config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 -- ---
 
 -- ---- Customer
-
--- -- Create card
--- newtype Card = Card { cardId :: Text } deriving (Show, Eq)
-
--- createCard :: CustomerId -> Token -> IO ()
--- createCard (CustomerId cid) (Token token_id) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "customers/" <> cid
---         params = [("card", token_id)] -- card is required
-
--- -- See all the optional arguments here, lots of them
--- updateCard :: CustomerId -> Card -> IO ()
--- updateCard (CustomerId custId) (Card cardId) = sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = "customers/" <> custId <> "/cards/" <> cardId
-
--- deleteCard :: CustomerId -> Card -> IO ()
--- deleteCard (CustomerId custId) (Card cardId) = sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = "customers/" <> custId <> "/cards/" <> cardId
-
--- -- optional args
--- -- ending_before
--- -- limit
--- -- starting_after
-
--- getCards :: CustomerId -> IO ()
--- getCards (CustomerId custId) = sendStripeRequest req config
---   where req = StripeRequest GET url []
---         url = "customers/" <> custId <> "/cards"
-
 
 
 -- --- Subscriptions
