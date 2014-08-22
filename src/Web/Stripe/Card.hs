@@ -70,18 +70,6 @@ newtype EndingBefore = EndingBefore Text deriving (Show, Eq)
 newtype StartingAfter = StartingAfter Text deriving (Show, Eq)
 newtype Limit = Limit Int deriving (Show, Eq)
 
-data StripeResult = StripeResult { deleted :: Bool, deletedId :: Text } deriving (Show, Eq)
-data StripeList a = StripeList { hasMore :: Bool, stripeList :: [a] } deriving (Show, Eq)
-
-data Token = Token {
-      tokenId       :: Text
-    , tokenLiveMode :: Bool
-    , tokenCreated  :: UTCTime
-    , tokenUsed     :: Bool
-    , tokenType     :: Text
-    , tokenCard     :: Card
-} deriving (Show, Eq)
-
 instance FromJSON Brand where
     parseJSON (String result) =
         return $ case result of
@@ -115,24 +103,7 @@ instance FromJSON Card where
              <*> o .:? "address_zip_check"
              <*> o .:? "customer"
 
-instance FromJSON StripeResult where
-   parseJSON (Object o) =
-       StripeResult <$> o .: "deleted"
-                    <*> o .: "id"
 
-instance FromJSON Token where
-   parseJSON (Object o) =
-       Token <$> o .: "id"
-             <*> o .: "livemode"
-             <*> (fromSeconds <$> o .: "created")
-             <*> o .: "used"
-             <*> o .: "type"
-             <*> o .: "card"
-
-instance FromJSON a => FromJSON (StripeList a) where
-   parseJSON (Object o) =
-       StripeList <$> o .: "has_more"
-                  <*> o .: "data"
 
 -- | Create card
 addCardToCustomer :: FromJSON a => CustomerId -> TokenId -> IO (Either StripeError a)
@@ -158,11 +129,10 @@ createCardToken (CardNumber num) (ExpMonth month) (ExpYear year) (CVC cvc)
                  ]
 
 -- | Get card by CustomerID and CardID
-getCard :: CustomerId -> CardId -> IO (Either StripeError Card)
+getCard :: CustomerId -> CardId -> Stripe Card
 getCard (CustomerId custId) (CardId cardId) = sendStripeRequest config req []
   where req = StripeRequest GET url
         url = "customers/" <> custId <> "/cards/" <> cardId
-
 
 updateCard :: CustomerId ->
               CardId ->
@@ -224,150 +194,8 @@ getCards (CustomerId custId) limit endingBefore startingAfter =
                  ]
 
 --------------- Subscriptions ----------------
-newtype SubscriptionId = SubscriptionId Text deriving (Show, Eq)
-newtype PlanId = PlanId Text deriving (Show, Eq)
-
-data Subscription = Subscription {
-      subscriptionId :: Text
-} deriving (Show, Eq)
-
-instance FromJSON Subscription where
-   parseJSON (Object o) = Subscription <$> o .: "id"
-
-createSubscription :: CustomerId -> PlanId -> IO (Either StripeError Subscription)
-createSubscription (CustomerId custId) (PlanId plan) =
-    sendStripeRequest config req params
-  where req = StripeRequest POST url
-        url = "customers/" <> custId <> "/subscriptions"
-        params = [("plan", T.encodeUtf8 plan)]
-
-getSubscription :: CustomerId -> SubscriptionId -> IO (Either StripeError Subscription)
-getSubscription (CustomerId custId) (SubscriptionId subId) =
-    sendStripeRequest config req []
-  where req = StripeRequest GET url
-        url = "customers/" <> custId <> "/subscriptions/" <> subId
-
--- see parameters on this one
-updateSubscription :: CustomerId -> SubscriptionId -> IO (Either StripeError Subscription)
-updateSubscription (CustomerId custId) (SubscriptionId subId) =
-    sendStripeRequest config req []
-  where req = StripeRequest POST url
-        url = "customers/" <> custId <> "/subscriptions/" <> subId
-
-deleteSubscription :: CustomerId -> SubscriptionId -> IO (Either StripeError Subscription)
-deleteSubscription (CustomerId custId) (SubscriptionId subId) =
-    sendStripeRequest config req []
-  where req = StripeRequest DELETE url
-        url = "customers/" <> custId <> "/subscriptions/" <> subId
 
 --- ===== plans ====== --
-
-data Interval = Week | Month | Year 
-                deriving (Eq)
-
-instance Show Interval where
-    show Week = "week"
-    show Month = "month"
-    show Year = "year"
-
--- Plans
-data Plan = Plan {
-      planId              :: Text
-    , planAmount          :: Int
-    , planInterval        :: Interval
-    , planCreated         :: UTCTime
-    , planCurrency        :: Text
-    , planLiveMode        :: Bool
-    , planName            :: Text
-    , planIntervalCount   :: Maybe Int -- optional, max of 1 year intervals allowed, default 1
-    , planTrialPeriodDays :: Maybe Int
-    , planMetaData        :: Maybe Object
-    , planDescription      :: Maybe Text
-} deriving (Show, Eq)
-
-
-instance FromJSON Plan where
-   parseJSON (Object o) =
-       do planId <- o .: "id"
-          planAmount <- o .: "amount"
-          result <- o .: "interval"
-          let planInterval = 
-                  case String result of
-                    "month" -> Month
-                    "week" -> Week
-                    "year" -> Year
-          planCreated <- fromSeconds <$> o .: "created"
-          planCurrency <- o .: "currency"
-          planLiveMode <- o .: "livemode"
-          planName <- o .: "name"
-          planIntervalCount <- o .:? "interval_count"
-          planTrialPeriodDays <- o .:? "trial_period_days"
-          planMetaData <- o .:? "meta_data"
-          planDescription <- o .:? "statement_description"
-          return Plan {..}
-
--- check all the optional ones as well
-newtype Currency = Currency Text deriving (Show, Eq)
-newtype IntervalCount = IntervalCount Int deriving (Show, Eq)
-newtype TrialPeriodDays = TrialPeriodDays Int deriving (Show, Eq)
-newtype Description = Description Text deriving (Show, Eq)
-newtype Amount = Amount Int deriving (Show, Eq)
-
-createPlan :: PlanId -> 
-              Amount -> 
-              Currency ->
-              Interval ->
-              Name ->
-              Maybe IntervalCount ->
-              Maybe TrialPeriodDays ->
-              Maybe Description ->
-              IO (Either StripeError Plan)
-createPlan (PlanId planId) (Amount amount) (Currency currency) interval (Name name) 
-           intervalCount trialPeriodDays description
-    = sendStripeRequest config req params
-  where req = StripeRequest POST url
-        url = "plans"
-        params = [ (k,v) | (k, Just v) <- [ 
-                     ("id", Just $ T.encodeUtf8 planId) -- required
-                   , ("amount", Just $ toBS amount) -- required
-                   , ("currency", Just $ T.encodeUtf8 currency) -- required
-                   , ("interval", Just $ toBS interval) -- required
-                   , ("name", Just $ T.encodeUtf8 name) -- required
-                   , ("interval_count", (\(IntervalCount x) -> toBS x) <$> intervalCount )
-                   , ("trial_period_days", (\(TrialPeriodDays x) -> toBS x) <$> trialPeriodDays )
-                   , ("statement_description", (\(Description x) -> T.encodeUtf8 x) <$> description )
-                   ]
-                 ]
-
--- gets plan * works
-getPlan :: PlanId -> IO (Either StripeError Plan)
-getPlan (PlanId planId) = sendStripeRequest config req []
-  where req = StripeRequest GET url 
-        url = "plans/" <> planId
-
--- optional :: name, metadata, statement_description * works
-updatePlan :: PlanId ->
-              Maybe Name -> 
-              Maybe Description ->
-              IO (Either StripeError Plan)
-updatePlan (PlanId planId) name description = sendStripeRequest config req params
-  where req = StripeRequest POST $ "plans/" <> planId
-        params = [ (k,v) | (k, Just v) <- [
-                     ("name", (\(Name x) -> T.encodeUtf8 x) <$> name )
-                   , ("statement_description", (\(Description x) -> T.encodeUtf8 x) <$> description )
-                   ]
-                 ]
--- works
-deletePlan :: PlanId -> IO (Either StripeError StripeResult)                 
-deletePlan (PlanId planId) = sendStripeRequest config req []
-  where req = StripeRequest DELETE $ "plans/" <> planId
-
-type Plans = StripeList Plan
-
--- works
-getPlans :: IO (Either StripeError Plans)
-getPlans = sendStripeRequest config req []
-  where req = StripeRequest GET "plans"
 
 --------------- Coupons ------------------
 
@@ -515,21 +343,341 @@ getRefunds :: ChargeId -> IO (Either StripeError Refunds)
 getRefunds (ChargeId chargeId) = sendStripeRequest config req []
   where req = StripeRequest GET $ "charges/" <> chargeId <> "/refunds"
 
-
 -- -- Discounts
--- deleteDiscount :: FromJSON a => CustomerId -> IO (Either StripeError a)
--- deleteDiscount (CustomerId customerId) = sendStripeRequest config req []
---   where req = StripeRequest DELETE url 
---         url = "customers/" <> customerId <> "/discount"
+data Discount = Discount {
+      discountCoupon :: Coupon
+    , discountCustomerId :: CustomerId
+    , discountStart :: UTCTime
+    , discountEnd :: Maybe UTCTime
+    , discountSubscription ::  Maybe SubscriptionId
+} deriving (Show)
 
--- deleteSubscriptionDiscount :: FromJSON a =>
---   CustomerId -> SubscriptionId -> IO (Either StripeError a)
--- deleteSubscriptionDiscount (CustomerId customerId) (SubscriptionId subId) =
---     sendStripeRequest config req []
---   where req = StripeRequest DELETE url 
---         url = T.concat ["customers/"
---                        , customerId
---                        , "/subscriptions/"
---                        , subId
---                        , "/discount"
---                        ]
+deleteCustomerDiscount :: CustomerId -> IO (Either StripeError StripeResult)
+deleteCustomerDiscount (CustomerId customerId) = sendStripeRequest config req []
+  where req = StripeRequest DELETE url 
+        url = "customers/" <> customerId <> "/discount"
+
+deleteSubscriptionDiscount ::
+  CustomerId -> 
+  SubscriptionId -> 
+  IO (Either StripeError StripeResult)
+deleteSubscriptionDiscount (CustomerId customerId) (SubscriptionId subId) =
+    sendStripeRequest config req []
+  where req = StripeRequest DELETE url 
+        url = T.concat ["customers/"
+                       , customerId
+                       , "/subscriptions/"
+                       , subId
+                       , "/discount"
+                       ]
+
+-- Invoices
+data InvoiceLineItem = InvoiceLineItem {
+      invoiceLineItemId :: Text
+    , invoiceLineItemLiveMode :: Bool
+    , invoiceLineItemAmount :: Int
+    , invoiceLineItemCurrency :: Text
+    , invoiceLineItemProration :: Bool
+    , invoiceLineItemStart :: UTCTime
+    , invoiceLineItemEnd :: UTCTime
+    , invoiceLineItemQuantity :: Maybe Int
+    , invoiceLineItemPlan :: Maybe Plan
+    , invoiceLineItemDescription :: Maybe Text
+  } deriving Show
+
+
+data Invoice = Invoice {
+      invoiceDate :: UTCTime
+    , invoiceId :: InvoiceId
+    , invoicePeriodStart :: UTCTime
+    , invoicePeriodEnd :: UTCTime
+    , invoiceLineItems :: StripeList InvoiceLineItem
+    , invoiceSubTotal :: Int
+    , invoiceTotal :: Int
+    , invoiceCustomer :: CustomerId
+    , invoiceAttempted :: Bool
+    , invoiceClosed :: Bool
+    , invoiceForgiven :: Bool
+    , invoicePaid :: Bool
+    , invoiceLiveMode :: Bool
+    , invoiceAttemptCount :: Int
+    , invoiceAmountDue :: Int
+    , invoiceCurrency :: Text
+    , invoiceStartingBalance :: Int
+    , invoiceEndingBalance :: Maybe Int
+    , invoiceNextPaymentAttempt :: UTCTime
+    , invoiceWebHooksDeliveredAt :: UTCTime
+    , invoiceCharge :: Maybe ChargeId
+    , invoiceDiscount :: Maybe Text
+    , invoiceApplicateFee :: Maybe ApplicationFee
+    , invoiceSubscription :: SubscriptionId
+    , invoiceStatementDescription :: Maybe Text
+    , invoiceDescription :: Maybe Text
+} deriving Show
+
+instance FromJSON Invoice where
+   parseJSON (Object o) = undefined
+
+instance FromJSON InvoiceLineItem where
+   parseJSON (Object o) = undefined
+
+-- https://stripe.com/docs/api#retrieve_invoiceitem
+newtype InvoiceId = InvoiceId Text deriving (Show, Eq)
+
+-- unsure this one is correct
+getInvoice :: InvoiceId -> IO (Either StripeError Invoice)
+getInvoice (InvoiceId invoiceId) =
+    sendStripeRequest config req []
+  where req = StripeRequest GET url 
+        url = "invoices/" <> invoiceId
+
+-- see optional params
+getInvoiceLineItems :: InvoiceId -> IO (Either StripeError (StripeList InvoiceLineItem))
+getInvoiceLineItems (InvoiceId invoiceId) =
+    sendStripeRequest config req []
+  where req = StripeRequest GET url
+        url = T.concat ["invoices/"
+                       , invoiceId
+                       , "/lines"
+                       ]
+
+createInvoice :: CustomerId -> IO (Either StripeError Invoice)
+createInvoice (CustomerId customerId) =
+    sendStripeRequest config req params
+  where req = StripeRequest POST "invoices"
+        params = [ ("customer", T.encodeUtf8 customerId) ]
+
+payInvoice :: InvoiceId -> IO (Either StripeError Invoice)
+payInvoice (InvoiceId invoiceId) =
+    sendStripeRequest config req []
+  where req = StripeRequest POST url 
+        url = "invoices/" <> invoiceId <> "/pay"
+
+-- see optional params
+updateInvoice :: InvoiceId -> IO (Either StripeError Invoice)
+updateInvoice (InvoiceId invoiceId) =
+    sendStripeRequest config req  []
+  where req = StripeRequest POST url 
+        url = "invoices/" <> invoiceId
+
+-- -- see optional for customer and date
+getInvoices :: IO (Either StripeError (StripeList Invoice))
+getInvoices = sendStripeRequest config req []
+  where req = StripeRequest GET url 
+        url = "invoicesadf"
+
+-- -- see customer and subscription as optional
+getUpcomingInvoice :: CustomerId -> IO (Either StripeError Invoice)
+getUpcomingInvoice (CustomerId customerId) =
+    sendStripeRequest config req []
+  where req = StripeRequest GET url
+        url = "invoices/upcoming?customer=" <> customerId
+
+-- ---- Create Invoice Items
+createInvoiceItem :: CustomerId -> IO (Either StripeError InvoiceLineItem)
+createInvoiceItem (CustomerId customerId) =
+    sendStripeRequest config req params
+  where req = StripeRequest POST "invoiceitems"
+        params = [ ("customer", T.encodeUtf8 customerId)
+                 , ("amount", "1000")
+                 , ("currency", "usd")
+                 ]
+
+newtype InvoiceLineItemId = InvoiceLineItemId Text deriving (Eq, Show)
+
+getInvoiceItem :: InvoiceLineItemId -> IO (Either StripeError InvoiceLineItem)
+getInvoiceItem (InvoiceLineItemId itemId) =
+    sendStripeRequest config req []
+  where req = StripeRequest GET url 
+        url = "invoiceitems/" <> itemId
+
+-- see additional parameters
+updateInvoiceItem :: InvoiceLineItemId -> IO (Either StripeError InvoiceLineItem)
+updateInvoiceItem (InvoiceLineItemId itemId) =
+    sendStripeRequest config req []
+  where req = StripeRequest POST url 
+        url = "invoiceitems/" <> itemId
+
+deleteInvoiceItem :: InvoiceLineItemId -> IO (Either StripeError StripeResult)
+deleteInvoiceItem (InvoiceLineItemId itemId) =
+    sendStripeRequest config req []
+  where req = StripeRequest DELETE url 
+        url = "invoiceitems/" <> itemId
+
+-- Disputes
+
+data Dispute = Dispute {
+      
+} deriving (Show)
+
+instance FromJSON Dispute where
+    parseJSON (Object o) = undefined
+
+updateDispute :: ChargeId -> IO (Either StripeError Dispute)
+updateDispute (ChargeId chargeId) = sendStripeRequest config req []
+  where req = StripeRequest POST url
+        url = "charges/" <> chargeId <> "/dispute"
+
+-- test this
+closeDispute :: ChargeId -> IO (Either StripeError Dispute)
+closeDispute (ChargeId chargeId) = sendStripeRequest config req []
+  where req = StripeRequest POST url
+        url = "charges/" <> chargeId <> "/dispute/close"
+
+-- transfers
+
+newtype RecipientId = RecipientId { recipientId :: Text } deriving (Show, Eq)
+newtype TransferId = TransferId Text deriving (Show, Eq)
+
+data TransferStatus = Paid | Pending | Canceled | Failed deriving (Show, Eq)
+data TransferType = CardTransfer | BankAccountTransfer deriving (Show, Eq)
+
+instance FromJSON TransferType where
+    parseJSON (String "card")         = pure CardTransfer
+    parseJSON (String "bank_account") = pure BankAccountTransfer
+
+instance FromJSON TransferStatus where
+    parseJSON (String "paid")     = pure Paid
+    parseJSON (String "pending")  = pure Pending
+    parseJSON (String "canceled") = pure Canceled
+    parseJSON (String "failed")   = pure Failed
+
+data Transfer = Transfer {
+      transferId :: TransferId
+    , transferCreated :: UTCTime
+    , transferDate :: UTCTime
+    , transferAmount :: Int
+    , transferCurrency :: Text
+    , transferStatus :: TransferStatus
+    , transferType :: TransferType
+    , transferBalanceTransaction :: Text -- what??
+    , transferDescription :: Text
+} deriving (Show)
+
+instance FromJSON Transfer where
+    parseJSON (Object o) = undefined
+
+createTransfer :: RecipientId -> IO (Either StripeError Transfer)
+createTransfer (RecipientId recipientId) = sendStripeRequest config req params
+  where req = StripeRequest POST "transfers" 
+        params = [ ("amount", "400")
+                 , ("currency", "usd")
+                 , ("recipient", T.encodeUtf8 recipientId)
+                 ]
+
+getTransfer :: TransferId -> IO (Either StripeError Transfer)
+getTransfer (TransferId transferId) = sendStripeRequest config req []
+  where req = StripeRequest GET url 
+        url = "transfers/" <> transferId
+
+-- -- see additional description and metadata
+updateTransfer :: TransferId -> IO (Either StripeError Transfer)
+updateTransfer (TransferId transferId) = sendStripeRequest config req []
+  where req = StripeRequest POST url
+        url = "transfers/" <> transferId
+
+cancelTransfer :: TransferId -> IO (Either StripeError Transfer)
+cancelTransfer (TransferId transferId) = sendStripeRequest config req []
+  where req = StripeRequest POST url 
+        url = "transfers/" <> transferId <> "/cancel"
+
+-- -- see optional params
+getTransfers :: IO (Either StripeError (StripeList Transfer))
+getTransfers = sendStripeRequest config req []
+  where req = StripeRequest GET url 
+        url = "transfers"
+
+-- recipients
+
+data RecipientType = Individual | Corporation deriving (Eq, Show)
+
+data Recipient = Recipient { } deriving (Show)
+
+instance FromJSON Recipient where
+   parseJSON (Object o) = undefined
+
+
+-- Text should be name?
+createRecipient :: Text -> RecipientType -> IO (Either StripeError Recipient)
+createRecipient name recipientType  = sendStripeRequest config req params
+  where req    = StripeRequest POST "recipients" 
+        params = [ ("name", T.encodeUtf8 name)
+                 , ("type", if recipientType == Individual
+                            then "individual"
+                            else "corporation")
+                 ]
+
+getRecipient :: RecipientId -> IO (Either StripeError Recipient)
+getRecipient (RecipientId recipientId) = sendStripeRequest config req []
+  where req =  StripeRequest GET url 
+        url = "recipients/" <> recipientId
+
+-- -- see optional
+updateRecipient :: RecipientId -> IO (Either StripeError Recipient)
+updateRecipient (RecipientId recipientId) = sendStripeRequest config req []
+  where req = StripeRequest POST url
+        url = "recipients/" <> recipientId
+
+deleteRecipient :: RecipientId -> IO (Either StripeError Recipient)
+deleteRecipient (RecipientId recipientId) = sendStripeRequest config req []
+  where req =  StripeRequest DELETE url 
+        url = "recipients/" <> recipientId
+
+-- -- get all recipients
+getRecipients :: IO (Either StripeError (StripeList Recipient))
+getRecipients = sendStripeRequest config req []
+  where req =  StripeRequest GET "recipients" 
+
+-- Application Fees
+
+data ApplicationFee = ApplicationFee {} deriving (Show)
+instance FromJSON ApplicationFee where
+   parseJSON (Object o) = undefined
+
+newtype FeeId = FeeId { feeId :: Text } deriving (Show, Eq)
+
+getApplicationFee :: FeeId -> IO (Either StripeError ApplicationFee)
+getApplicationFee (FeeId feeId) = sendStripeRequest config req []
+  where req =  StripeRequest GET url 
+        url = "application_fees/" <> feeId
+
+refundApplicationFee :: FeeId -> IO (Either StripeError ApplicationFee)
+refundApplicationFee (FeeId feeId) = sendStripeRequest config req  []
+  where req =  StripeRequest POST url 
+        url = "application_fees/" <> feeId <> "/refund"
+
+-- see optional
+getApplicationFees :: FeeId -> IO (Either StripeError (StripeList ApplicationFee))
+getApplicationFees (FeeId feeId) = sendStripeRequest config req []
+  where req =  StripeRequest GET "application_fees"  
+
+-- Application Fee Refund
+-- newtype ApplicationFeeRefundId = ApplicationFeeRefundId Text deriving (Show, Eq)
+
+-- data ApplicationFeeRefund = ApplicationFeeRefund {  
+--       applicationFeeRefundId :: ApplicationFeeRefundId
+--     , applicationFeeRefundAmount :: Int
+--     , applicationFeeRefundCreated :: UTCTime
+--     , applicationFeeRefundCurrency :: Text
+--     , applicationFeeRefundBalanceTransaction :: Maybe Text
+--     , applicationFeeRefundFee :: FeeId
+--     } deriving Show
+
+-- instance FromJSON ApplicationFeeRefund where
+--    parseJSON (Object o) = undefined  
+
+-- Account
+
+-- balance
+getAccountBalance :: IO (Either StripeError Account)
+getAccountBalance = sendStripeRequest config req params
+  where req    =  StripeRequest GET "balance"  
+        params = []
+
+-- newtype TransactionId = TransactionId { transactionId :: Text } deriving (Show, Eq)
+
+-- getBalanceTransaction :: TransactionId -> IO ()
+-- getBalanceTransaction (TransactionId transactionId) =
+--     sendStripeRequest req config
+--   where req =  StripeRequest GET url []
+--         url = "balance/history/" <> transactionId

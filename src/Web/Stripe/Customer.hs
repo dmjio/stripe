@@ -89,28 +89,25 @@ instance URLEncodeable CustomerOptions where
          ]
         ]
 
-instance URLEncodeable () where
-    formEncode ()   = []
-
-createDefaultCustomer :: IO (Either StripeError Customer)
+createDefaultCustomer :: Stripe Customer
 createDefaultCustomer = createCustomer defaultCustomerOptions
 
-createCustomer :: CustomerOptions -> IO (Either StripeError Customer)
-createCustomer options = sendStripeRequest config req options
+createCustomer :: CustomerOptions -> Stripe Customer
+createCustomer options = callAPI req options
   where req = StripeRequest POST "customers"
 
-getCustomer :: CustomerId -> IO (Either StripeError Customer)
-getCustomer (CustomerId cid) = sendStripeRequest config req ()
+getCustomer :: CustomerId -> Stripe Customer
+getCustomer (CustomerId cid) = callAPI req ()
   where req = StripeRequest GET url
         url = "customers/" <> cid
 
-updateCustomer :: CustomerOptions -> CustomerId -> IO (Either StripeError Customer)
-updateCustomer options (CustomerId cid) = sendStripeRequest config req options
+updateCustomer :: CustomerOptions -> CustomerId -> Stripe Customer
+updateCustomer options (CustomerId cid) = callAPI req options
   where req = StripeRequest POST url
         url = "customers/" <> cid
 
-deleteCustomer :: CustomerOptions -> CustomerId ->  IO (Either StripeError Customer)
-deleteCustomer options (CustomerId cid) = sendStripeRequest config req options
+deleteCustomer :: CustomerOptions -> CustomerId ->  Stripe Customer
+deleteCustomer options (CustomerId cid) = callAPI req options
   where req = StripeRequest DELETE url
         url = "customers/" <> cid
 

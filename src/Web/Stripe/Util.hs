@@ -1,8 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Util
     ( fromSeconds
-    , convertToString
-    , strictToLazy
+    , paramsToByteString
     , toBS
     ) where
 
@@ -18,13 +17,10 @@ import           Data.Time.Clock.POSIX (posixSecondsToUTCTime,
 toBS :: Show a => a -> S.ByteString
 toBS = BC8.pack . show
 
-strictToLazy :: S.ByteString -> BL.ByteString
-strictToLazy = BL.fromChunks . (:[])
-
-convertToString :: [(S.ByteString, S.ByteString)] -> S.ByteString
-convertToString [] = ""
-convertToString ((x,y) : []) = x <> "=" <> y
-convertToString ((x,y) : xs) = x <> "=" <> y <> "&" <> convertToString xs
+paramsToByteString :: [(S.ByteString, S.ByteString)] -> S.ByteString
+paramsToByteString [] = ""
+paramsToByteString ((x,y) : []) = x <> "=" <> y
+paramsToByteString ((x,y) : xs) = x <> "=" <> y <> "&" <> paramsToByteString xs
 
 fromSeconds :: Integer -> UTCTime
 fromSeconds  = posixSecondsToUTCTime . fromInteger
