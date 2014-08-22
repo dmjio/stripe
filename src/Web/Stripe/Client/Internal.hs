@@ -4,12 +4,12 @@
 module Web.Stripe.Client.Internal
     ( callAPI
     , runStripe
-    , Stripe
-    , StripeRequest (..)
-    , StripeConfig (..)
-    , StripeList(..)
-    , StripeResult (..)
-    , Method(GET, POST, DELETE, PUT)
+    , Stripe             (..)
+    , StripeRequest      (..)
+    , StripeConfig       (..)
+    , StripeList         (..)
+    , StripeDeleteResult (..)
+    , Method             (..)
     ) where
 
 import           Control.Applicative
@@ -31,7 +31,10 @@ import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
 import qualified System.IO.Streams               as Streams
 
-type URL    = S.ByteString
+-- Base Type we use for Stripe
+type Stripe a = ReaderT StripeConfig IO (Either StripeError a)
+
+-- HTTP Params type
 type Params = [(ByteString, ByteString)]
 
 data StripeRequest = StripeRequest
@@ -45,10 +48,8 @@ data StripeConfig = StripeConfig
     , apiVersion :: S.ByteString
     } deriving (Show)
 
-type Stripe a = ReaderT StripeConfig IO (Either StripeError a)
-
-runStripe :: FromJSON a => StripeConfig -> StripeRequest -> IO (Either StripeError a)
-runStripe config request = runReaderT (callAPI request) config
+runStripe :: FromJSON a => StripeConfig -> Stripe a -> IO (Either StripeError a)
+runStripe config action = flip runReaderT config action
 
 callAPI :: FromJSON a => StripeRequest -> Stripe a
 callAPI request = do
@@ -61,30 +62,35 @@ sendStripeRequest :: FromJSON a =>
                      IO (Either StripeError a)
 sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
   ctx <- baselineContextSSL
-  c <- openConnectionSSL ctx "api.stripe.com" 443
-  q <- buildRequest $ do
+  con <- openConnectionSSL ctx "api.stripe.com" 443
+  req <- buildRequest $ do
           http method $ "/v1/" <> T.encodeUtf8 url
           setAuthorizationBasic secretKey ""
           setContentType "application/x-www-form-urlencoded"
           setHeader "Stripe-Version" apiVersion
-  print q
   body <- Streams.fromByteString $ paramsToByteString params
-  print $ paramsToByteString params
-  sendRequest c q (inputStreamBody body)
-  receiveResponse c $ \response inputStream ->
-           Streams.read inputStream >>=
-                  maybe (error "couldn't read stream") (handleStream response)
+  sendRequest con req $ inputStreamBody body
+  receiveResponse con $ \response inputStream ->
+           Streams.read inputStream >>= maybeStream response
       where
+        maybeStream response = maybe (error "couldn't read stream") (handleStream response)
         handleStream p x = do
-          print (x, p)
           return $ case getStatusCode p of
-                     c | c == 200 -> case decodeStrict x of
-                                       Nothing -> error "oops"
-                                       Just res -> Right res
-                       | c >= 400 -> case decodeStrict x :: Maybe StripeError of
-                                       Nothing -> error "oops"
-                                       Just res  -> Left res
-                       | otherwise -> undefined
+                     200 -> maybe (error "Parse failure") Right (decodeStrict x)
+                     code | code >= 400 ->
+                        do let json = case decodeStrict x :: Maybe StripeError of
+                                        Nothing -> error "Parse Failure"
+                                        Just x  -> x
+                           Left $ case code of
+                             400 -> json { errorHTTP = BadRequest }
+                             401 -> json { errorHTTP = UnAuthorized }
+                             402 -> json { errorHTTP = RequestFailed }
+                             404 -> json { errorHTTP = NotFound }
+                             500 -> json { errorHTTP = StripeServerError }
+                             502 -> json { errorHTTP = StripeServerError }
+                             503 -> json { errorHTTP = StripeServerError }
+                             504 -> json { errorHTTP = StripeServerError }
+                             _   -> json { errorHTTP = UnknownHTTPCode }
 
 data StripeList a = StripeList
     { hasMore    :: Bool
@@ -96,9 +102,12 @@ instance FromJSON a => FromJSON (StripeList a) where
        StripeList <$> o .: "has_more"
                   <*> o .: "data"
 
-data StripeResult = StripeResult { deleted :: Bool, deletedId :: Text } deriving (Show, Eq)
+data StripeDeleteResult = StripeDeleteResult {
+      deleted   :: Bool
+    , deletedId :: Text
+    } deriving (Show, Eq)
 
-instance FromJSON StripeResult where
+instance FromJSON StripeDeleteResult where
    parseJSON (Object o) =
-       StripeResult <$> o .: "deleted"
-                    <*> o .: "id"
+       StripeDeleteResult <$> o .: "deleted"
+                          <*> o .: "id"

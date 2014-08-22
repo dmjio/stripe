@@ -298,50 +298,6 @@ getCoupons = sendStripeRequest config req []
 
 -- refunds
 -- -- create a refund
-data Refund = Refund {
-      refundId :: Text
-    , refundAmount :: Int
-    , refundCurrency :: Text
-    , refundCreated :: UTCTime
-    , refundCharge :: Text
-    , refundBalanceTransaction :: Maybe Text
-    } deriving (Show, Eq)
-
-instance FromJSON Refund where
-   parseJSON (Object o) = 
-        Refund <$> o .: "id"
-               <*> o .: "amount"
-               <*> o .: "currency"
-               <*> (fromSeconds <$> o .: "created")
-               <*> o .: "charge"
-               <*> o .:? "balance_transaction"
-
-newtype ChargeId = ChargeId Text deriving (Show, Eq)
-newtype RefundId = RefundId Text deriving (Show, Eq)
-
--- works, see optional parameters
-createRefund :: ChargeId -> IO (Either StripeError Refund)
-createRefund (ChargeId chargeId) = sendStripeRequest config req []
-  where req = StripeRequest POST url 
-        url = "charges/" <> chargeId <> "/refunds"
-
-getRefund :: ChargeId -> RefundId -> IO (Either StripeError Refund)
-getRefund (ChargeId chargeId) (RefundId refId) = sendStripeRequest config req []
-   where req = StripeRequest GET $ "charges/" <> chargeId <> "/refunds/" <> refId
-
--- -- optional metadata
--- updateRefund :: Charge -> RefundId -> IO ()
--- updateRefund (Charge chargeId) (RefundId refId) = sendStripeRequest req config
---   where req = StripeRequest POST url []
---         url = "charges/" <> chargeId <> "/refunds/" <> refId
-
--- -- optional, limit, etc
-type Refunds = StripeList Refund
-
--- works but needs more parameters
-getRefunds :: ChargeId -> IO (Either StripeError Refunds)
-getRefunds (ChargeId chargeId) = sendStripeRequest config req []
-  where req = StripeRequest GET $ "charges/" <> chargeId <> "/refunds"
 
 -- -- Discounts
 data Discount = Discount {
@@ -427,14 +383,14 @@ newtype InvoiceId = InvoiceId Text deriving (Show, Eq)
 -- unsure this one is correct
 getInvoice :: InvoiceId -> IO (Either StripeError Invoice)
 getInvoice (InvoiceId invoiceId) =
-    sendStripeRequest config req []
+    callAPI config req []
   where req = StripeRequest GET url 
         url = "invoices/" <> invoiceId
 
 -- see optional params
 getInvoiceLineItems :: InvoiceId -> IO (Either StripeError (StripeList InvoiceLineItem))
 getInvoiceLineItems (InvoiceId invoiceId) =
-    sendStripeRequest config req []
+    callAPI config req []
   where req = StripeRequest GET url
         url = T.concat ["invoices/"
                        , invoiceId
@@ -443,40 +399,40 @@ getInvoiceLineItems (InvoiceId invoiceId) =
 
 createInvoice :: CustomerId -> IO (Either StripeError Invoice)
 createInvoice (CustomerId customerId) =
-    sendStripeRequest config req params
+    callAPI config req params
   where req = StripeRequest POST "invoices"
         params = [ ("customer", T.encodeUtf8 customerId) ]
 
 payInvoice :: InvoiceId -> IO (Either StripeError Invoice)
 payInvoice (InvoiceId invoiceId) =
-    sendStripeRequest config req []
+    callAPI config req []
   where req = StripeRequest POST url 
         url = "invoices/" <> invoiceId <> "/pay"
 
 -- see optional params
 updateInvoice :: InvoiceId -> IO (Either StripeError Invoice)
 updateInvoice (InvoiceId invoiceId) =
-    sendStripeRequest config req  []
+    callAPI config req  []
   where req = StripeRequest POST url 
         url = "invoices/" <> invoiceId
 
 -- -- see optional for customer and date
 getInvoices :: IO (Either StripeError (StripeList Invoice))
-getInvoices = sendStripeRequest config req []
+getInvoices = callAPI config req []
   where req = StripeRequest GET url 
         url = "invoicesadf"
 
 -- -- see customer and subscription as optional
 getUpcomingInvoice :: CustomerId -> IO (Either StripeError Invoice)
 getUpcomingInvoice (CustomerId customerId) =
-    sendStripeRequest config req []
+    callAPI config req []
   where req = StripeRequest GET url
         url = "invoices/upcoming?customer=" <> customerId
 
 -- ---- Create Invoice Items
 createInvoiceItem :: CustomerId -> IO (Either StripeError InvoiceLineItem)
 createInvoiceItem (CustomerId customerId) =
-    sendStripeRequest config req params
+    callAPI config req params
   where req = StripeRequest POST "invoiceitems"
         params = [ ("customer", T.encodeUtf8 customerId)
                  , ("amount", "1000")
@@ -487,20 +443,20 @@ newtype InvoiceLineItemId = InvoiceLineItemId Text deriving (Eq, Show)
 
 getInvoiceItem :: InvoiceLineItemId -> IO (Either StripeError InvoiceLineItem)
 getInvoiceItem (InvoiceLineItemId itemId) =
-    sendStripeRequest config req []
+    callAPI config req []
   where req = StripeRequest GET url 
         url = "invoiceitems/" <> itemId
 
 -- see additional parameters
 updateInvoiceItem :: InvoiceLineItemId -> IO (Either StripeError InvoiceLineItem)
 updateInvoiceItem (InvoiceLineItemId itemId) =
-    sendStripeRequest config req []
+    callAPI config req []
   where req = StripeRequest POST url 
         url = "invoiceitems/" <> itemId
 
 deleteInvoiceItem :: InvoiceLineItemId -> IO (Either StripeError StripeResult)
 deleteInvoiceItem (InvoiceLineItemId itemId) =
-    sendStripeRequest config req []
+    callAPI config req []
   where req = StripeRequest DELETE url 
         url = "invoiceitems/" <> itemId
 
@@ -514,13 +470,13 @@ instance FromJSON Dispute where
     parseJSON (Object o) = undefined
 
 updateDispute :: ChargeId -> IO (Either StripeError Dispute)
-updateDispute (ChargeId chargeId) = sendStripeRequest config req []
+updateDispute (ChargeId chargeId) = callAPI config req []
   where req = StripeRequest POST url
         url = "charges/" <> chargeId <> "/dispute"
 
 -- test this
 closeDispute :: ChargeId -> IO (Either StripeError Dispute)
-closeDispute (ChargeId chargeId) = sendStripeRequest config req []
+closeDispute (ChargeId chargeId) = callAPI config req []
   where req = StripeRequest POST url
         url = "charges/" <> chargeId <> "/dispute/close"
 
@@ -558,7 +514,7 @@ instance FromJSON Transfer where
     parseJSON (Object o) = undefined
 
 createTransfer :: RecipientId -> IO (Either StripeError Transfer)
-createTransfer (RecipientId recipientId) = sendStripeRequest config req params
+createTransfer (RecipientId recipientId) = callAPI config req params
   where req = StripeRequest POST "transfers" 
         params = [ ("amount", "400")
                  , ("currency", "usd")
@@ -566,24 +522,24 @@ createTransfer (RecipientId recipientId) = sendStripeRequest config req params
                  ]
 
 getTransfer :: TransferId -> IO (Either StripeError Transfer)
-getTransfer (TransferId transferId) = sendStripeRequest config req []
+getTransfer (TransferId transferId) = callAPI config req []
   where req = StripeRequest GET url 
         url = "transfers/" <> transferId
 
 -- -- see additional description and metadata
 updateTransfer :: TransferId -> IO (Either StripeError Transfer)
-updateTransfer (TransferId transferId) = sendStripeRequest config req []
+updateTransfer (TransferId transferId) = callAPI config req []
   where req = StripeRequest POST url
         url = "transfers/" <> transferId
 
 cancelTransfer :: TransferId -> IO (Either StripeError Transfer)
-cancelTransfer (TransferId transferId) = sendStripeRequest config req []
+cancelTransfer (TransferId transferId) = callAPI config req []
   where req = StripeRequest POST url 
         url = "transfers/" <> transferId <> "/cancel"
 
 -- -- see optional params
 getTransfers :: IO (Either StripeError (StripeList Transfer))
-getTransfers = sendStripeRequest config req []
+getTransfers = callAPI config req []
   where req = StripeRequest GET url 
         url = "transfers"
 
@@ -599,7 +555,7 @@ instance FromJSON Recipient where
 
 -- Text should be name?
 createRecipient :: Text -> RecipientType -> IO (Either StripeError Recipient)
-createRecipient name recipientType  = sendStripeRequest config req params
+createRecipient name recipientType  = callAPI config req params
   where req    = StripeRequest POST "recipients" 
         params = [ ("name", T.encodeUtf8 name)
                  , ("type", if recipientType == Individual
@@ -608,48 +564,28 @@ createRecipient name recipientType  = sendStripeRequest config req params
                  ]
 
 getRecipient :: RecipientId -> IO (Either StripeError Recipient)
-getRecipient (RecipientId recipientId) = sendStripeRequest config req []
+getRecipient (RecipientId recipientId) = callAPI config req []
   where req =  StripeRequest GET url 
         url = "recipients/" <> recipientId
 
 -- -- see optional
 updateRecipient :: RecipientId -> IO (Either StripeError Recipient)
-updateRecipient (RecipientId recipientId) = sendStripeRequest config req []
+updateRecipient (RecipientId recipientId) = callAPI config req []
   where req = StripeRequest POST url
         url = "recipients/" <> recipientId
 
 deleteRecipient :: RecipientId -> IO (Either StripeError Recipient)
-deleteRecipient (RecipientId recipientId) = sendStripeRequest config req []
+deleteRecipient (RecipientId recipientId) = callAPI config req []
   where req =  StripeRequest DELETE url 
         url = "recipients/" <> recipientId
 
 -- -- get all recipients
 getRecipients :: IO (Either StripeError (StripeList Recipient))
-getRecipients = sendStripeRequest config req []
+getRecipients = callAPI config req []
   where req =  StripeRequest GET "recipients" 
 
 -- Application Fees
 
-data ApplicationFee = ApplicationFee {} deriving (Show)
-instance FromJSON ApplicationFee where
-   parseJSON (Object o) = undefined
-
-newtype FeeId = FeeId { feeId :: Text } deriving (Show, Eq)
-
-getApplicationFee :: FeeId -> IO (Either StripeError ApplicationFee)
-getApplicationFee (FeeId feeId) = sendStripeRequest config req []
-  where req =  StripeRequest GET url 
-        url = "application_fees/" <> feeId
-
-refundApplicationFee :: FeeId -> IO (Either StripeError ApplicationFee)
-refundApplicationFee (FeeId feeId) = sendStripeRequest config req  []
-  where req =  StripeRequest POST url 
-        url = "application_fees/" <> feeId <> "/refund"
-
--- see optional
-getApplicationFees :: FeeId -> IO (Either StripeError (StripeList ApplicationFee))
-getApplicationFees (FeeId feeId) = sendStripeRequest config req []
-  where req =  StripeRequest GET "application_fees"  
 
 -- Application Fee Refund
 -- newtype ApplicationFeeRefundId = ApplicationFeeRefundId Text deriving (Show, Eq)
@@ -670,7 +606,7 @@ getApplicationFees (FeeId feeId) = sendStripeRequest config req []
 
 -- balance
 getAccountBalance :: IO (Either StripeError Account)
-getAccountBalance = sendStripeRequest config req params
+getAccountBalance = callAPI config req params
   where req    =  StripeRequest GET "balance"  
         params = []
 
@@ -678,6 +614,6 @@ getAccountBalance = sendStripeRequest config req params
 
 -- getBalanceTransaction :: TransactionId -> IO ()
 -- getBalanceTransaction (TransactionId transactionId) =
---     sendStripeRequest req config
+--     callAPI req config
 --   where req =  StripeRequest GET url []
 --         url = "balance/history/" <> transactionId

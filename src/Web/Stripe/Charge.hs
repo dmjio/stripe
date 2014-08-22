@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
-module Web.Stripe.Charge where
+module Web.Stripe.Charge 
+    ( Charge(..)
+    ) where
 
 import           Control.Applicative
 import           Data.Aeson
@@ -9,21 +11,17 @@ import           Data.Monoid
 import           Data.Text                       (Text)
 import qualified Data.Text.Encoding              as T
 import           Network.Http.Client
-import           Web.Stripe.Client
-import           Web.Stripe.Internal.Class
+import           Web.Stripe.Client.Internal
 import           Web.Stripe.Internal.StripeError
 import           Web.Stripe.Util
+import           Data.Time
 
--- charges, lots of optional fields as well
-newtype Charge = Charge Text deriving (Show, Eq)
-newtype RefundId = RefundId { refundId :: Text } deriving (Show, Eq)
+newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
-config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
+-- config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
+-- defaultChargeOptions = 
+--     ChargeOptions Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing 
 
-defaultChargeOptions = 
-    ChargeOptions Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing 
-
--- either customer Id or charge is required
 data Charge = Charge {
       chargeId                   :: Text
     , chargeObject               :: Text
@@ -41,16 +39,13 @@ data Charge = Charge {
     } deriving (Show, Eq)
 
 instance FromJSON Charge where
-    parseJSON (Object o) = 
-        do Charge <$> o .: "id"
-                  <*> o .: "object"
-                  <*> o .: "created"
-                  <*> o .: "livemode"
-                  <*> o .: "paid"
-                  <*> o .: "amount"
-
-                      
-                           
+    parseJSON (Object o) = undefined
+        -- do Charge <$> o .: "id"
+        --           <*> o .: "object"
+        --           <*> o .: "created"
+        --           <*> o .: "livemode"
+        --           <*> o .: "paid"
+        --           <*> o .: "amount"
 
 -- data GetChargeOptions = GetChargeOptions {
 --       chargeId               :: Int
@@ -59,8 +54,6 @@ instance FromJSON Charge where
 --     , chargeReceiptEmail         :: Maybe Text
 --     } deriving (Show, Eq)
 
-instance URLEncodeable () where
-    formEncode () = []
 
 -- instance URLEncodeable ChargeOptions where
 --     formEncode ChargeOptions{..} =
@@ -96,10 +89,10 @@ instance URLEncodeable () where
 -- chargeByCustomerId :: CustomerId -> IO ()
 -- chargeByCustomerId customerId = charge $ Right customerId
 
-getCharge :: FromJSON a => Charge -> IO (Either StripeError a)
-getCharge (Charge charge) = sendStripeRequest config req ()
-  where req = StripeRequest GET url 
-        url = "charges/" <> charge
+-- getCharge :: FromJSON a => Charge -> IO (Either StripeError a)
+-- getCharge (Charge charge) = sendStripeRequest config req ()
+--   where req = StripeRequest GET url 
+--         url = "charges/" <> charge
 
 
 
@@ -111,14 +104,11 @@ getCharge (Charge charge) = sendStripeRequest config req ()
 
 -- -- optional params
 
-data Charge = Charge {
 
-}
-
-captureCharge :: FromJSON a => Charge -> IO (Either StripeError a)
-captureCharge (Charge charge) = sendStripeRequest config req ()
-  where req = StripeRequest POST url
-        url = "charges/" <> charge <> "/capture"
+-- captureCharge :: FromJSON a => Charge -> IO (Either StripeError a)
+-- captureCharge (Charge charge) = sendStripeRequest config req ()
+--   where req = StripeRequest POST url
+--         url = "charges/" <> charge <> "/capture"
 
 -- -- optional params
 -- getCharges :: FromJSON a => IO (Either StripeError a)

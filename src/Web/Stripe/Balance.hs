@@ -13,26 +13,25 @@ import           Web.Stripe.Util
 import           Web.Stripe.Internal.StripeError
 
 config :: StripeConfig
-config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
+config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpHss" "2014-03-28"
 
 -- ================= API Calls ===================== -- 
 getBalance :: Stripe Balance
-getBalance config = callAPI req 
+getBalance = callAPI req 
   where req    = StripeRequest GET url params
         url    = "balance"
         params = []
 
 getBalanceHistory :: Stripe (StripeList BalanceTransaction)
-getBalanceHistory config = callAPI request 
+getBalanceHistory = callAPI request 
   where request = StripeRequest GET url params
         url     = "balance/history"
         params  = []
 
 getBalanceTransaction ::
     TransactionId ->
-    IO (Either StripeError Balance)
-getBalanceTransaction (TransactionId tId)  =
-    callAPI request 
+    Stripe Balance
+getBalanceTransaction (TransactionId tId) = callAPI request 
   where request = StripeRequest GET url params
         url     = "balance/history/" <> tId
         params  = []
@@ -72,7 +71,6 @@ data FeeDetails = FeeDetails {
 
 newtype TransactionId = TransactionId Text deriving (Show, Eq)
 
--- ================= JSON  ===================== -- 
 instance FromJSON FeeDetails where
    parseJSON (Object o) = 
        FeeDetails <$> o .: "amount"
