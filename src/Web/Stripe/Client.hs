@@ -88,23 +88,6 @@ config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 -- ---------- Coupons
 
 
--- --------------- Discounts
-
--- deleteDiscount :: CustomerId -> IO ()
--- deleteDiscount (CustomerId customerId) = sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = "customers/" <> customerId <> "/discount"
-
--- deleteSubscriptionDiscount :: CustomerId -> SubscriptionId -> IO ()
--- deleteSubscriptionDiscount (CustomerId customerId) (SubscriptionId subId) =
---     sendStripeRequest req config
---   where req = StripeRequest DELETE url []
---         url = T.concat ["customers/"
---                        , customerId
---                        , "/subscriptions/"
---                        , subId
---                        , "/discount"
---                        ]
 
 -- --- Invoices
 -- -- https://stripe.com/docs/api#retrieve_invoiceitem

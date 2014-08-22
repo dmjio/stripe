@@ -515,3 +515,21 @@ getRefunds :: ChargeId -> IO (Either StripeError Refunds)
 getRefunds (ChargeId chargeId) = sendStripeRequest config req []
   where req = StripeRequest GET $ "charges/" <> chargeId <> "/refunds"
 
+
+-- -- Discounts
+-- deleteDiscount :: FromJSON a => CustomerId -> IO (Either StripeError a)
+-- deleteDiscount (CustomerId customerId) = sendStripeRequest config req []
+--   where req = StripeRequest DELETE url 
+--         url = "customers/" <> customerId <> "/discount"
+
+-- deleteSubscriptionDiscount :: FromJSON a =>
+--   CustomerId -> SubscriptionId -> IO (Either StripeError a)
+-- deleteSubscriptionDiscount (CustomerId customerId) (SubscriptionId subId) =
+--     sendStripeRequest config req []
+--   where req = StripeRequest DELETE url 
+--         url = T.concat ["customers/"
+--                        , customerId
+--                        , "/subscriptions/"
+--                        , subId
+--                        , "/discount"
+--                        ]
