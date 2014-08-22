@@ -17,6 +17,7 @@ import           Control.Monad.IO.Class          (MonadIO (liftIO))
 import           Control.Monad.Reader
 import           Data.Aeson
 import           Data.ByteString                 (ByteString)
+import           Data.Maybe                      (fromMaybe)
 import           Data.Monoid                     ((<>))
 import           Data.Text                       (Text)
 import           Network.Http.Client
@@ -49,11 +50,10 @@ data StripeConfig = StripeConfig
     } deriving (Show)
 
 runStripe :: FromJSON a => StripeConfig -> Stripe a -> IO (Either StripeError a)
-runStripe config action = flip runReaderT config action
+runStripe = flip runReaderT
 
 callAPI :: FromJSON a => StripeRequest -> Stripe a
-callAPI request = do
-  config <- ask
+callAPI request = ask >>= \config ->
   liftIO $ sendStripeRequest config request
 
 sendStripeRequest :: FromJSON a =>
@@ -72,25 +72,23 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
   sendRequest con req $ inputStreamBody body
   receiveResponse con $ \response inputStream ->
            Streams.read inputStream >>= maybeStream response
-      where
-        maybeStream response = maybe (error "couldn't read stream") (handleStream response)
-        handleStream p x = do
-          return $ case getStatusCode p of
-                     200 -> maybe (error "Parse failure") Right (decodeStrict x)
-                     code | code >= 400 ->
-                        do let json = case decodeStrict x :: Maybe StripeError of
-                                        Nothing -> error "Parse Failure"
-                                        Just x  -> x
-                           Left $ case code of
-                             400 -> json { errorHTTP = BadRequest }
-                             401 -> json { errorHTTP = UnAuthorized }
-                             402 -> json { errorHTTP = RequestFailed }
-                             404 -> json { errorHTTP = NotFound }
-                             500 -> json { errorHTTP = StripeServerError }
-                             502 -> json { errorHTTP = StripeServerError }
-                             503 -> json { errorHTTP = StripeServerError }
-                             504 -> json { errorHTTP = StripeServerError }
-                             _   -> json { errorHTTP = UnknownHTTPCode }
+  where
+    maybeStream response = maybe (error "couldn't read stream") (handleStream response)
+    handleStream p x =
+        return $ case getStatusCode p of
+                   200 -> maybe (error "Parse failure") Right (decodeStrict x)
+                   code | code >= 400 ->
+                     do let json = fromMaybe (error "Parse Failure") (decodeStrict x :: Maybe StripeError)
+                        Left $ case code of
+                                 400 -> json { errorHTTP = BadRequest }
+                                 401 -> json { errorHTTP = UnAuthorized }
+                                 402 -> json { errorHTTP = RequestFailed }
+                                 404 -> json { errorHTTP = NotFound }
+                                 500 -> json { errorHTTP = StripeServerError }
+                                 502 -> json { errorHTTP = StripeServerError }
+                                 503 -> json { errorHTTP = StripeServerError }
+                                 504 -> json { errorHTTP = StripeServerError }
+                                 _   -> json { errorHTTP = UnknownHTTPCode }
 
 data StripeList a = StripeList
     { hasMore    :: Bool
