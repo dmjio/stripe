@@ -17,10 +17,11 @@ import           Data.Monoid                     ((<>))
 import           Data.Text                       (Text)
 import           Data.Time.Clock
 import           Network.Http.Client
-import           Web.Stripe.Client
-
-import           Web.Stripe.Internal.Class
+import           Web.Stripe.Card
+import           Web.Stripe.Client.Internal
+import           Web.Stripe.Coupon
 import           Web.Stripe.Internal.StripeError
+import           Web.Stripe.Plan
 import           Web.Stripe.Util
 
 config :: StripeConfig
@@ -41,9 +42,6 @@ data Customer = Customer {
     , customerAccountBalance :: Maybe Int
     , customerCurrency       :: Maybe Text
     , customerDiscount       :: Maybe Discount
-    } | DeletedCustomer {
-      isDeleted  :: Bool
-    , deletionId :: Text
     } deriving (Show, Eq)
 
 data Discount = Discount {
@@ -63,38 +61,27 @@ type Quantity = Int
 
 data CustomerOptions = CustomerOptions {
       customerAccountBalanceOptions :: Maybe Balance
---  , customerCard :: Card
---  , customerCoupon :: Maybe Coupon
+    , customerCard                  :: Card
+    , customerCoupon                :: Maybe Coupon
     , customerDescriptonOptions     :: Maybe Text
     , customerEmailOptions          :: Maybe Text
---  , customerMetaData :: Maybe Text
---  , customerPlan :: Maybe Plan
+    , customerPlan                  :: Maybe Plan
     , customerQuantityOptions       :: Maybe Int
     , customerTrialEndOptions       :: Maybe Int
 }
 
--------------------------------------------------------------
-defaultCustomerOptions :: CustomerOptions
-defaultCustomerOptions =
-    CustomerOptions Nothing Nothing Nothing Nothing  Nothing
 
-instance URLEncodeable CustomerOptions where
-    formEncode CustomerOptions{..} =
-        [ (a, b) | (a, Just b) <- [
-           ("account_balance", fmap toBS customerAccountBalanceOptions)
-         , ("description", fmap toBS customerDescriptonOptions)
-         , ("email", fmap toBS customerEmailOptions)
-         , ("quantity", fmap toBS customerQuantityOptions)
-         , ("trial_end", fmap toBS customerTrialEndOptions)
-         ]
-        ]
-
-createDefaultCustomer :: Stripe Customer
-createDefaultCustomer = createCustomer defaultCustomerOptions
-
-createCustomer :: CustomerOptions -> Stripe Customer
-createCustomer options = callAPI req options
-  where req = StripeRequest POST "customers"
+createCustomer :: Stripe Customer
+createCustomer = callAPI req
+  where req = StripeRequest POST "customers" params
+        params = [ (x, y) | (x, Just y) <- [
+                     ("account_balance", fmap toBS customerAccountBalanceOptions)
+                   , ("description", fmap toBS customerDescriptonOptions)
+                   , ("email", fmap toBS customerEmailOptions)
+                   , ("quantity", fmap toBS customerQuantityOptions)
+                   , ("trial_end", fmap toBS customerTrialEndOptions)
+                   ]
+                 ]
 
 getCustomer :: CustomerId -> Stripe Customer
 getCustomer (CustomerId cid) = callAPI req ()
@@ -126,7 +113,5 @@ instance FromJSON Customer where
            <*> o .:? "account_balance"
            <*> o .:? "currency"
            <*> o .:? "discount"
-      <|> DeletedCustomer
-           <$> o .: "deleted"
-           <*> o .: "id"
+
 

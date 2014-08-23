@@ -18,9 +18,7 @@ import           Data.Time
 
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
--- config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
--- defaultChargeOptions = 
---     ChargeOptions Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing 
+config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
 data Charge = Charge {
       chargeId                   :: Text
@@ -40,12 +38,11 @@ data Charge = Charge {
 
 instance FromJSON Charge where
     parseJSON (Object o) = undefined
-        -- do Charge <$> o .: "id"
-        --           <*> o .: "object"
-        --           <*> o .: "created"
-        --           <*> o .: "livemode"
-        --           <*> o .: "paid"
-        --           <*> o .: "amount"
+        do Charge <$> o .: "id"
+                  <*> o .: "created"
+                  <*> o .: "livemode"
+                  <*> o .: "paid"
+                  <*> o .: "amount"
 
 -- data GetChargeOptions = GetChargeOptions {
 --       chargeId               :: Int

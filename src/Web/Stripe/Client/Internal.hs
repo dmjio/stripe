@@ -12,18 +12,26 @@ module Web.Stripe.Client.Internal
     , Method             (..)
     ) where
 
-import           Control.Applicative
+import           Control.Applicative             ((<$>), (<*>))
 import           Control.Monad.IO.Class          (MonadIO (liftIO))
-import           Control.Monad.Reader
-import           Data.Aeson
+import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
+import           Data.Aeson                      (FromJSON, Value (Object),
+                                                  decodeStrict, parseJSON, (.:))
 import           Data.ByteString                 (ByteString)
 import           Data.Maybe                      (fromMaybe)
 import           Data.Monoid                     ((<>))
 import           Data.Text                       (Text)
-import           Network.Http.Client
+import           Network.Http.Client             (Method(..), baselineContextSSL,
+                                                  buildRequest, getStatusCode,
+                                                  http, inputStreamBody,
+                                                  openConnectionSSL,
+                                                  receiveResponse, sendRequest,
+                                                  setAuthorizationBasic,
+                                                  setContentType, setHeader)
 import           OpenSSL                         (withOpenSSL)
-import           Web.Stripe.Internal.StripeError
-import           Web.Stripe.Util
+import           Web.Stripe.Internal.StripeError (StripeError (..),
+                                                  StripeErrorHTTPCode (..))
+import           Web.Stripe.Util                 (paramsToByteString)
 
 import qualified Data.ByteString                 as S
 import qualified Data.ByteString.Lazy            as BL

@@ -1,10 +1,12 @@
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE RecordWildCards           #-}
 
-module Web.Stripe.Card where
+module Web.Stripe.Card 
+    ( Card(..)
 
-import           Control.Applicative
+    ) where
+
+import           Control.Applicative ((<*>), (<$>))
 import           Data.Aeson
 import           Data.ByteString                 (ByteString)
 import qualified Data.ByteString                 as B
@@ -14,7 +16,8 @@ import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
 import           Data.Time
 import           Network.Http.Client
-import           Web.Stripe.Client
+import           Web.Stripe.Client.Internal
+import           Web.Stripe.Customer
 import           Web.Stripe.Internal.StripeError
 import           Web.Stripe.Util
 
@@ -104,11 +107,10 @@ instance FromJSON Card where
              <*> o .:? "customer"
 
 
-
 -- | Create card
-addCardToCustomer :: FromJSON a => CustomerId -> TokenId -> IO (Either StripeError a)
+addCardToCustomer :: CustomerId -> TokenId -> Stripe Customer
 addCardToCustomer (CustomerId cid) (TokenId tokenId) =
-    sendStripeRequest config req params
+    callAPI config req params
   where req = StripeRequest POST url
         url = "customers/" <> cid <> "/cards"
         params = [("card", toBS tokenId)]
@@ -120,7 +122,7 @@ createCardToken :: CardNumber ->
                    CVC ->
                    IO (Either StripeError Token)
 createCardToken (CardNumber num) (ExpMonth month) (ExpYear year) (CVC cvc)
-    = sendStripeRequest config req params
+    = callAPI config req params
   where req = StripeRequest POST "tokens"
         params = [ ("card[number]", toBS num)
                  , ("card[exp_month]", toBS month)
@@ -130,7 +132,7 @@ createCardToken (CardNumber num) (ExpMonth month) (ExpYear year) (CVC cvc)
 
 -- | Get card by CustomerID and CardID
 getCard :: CustomerId -> CardId -> Stripe Card
-getCard (CustomerId custId) (CardId cardId) = sendStripeRequest config req []
+getCard (CustomerId custId) (CardId cardId) = callAPI config req []
   where req = StripeRequest GET url
         url = "customers/" <> custId <> "/cards/" <> cardId
 
@@ -156,7 +158,7 @@ updateCard (CustomerId custId)
            addressZip
            expMonth
            expYear
-           name = sendStripeRequest config req params
+           name = callAPI config req params
   where req = StripeRequest POST url
         url = "customers/" <> custId <> "/cards/" <> cardId
         params = [ (k, v) | (k, Just v) <- [
@@ -173,7 +175,7 @@ updateCard (CustomerId custId)
                  ]
 
 deleteCard :: CustomerId -> CardId -> IO (Either StripeError StripeResult)
-deleteCard (CustomerId custId) (CardId cardId) = sendStripeRequest config req []
+deleteCard (CustomerId custId) (CardId cardId) = callAPI config req []
   where req = StripeRequest DELETE url
         url = "customers/" <> custId <> "/cards/" <> cardId
 
@@ -183,7 +185,7 @@ getCards :: CustomerId ->
             Maybe StartingAfter -> -- For use in pagination
             IO (Either StripeError (StripeList Card))
 getCards (CustomerId custId) limit endingBefore startingAfter =
-    sendStripeRequest config req params
+    callAPI config req params
   where req = StripeRequest GET url
         url = "customers/" <> custId <> "/cards"
         params = [ (k, v) | (k, Just v) <- [
@@ -263,7 +265,7 @@ createCoupon :: Maybe CouponId ->
                 Maybe RedeemBy ->
                 IO (Either StripeError Coupon)                 
 createCoupon couponId duration amountOff currency durationInMonths maxRedemptions percentOff redeemBy
-    = sendStripeRequest config req params
+    = callAPI config req params
   where req = StripeRequest POST url 
         url = "coupons"
         params = [(k,v) | (k, Just v) <- [ 
@@ -279,20 +281,20 @@ createCoupon couponId duration amountOff currency durationInMonths maxRedemption
                  ]
 -- works
 getCoupon :: CouponId -> IO (Either StripeError Coupon)
-getCoupon (CouponId couponId) = sendStripeRequest config req []
+getCoupon (CouponId couponId) = callAPI config req []
   where req = StripeRequest POST url 
         url = "coupons/" <> couponId
 
 -- delete coupon
 deleteCoupon :: CouponId -> IO (Either StripeError StripeResult)
-deleteCoupon (CouponId couponId) = sendStripeRequest config req []
+deleteCoupon (CouponId couponId) = callAPI config req []
   where req = StripeRequest DELETE $ "coupons/" <> couponId
 
 type Coupons = StripeList Coupon
 
 -- works but needs more options, like ending and starting
 getCoupons :: IO (Either StripeError Coupons)
-getCoupons = sendStripeRequest config req []
+getCoupons = callAPI config req []
   where req = StripeRequest GET "coupons"
 
 
@@ -309,7 +311,7 @@ data Discount = Discount {
 } deriving (Show)
 
 deleteCustomerDiscount :: CustomerId -> IO (Either StripeError StripeResult)
-deleteCustomerDiscount (CustomerId customerId) = sendStripeRequest config req []
+deleteCustomerDiscount (CustomerId customerId) = callAPI req []
   where req = StripeRequest DELETE url 
         url = "customers/" <> customerId <> "/discount"
 
@@ -318,8 +320,8 @@ deleteSubscriptionDiscount ::
   SubscriptionId -> 
   IO (Either StripeError StripeResult)
 deleteSubscriptionDiscount (CustomerId customerId) (SubscriptionId subId) =
-    sendStripeRequest config req []
-  where req = StripeRequest DELETE url 
+    callAPI req 
+  where req = StripeRequest DELETE url []
         url = T.concat ["customers/"
                        , customerId
                        , "/subscriptions/"

@@ -99,7 +99,7 @@ updatePlan (PlanId planId) name description = callAPI request
                     ]
                   ]
 
-deletePlan :: PlanId -> Stripe StripeResult
+deletePlan :: PlanId -> Stripe StripeDeleteResult
 deletePlan (PlanId planId) = callAPI request 
   where request = StripeRequest DELETE url params
         url     = "plans/" <> planId
