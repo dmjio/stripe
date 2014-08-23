@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Internal.StripeError where
+module Web.Stripe.Client.Error where
 
 import           Control.Applicative
 import           Data.Aeson

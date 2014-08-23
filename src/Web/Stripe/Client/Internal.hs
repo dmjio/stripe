@@ -29,9 +29,10 @@ import           Network.Http.Client             (Method(..), baselineContextSSL
                                                   setAuthorizationBasic,
                                                   setContentType, setHeader)
 import           OpenSSL                         (withOpenSSL)
-import           Web.Stripe.Internal.StripeError (StripeError (..),
+import           Web.Stripe.Client.Error         (StripeError (..),
                                                   StripeErrorHTTPCode (..))
 import           Web.Stripe.Util                 (paramsToByteString)
+import           Web.Stripe.Client.Types 
 
 import qualified Data.ByteString                 as S
 import qualified Data.ByteString.Lazy            as BL
@@ -39,23 +40,6 @@ import qualified Data.ByteString.Lazy.Char8      as BL8
 import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
 import qualified System.IO.Streams               as Streams
-
--- Base Type we use for Stripe
-type Stripe a = ReaderT StripeConfig IO (Either StripeError a)
-
--- HTTP Params type
-type Params = [(ByteString, ByteString)]
-
-data StripeRequest = StripeRequest
-    { method :: Method
-    , url    :: Text
-    , params :: Params
-    } deriving (Show)
-
-data StripeConfig = StripeConfig
-    { secretKey  :: S.ByteString
-    , apiVersion :: S.ByteString
-    } deriving (Show)
 
 runStripe :: FromJSON a => StripeConfig -> Stripe a -> IO (Either StripeError a)
 runStripe = flip runReaderT
@@ -81,7 +65,7 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
   receiveResponse con $ \response inputStream ->
            Streams.read inputStream >>= maybeStream response
   where
-    maybeStream response = maybe (error "couldn't read stream") (handleStream response)
+    maybeStream response = maybe (error "Couldn't read stream") (handleStream response)
     handleStream p x =
         return $ case getStatusCode p of
                    200 -> maybe (error "Parse failure") Right (decodeStrict x)
@@ -97,14 +81,3 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
                                  503 -> json { errorHTTP = StripeServerError }
                                  504 -> json { errorHTTP = StripeServerError }
                                  _   -> json { errorHTTP = UnknownHTTPCode }
-
-
-data StripeDeleteResult = StripeDeleteResult {
-      deleted   :: Bool
-    , deletedId :: Text
-    } deriving (Show, Eq)
-
-instance FromJSON StripeDeleteResult where
-   parseJSON (Object o) =
-       StripeDeleteResult <$> o .: "deleted"
-                          <*> o .: "id"
