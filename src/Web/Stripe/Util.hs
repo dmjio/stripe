@@ -3,6 +3,7 @@ module Web.Stripe.Util
     ( fromSeconds
     , paramsToByteString
     , toBS
+    , (</>)
     ) where
 
 import           Data.ByteString       (ByteString)
@@ -10,6 +11,7 @@ import qualified Data.ByteString       as S
 import qualified Data.ByteString.Char8 as BC8
 import qualified Data.ByteString.Lazy  as BL
 import           Data.Monoid
+import           Data.String
 import           Data.Time.Clock
 import           Data.Time.Clock.POSIX (posixSecondsToUTCTime,
                                         utcTimeToPOSIXSeconds)
@@ -21,6 +23,9 @@ paramsToByteString :: [(S.ByteString, S.ByteString)] -> S.ByteString
 paramsToByteString [] = ""
 paramsToByteString ((x,y) : []) = x <> "=" <> y
 paramsToByteString ((x,y) : xs) = x <> "=" <> y <> "&" <> paramsToByteString xs
+
+(</>) :: (Monoid m, IsString m) => m -> m -> m
+m1 </> m2 = m1 <> "/" <> m2
 
 fromSeconds :: Integer -> UTCTime
 fromSeconds  = posixSecondsToUTCTime . fromInteger

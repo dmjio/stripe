@@ -13,22 +13,25 @@ import           Web.Stripe.Util
 
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
+type Key = Text
+type Value = Text
+
 data Charge = Charge {
-      chargeId         :: Text
-    , chargeObject     :: Text
-    , chargeCreated    :: UTCTime
-    , chargeLiveMode   :: Bool
-    , chargePaid       :: Bool
-    , chargeAmount     :: Int
-    , chargeCurrency   :: Text
-    , chargeRefunded   :: Bool
-    , chargeCreditCard :: Card
-    , chargeCaptured   :: Bool
-    , chargeBalanceTransaction :: TransactionId
+      chargeId                   :: Text
+    , chargeObject               :: Text
+    , chargeCreated              :: UTCTime
+    , chargeLiveMode             :: Bool
+    , chargePaid                 :: Bool
+    , chargeAmount               :: Int
+    , chargeCurrency             :: Text
+    , chargeRefunded             :: Bool
+    , chargeCreditCard           :: Card
+    , chargeCaptured             :: Bool
+    , chargeBalanceTransaction   :: TransactionId
     , chargeFailureMessage       :: Maybe Text
     , chargeFailureCode          :: Maybe Text
     , chargeAmountRefunded       :: Int
-    , chargeCustomerId           :: Maybe CustomerId 
+    , chargeCustomerId           :: Maybe CustomerId
     , chargeInvoice              :: Maybe InvoiceId
     , chargeDescription          :: Maybe Text
     , chargeDispute              :: Maybe Text
@@ -68,6 +71,29 @@ instance FromJSON Charge where
                <*> o .:? "dispute"
                <*> o .:? "statement_description"
                <*> o .:? "receipt_email"
+
+--- Refund ---
+data Refund = Refund {
+      refundId                 :: Text
+    , refundAmount             :: Int
+    , refundCurrency           :: Text
+    , refundCreated            :: UTCTime
+    , refundCharge             :: ChargeId
+    , refundBalanceTransaction :: TransactionId
+    , refundMetaData           :: [(Text,Text)]
+    } deriving (Show, Eq)
+
+instance FromJSON Refund where
+   parseJSON (Object o) =
+        Refund <$> o .: "id"
+               <*> o .: "amount"
+               <*> o .: "currency"
+               <*> (fromSeconds <$> o .: "created")
+               <*> (ChargeId <$> o .: "charge")
+               <*> (TransactionId <$> o .: "balance_transaction")
+               <*> o .: "metadata"
+
+newtype RefundId = RefundId Text deriving (Show)
 
 -- Customer --
 newtype CustomerId = CustomerId Text deriving (Show)

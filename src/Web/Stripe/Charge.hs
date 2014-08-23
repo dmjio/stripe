@@ -1,11 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 
 module Web.Stripe.Charge 
-    ( -- * Charge type
+    ( -- * Charge Types
       Charge   (..)
     , ChargeId (..)  
-      -- * API functions
+      -- * API Functions
     , chargeCustomer
     , chargeCard
     , chargeCardByToken
@@ -103,7 +102,7 @@ getCharge :: ChargeId -> -- ^ The Charge to update
              Stripe Charge
 getCharge (ChargeId charge) = callAPI request
   where request = StripeRequest GET url params
-        url     = "charges/" <> charge
+        url     = "charges" </> charge
         params  = []
 
 updateChargeDescription :: ChargeId ->    -- ^ The Charge to update
@@ -112,8 +111,8 @@ updateChargeDescription :: ChargeId ->    -- ^ The Charge to update
 updateChargeDescription (ChargeId chargeId) (Description description) 
     = callAPI request
   where request = StripeRequest POST url params
-        url     = "charges/" <> chargeId
-        params  = ("description", T.encodeUtf8 description) : []
+        url     = "charges" </> chargeId
+        params  = [("description", T.encodeUtf8 description)]
 
 captureCharge :: ChargeId ->           -- ^ The Charge to capture
                  Maybe Amount ->       -- ^ If Nothing the entire charge will be captured, otherwise the remaining will be refunded
@@ -122,7 +121,7 @@ captureCharge :: ChargeId ->           -- ^ The Charge to capture
 captureCharge (ChargeId chargeId) amount receiptEmail
     = callAPI request
   where request = StripeRequest POST url params
-        url     = "charges/" <> chargeId <> "/capture" 
+        url     = "charges" </> chargeId </> "capture" 
         params  = [ (x,y) | (x, Just y) <- [
                       ("amount", (\(Amount amount) -> toBS amount) <$> amount)
                     , ("receipt_email", (\(ReceiptEmail email) -> T.encodeUtf8 email) <$> receiptEmail)
