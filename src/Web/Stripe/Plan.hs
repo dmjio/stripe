@@ -21,38 +21,9 @@ import qualified Data.Text.Encoding as T
 import           Data.Time
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Util
-import           Web.Stripe.Internal.StripeError
 
 config :: StripeConfig
 config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
-
-newtype PlanId          = PlanId Text deriving (Show, Eq)
-newtype Name            = Name Text deriving (Show, Eq)
-newtype Currency        = Currency Text deriving (Show, Eq)
-newtype IntervalCount   = IntervalCount Int deriving (Show, Eq)
-newtype TrialPeriodDays = TrialPeriodDays Int deriving (Show, Eq)
-newtype Description     = Description Text deriving (Show, Eq)
-newtype Amount          = Amount Int deriving (Show, Eq)
-data Interval = Week | Month | Year deriving (Eq)
-
-instance Show Interval where
-    show Week = "week"
-    show Month = "month"
-    show Year = "year"
-
-data Plan = Plan {
-      planId              :: PlanId
-    , planAmount          :: Int
-    , planInterval        :: Interval
-    , planCreated         :: UTCTime
-    , planCurrency        :: Text
-    , planLiveMode        :: Bool
-    , planName            :: Text
-    , planIntervalCount   :: Maybe Int -- optional, max of 1 year intervals allowed, default 1
-    , planTrialPeriodDays :: Maybe Int
-    , planMetaData        :: Maybe Object
-    , planDescription     :: Maybe Text
-} deriving (Show, Eq)
 
 createPlan :: PlanId -> 
               Amount -> 
@@ -104,31 +75,3 @@ deletePlan (PlanId planId) = callAPI request
   where request = StripeRequest DELETE url params
         url     = "plans/" <> planId
         params  = []
-
-type Plans = StripeList Plan
-
--- works
-getPlans :: Stripe Plans
-getPlans = callAPI request 
-  where request = StripeRequest GET "plans" params
-        params  = []
-
-instance FromJSON Plan where
-   parseJSON (Object o) =
-       do planId <- PlanId <$> o .: "id"
-          planAmount <- o .: "amount"
-          result <- o .: "interval"
-          let planInterval = 
-                  case String result of
-                    "month" -> Month
-                    "week" -> Week
-                    "year" -> Year
-          planCreated <- fromSeconds <$> o .: "created"
-          planCurrency <- o .: "currency"
-          planLiveMode <- o .: "livemode"
-          planName <- o .: "name"
-          planIntervalCount <- o .:? "interval_count"
-          planTrialPeriodDays <- o .:? "trial_period_days"
-          planMetaData <- o .:? "meta_data"
-          planDescription <- o .:? "statement_description"
-          return Plan {..}

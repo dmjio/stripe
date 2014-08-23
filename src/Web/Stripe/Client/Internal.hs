@@ -98,15 +98,6 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
                                  504 -> json { errorHTTP = StripeServerError }
                                  _   -> json { errorHTTP = UnknownHTTPCode }
 
-data StripeList a = StripeList
-    { hasMore    :: Bool
-    , stripeList :: [a]
-    } deriving (Show, Eq)
-
-instance FromJSON a => FromJSON (StripeList a) where
-   parseJSON (Object o) =
-       StripeList <$> o .: "has_more"
-                  <*> o .: "data"
 
 data StripeDeleteResult = StripeDeleteResult {
       deleted   :: Bool

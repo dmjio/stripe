@@ -5,6 +5,7 @@ module Web.Stripe.Charge
     ( Charge(..)
     ) where
 
+
 import           Control.Applicative
 import           Data.Aeson
 import           Data.Monoid
@@ -16,69 +17,16 @@ import           Web.Stripe.Internal.StripeError
 import           Web.Stripe.Util
 import           Data.Time
 
-newtype ChargeId = ChargeId Text deriving (Show, Eq)
-
 config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
-data Charge = Charge {
-      chargeId                   :: Text
-    , chargeObject               :: Text
-    , chargeCreated              :: UTCTime
-    , chargeLiveMode             :: Bool
-    , chargePaid                 :: Bool
-    , chargeAmount               :: Int
-    , chargeCurrency             :: Maybe Text
-    , chargeCustomerId           :: Maybe Text
-    , chargeCardId               :: Maybe Text
-    , chargeDescription          :: Maybe Text
-    , chargeCapture              :: Maybe Text
-    , chargeStatementDescription :: Maybe Text
-    , chargeReceiptEmail         :: Maybe Text
-    } deriving (Show, Eq)
-
-instance FromJSON Charge where
-    parseJSON (Object o) = undefined
-        do Charge <$> o .: "id"
-                  <*> o .: "created"
-                  <*> o .: "livemode"
-                  <*> o .: "paid"
-                  <*> o .: "amount"
-
--- data GetChargeOptions = GetChargeOptions {
---       chargeId               :: Int
---     , chargeAmount           :: Maybe Int
---     , chargeStatementDescription :: Maybe Text
---     , chargeReceiptEmail         :: Maybe Text
---     } deriving (Show, Eq)
-
-
--- instance URLEncodeable ChargeOptions where
---     formEncode ChargeOptions{..} =
---         [ (a, b) | (a, Just b) <- [
---            ("id", fmap toBS chargeId)
---          , ("amount", fmap toBS chargeAmount)
---          , ("currency", fmap toBS chargeDescription)
---          , ("customer", fmap toBS chargeCustomerId)
---          , ("card", fmap toBS chargeCardId)
---          , ("description", fmap toBS chargeDescription)
---          , ("capture", fmap toBS chargeCapture)
---          , ("statement_description", fmap toBS chargeStatementDescription)
---          , ("receipt_email", fmap toBS chargeReceiptEmail)
---          ]
---         ]
-
--- charge :: Either Card CustomerId -> IO ()
--- charge param = sendStripeRequest req config
---   where req = StripeRequest POST "charges" params
---         params = result : [ ("amount", "400")
---                           , ("currency", "usd")
---                           ]
---         result =
---             case param of
---               Right (CustomerId custId) ->
---                   ("customer", T.encodeUtf8 custId)
---               Left (Card cardId) ->
---                   ("card", T.encodeUtf8 cardId)
+charge :: Amount -> Currency -> Stripe Charge
+charge (Amount amount) (Currency currency) = callAPI request
+  where request = StripeRequest POST url params
+        url     = "charges"
+        params  = [ ("amount", toBs amount)
+                  , ("currency", toBs currency)
+                  ]
+       
 
 -- chargeByCardId :: Card -> IO ()
 -- chargeByCardId card = charge $ Left card
