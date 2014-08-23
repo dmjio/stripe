@@ -4,10 +4,10 @@
 module Web.Stripe.Client.Internal
     ( callAPI
     , runStripe
+    , config
     , Stripe             (..)
     , StripeRequest      (..)
     , StripeConfig       (..)
-    , StripeList         (..)
     , StripeDeleteResult (..)
     , Method             (..)
     ) where
@@ -17,6 +17,7 @@ import           Control.Monad.IO.Class          (MonadIO (liftIO))
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Data.Aeson                      (FromJSON, Value (Object),
                                                   decodeStrict, parseJSON, (.:))
+import           Data.Maybe
 import           Data.ByteString                 (ByteString)
 import           Data.Maybe                      (fromMaybe)
 import           Data.Monoid                     ((<>))
@@ -41,6 +42,9 @@ import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
 import qualified System.IO.Streams               as Streams
 
+config :: StripeConfig
+config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-08-20"
+
 runStripe :: FromJSON a => StripeConfig -> Stripe a -> IO (Either StripeError a)
 runStripe = flip runReaderT
 
@@ -61,9 +65,12 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
           setContentType "application/x-www-form-urlencoded"
           setHeader "Stripe-Version" apiVersion
   body <- Streams.fromByteString $ paramsToByteString params
+  
   sendRequest con req $ inputStreamBody body
   receiveResponse con $ \response inputStream ->
-           Streams.read inputStream >>= maybeStream response
+           Streams.read inputStream >>= \res -> do
+             print (decodeStrict (fromJust res) :: Maybe Value)
+             maybeStream response res
   where
     maybeStream response = maybe (error "Couldn't read stream") (handleStream response)
     handleStream p x =

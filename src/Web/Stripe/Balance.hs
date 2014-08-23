@@ -11,9 +11,6 @@ import           Data.Monoid
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
-config :: StripeConfig
-config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpHss" "2014-03-28"
-
 getBalance :: Stripe Balance
 getBalance = callAPI req 
   where req    = StripeRequest GET url params

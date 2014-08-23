@@ -1,38 +1,62 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
---- Charge ---
+module Web.Stripe.Types where
+
+import           Control.Applicative
+import           Data.Aeson
+import           Data.Text           (Text)
+import           Data.Time
+import           Data.Vector
+import           Web.Stripe.Util
 
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
 data Charge = Charge {
-      chargeId                   :: Text
-    , chargeCreated              :: UTCTime
-    , chargePaid                 :: Bool
-    , chargeAmount               :: Int
-    , chargeCurrency             :: Text
-    , chargeRefunded             :: Text
-    , chargeCard                 :: Card
-    , chargeCaptured             :: Bool
-    , chargeFailureMessage       :: Maybe Text
-    , chargeFailureCode          :: Maybe Text
-    , chargeAmountRefunded       :: Int
-    , chargeCustomerId           :: Maybe Text
-    , chargeInvoice              :: Maybe Invoice
-    , chargeDescription          :: Maybe Text
-    , chargeDispute              :: Maybe Text
-    , chargeStatementDescription :: Maybe Text
-    , chargeReceiptEmail         :: Maybe Text
-    } deriving (Show, Eq)
+      chargeId       :: Text
+    , chargeObject   :: Text
+    , chargeCreated  :: UTCTime
+    , chargeLiveMode :: Bool
+    , chargePaid     :: Bool
+    -- , chargeAmount               :: Int
+    -- , chargeCurrency             :: Text
+    -- , chargeRefunded             :: Text
+    -- , chargeCard                 :: Card
+    -- , chargeCaptured             :: Bool
+    -- , chargeFailureMessage       :: Maybe Text
+    -- , chargeFailureCode          :: Maybe Text
+    -- , chargeAmountRefunded       :: Int
+    -- , chargeCustomerId           :: Maybe Text
+    -- , chargeInvoice              :: Maybe Invoice
+    -- , chargeDescription          :: Maybe Text
+    -- , chargeDispute              :: Maybe Text
+    -- , chargeStatementDescription :: Maybe Text
+    -- , chargeReceiptEmail         :: Maybe Text
+    } deriving Show
+
+newtype StatementDescription = StatementDescription Text deriving (Show, Eq)
+type Capture = Bool
+
+newtype ReceiptEmail = ReceiptEmail Text deriving (Show, Eq)
+
+-- instance FromJSON [Charge] where
+--     parseJSON (Object o) = do
+--       Array d <- o .: "data"
+--       return d
 
 instance FromJSON Charge where
     parseJSON (Object o) =
         Charge <$> o .: "id"
-               <*> o .: "created"
+               <*> o .: "object"
+               <*> (fromSeconds <$> o .: "created")
+               <*> o .: "livemode"
                <*> o .: "paid"
-               <*> o .: "amount"
-               <*> o .: "currency"
-               <*> o .: "refunded"
-               <*> o .: "card"
-               <*> o .: "captured"
+               -- <*> o .: "amount"
+               -- <*> o .: "currency"
+               -- <*> o .: "refunded"
+               -- <*> o .: "card"
+               -- <*> o .: "captured"
 
 -- Customer --
 newtype CustomerId = CustomerId Text deriving (Show)
@@ -72,7 +96,6 @@ newtype AddressLine1   = AddressLine1 Text deriving (Show, Eq)
 newtype AddressLine2   = AddressLine2 Text deriving (Show, Eq)
 newtype AddressState   = AddressState Text deriving (Show, Eq)
 newtype AddressZip     = AddressZip Text deriving (Show, Eq)
-newtype Name           = Name Text deriving (Show, Eq)
 newtype EndingBefore   = EndingBefore Text deriving (Show, Eq)
 newtype StartingAfter  = StartingAfter Text deriving (Show, Eq)
 newtype Limit          = Limit Int deriving (Show, Eq)
@@ -151,22 +174,22 @@ instance FromJSON TokenType where
    parseJSON (String "card") = pure TokenCard
    parseJSON _ = error "Additional token type not documented in Stripe's API"
 
-data Token = Token { 
-      tokenId :: TokenId
+data Token = Token {
+      tokenId      :: TokenId
     , tokenCreated :: UTCTime
-    , tokenUsed :: Bool
-    , tokenType :: TokenType
-    , tokenCard :: Card
+    , tokenUsed    :: Bool
+    , tokenType    :: TokenType
+    , tokenCard    :: Card
 } deriving (Show)
 
 instance FromJSON Token where
-   parseJSON (Object o) =
-       Token <$> (TokenId <$> (o .: "id"))
-             <*> o .: "livemode"
-             <*> (fromSeconds <$> o .: "created")
-             <*> o .: "used"
-             <*> o .: "type"
-             <*> o .: "card"
+   parseJSON (Object o) = undefined
+       -- Token <$> (TokenId <$> (o .: "id"))
+       --       <*> o .: "livemode"
+       --       <*> (fromSeconds <$> o .: "created")
+       --       <*> o .: "used"
+       --       <*> o .: "type"
+       --       <*> o .: "card"
 
 ---- == Invoice Item == ------
 data InvoiceLineItem = InvoiceLineItem {
@@ -188,7 +211,7 @@ data Invoice = Invoice {
     , invoiceId                   :: Text
     , invoicePeriodStart          :: UTCTime
     , invoicePeriodEnd            :: UTCTime
-    , invoiceLineItems            :: StripeList InvoiceLineItem
+--    , invoiceLineItems            :: StripeList InvoiceLineItem
     , invoiceSubTotal             :: Int
     , invoiceTotal                :: Int
     , invoiceCustomer             :: Text
@@ -211,6 +234,8 @@ data Invoice = Invoice {
     , invoiceStatementDescription :: Maybe Text
     , invoiceDescription          :: Maybe Text
 } deriving Show
+
+newtype SubscriptionId = SubscriptionId Text deriving (Show, Eq)
 
 instance FromJSON Invoice where
    parseJSON (Object o) = undefined
@@ -249,29 +274,29 @@ instance Show Duration where
     show Repeating = "repeating"
 
 instance FromJSON Duration where
-   parseJSON (String x) 
+   parseJSON (String x)
        | x == "forever" = pure Forever
        | x == "once" = pure Once
        | x == "repeating" = pure Repeating
        | otherwise = error "Invalid Duration"
 
 data Coupon = Coupon {
-      couponId :: Text
-    , couponCreated :: UTCTime
-    , couponPercentOff :: Int
-    , couponAmountOff :: Maybe Int
-    , couponCurrency :: Maybe Text
-    , couponLiveMode :: Bool
-    , couponDuration :: Duration
-    , couponRedeemBy :: Maybe UTCTime
-    , couponMaxRedemptions :: Maybe Int
-    , couponTimesRedeemed :: Maybe Int
+      couponId               :: Text
+    , couponCreated          :: UTCTime
+    , couponPercentOff       :: Int
+    , couponAmountOff        :: Maybe Int
+    , couponCurrency         :: Maybe Text
+    , couponLiveMode         :: Bool
+    , couponDuration         :: Duration
+    , couponRedeemBy         :: Maybe UTCTime
+    , couponMaxRedemptions   :: Maybe Int
+    , couponTimesRedeemed    :: Maybe Int
     , couponDurationInMonths :: Maybe Int
-    , couponValid :: Bool
+    , couponValid            :: Bool
     } deriving (Show, Eq)
 
 instance FromJSON Coupon where
-   parseJSON (Object o) = 
+   parseJSON (Object o) =
         Coupon <$> o .: "id"
                <*> (fromSeconds <$> o .: "created")
                <*> o .: "percent_off"
@@ -290,7 +315,7 @@ newtype AmountOff = AmountOff Int deriving (Show, Eq)
 newtype MaxRedemptions = MaxRedemptions Int deriving (Show, Eq)
 newtype PercentOff = PercentOff Int deriving (Show, Eq)
 newtype RedeemBy = RedeemBy UTCTime deriving (Show, Eq)
-newtype DurationInMonths = DurationInMonths Int deriving (Show, Eq)                 
+newtype DurationInMonths = DurationInMonths Int deriving (Show, Eq)
 
 -- Plan --
 
@@ -328,7 +353,7 @@ instance FromJSON Plan where
        do planId <- PlanId <$> o .: "id"
           planAmount <- o .: "amount"
           result <- o .: "interval"
-          let planInterval = 
+          let planInterval =
                   case String result of
                     "month" -> Month
                     "week" -> Week
@@ -348,7 +373,7 @@ instance FromJSON Plan where
 newtype AccountId = AccountId Text deriving (Show, Eq)
 
 data Account = Account {
-      accountId                   :: AccountId
+       accountId                  :: AccountId
      , accountEmail               :: Text
      , accountStatementDescriptor :: Maybe Text
      , accountDisplayName         :: Text
@@ -359,6 +384,7 @@ data Account = Account {
      , accountCurrenciesSupported :: [Text]
      , accountDefaultCurrency     :: Text
      , accountCountry             :: Text
+     , accountObject              :: Text
 } deriving (Show, Eq)
 
 instance FromJSON Account where
@@ -373,16 +399,17 @@ instance FromJSON Account where
                <*> o .:  "transfer_enabled"
                <*> o .:  "currencies_supported"
                <*> o .:  "default_currency"
-               <*> o .:  "country"                 
+               <*> o .:  "country"
+               <*> o .:  "object"
 
 -- Application Fee --
 data ApplicationFee = ApplicationFee {
-      applicationFeeId :: Text
-    , applicationFeeCreated :: UTCTime
-    , applicationFeeLiveMode :: Bool
-    , applicationFeeAmount :: Int
-    , applicationFeeCurrency :: Text
-    , applicationFeeRefunded :: Bool
+      applicationFeeId             :: Text
+    , applicationFeeCreated        :: UTCTime
+    , applicationFeeLiveMode       :: Bool
+    , applicationFeeAmount         :: Int
+    , applicationFeeCurrency       :: Text
+    , applicationFeeRefunded       :: Bool
     , applicationFeeAmountRefunded :: Int
 } deriving (Show)
 
@@ -403,10 +430,10 @@ data EventType = ChargeEvent
    | TransferFailureEvent
       deriving (Show, Eq)
 
-data Event = Event { 
-      eventId :: EventId
+data Event = Event {
+      eventId      :: EventId
     , eventCreated :: UTCTime
-    , eventType :: Text
+    , eventType    :: Text
 } deriving (Show)
 
 instance FromJSON Event where
@@ -448,7 +475,7 @@ data FeeDetails = FeeDetails {
 newtype TransactionId = TransactionId Text deriving (Show, Eq)
 
 instance FromJSON FeeDetails where
-   parseJSON (Object o) = 
+   parseJSON (Object o) =
        FeeDetails <$> o .: "amount"
                   <*> o .: "currency"
                   <*> o .: "type"
@@ -464,7 +491,7 @@ instance FromJSON Balance where
                <*> o .: "available"
 
 instance FromJSON BalanceTransaction where
-   parseJSON (Object o) = 
+   parseJSON (Object o) =
        BalanceTransaction <$> (TransactionId <$> o .: "id")
                           <*> o .: "amount"
                           <*> o .: "currency"

@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.Client.Types 
   ( Stripe 
   , Params
@@ -13,6 +15,7 @@ import           Data.Aeson
 import           Data.ByteString                 (ByteString)
 import           Data.Text                       (Text)
 import           Network.Http.Client
+import           Web.Stripe.Client.Error
 
 -- Base Type we use for Stripe
 type Stripe a = ReaderT StripeConfig IO (Either StripeError a)
@@ -27,8 +30,8 @@ data StripeRequest = StripeRequest
     } deriving (Show)
 
 data StripeConfig = StripeConfig
-    { secretKey  :: S.ByteString
-    , apiVersion :: S.ByteString
+    { secretKey  :: ByteString
+    , apiVersion :: ByteString
     } deriving (Show)
 
 data StripeDeleteResult = StripeDeleteResult {
