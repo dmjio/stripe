@@ -69,7 +69,7 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
   sendRequest con req $ inputStreamBody body
   receiveResponse con $ \response inputStream ->
            Streams.read inputStream >>= \res -> do
-             print (decodeStrict (fromJust res) :: Maybe Value)
+             -- print (decodeStrict (fromJust res) :: Maybe Value)
              maybeStream response res
   where
     maybeStream response = maybe (error "Couldn't read stream") (handleStream response)

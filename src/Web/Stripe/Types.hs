@@ -14,25 +14,26 @@ import           Web.Stripe.Util
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
 data Charge = Charge {
-      chargeId       :: Text
-    , chargeObject   :: Text
-    , chargeCreated  :: UTCTime
-    , chargeLiveMode :: Bool
-    , chargePaid     :: Bool
-    -- , chargeAmount               :: Int
-    -- , chargeCurrency             :: Text
-    -- , chargeRefunded             :: Text
-    -- , chargeCard                 :: Card
-    -- , chargeCaptured             :: Bool
-    -- , chargeFailureMessage       :: Maybe Text
-    -- , chargeFailureCode          :: Maybe Text
-    -- , chargeAmountRefunded       :: Int
-    -- , chargeCustomerId           :: Maybe Text
-    -- , chargeInvoice              :: Maybe Invoice
-    -- , chargeDescription          :: Maybe Text
-    -- , chargeDispute              :: Maybe Text
-    -- , chargeStatementDescription :: Maybe Text
-    -- , chargeReceiptEmail         :: Maybe Text
+      chargeId         :: Text
+    , chargeObject     :: Text
+    , chargeCreated    :: UTCTime
+    , chargeLiveMode   :: Bool
+    , chargePaid       :: Bool
+    , chargeAmount     :: Int
+    , chargeCurrency   :: Text
+    , chargeRefunded   :: Bool
+    , chargeCreditCard :: Card
+    , chargeCaptured   :: Bool
+    , chargeBalanceTransaction :: TransactionId
+    , chargeFailureMessage       :: Maybe Text
+    , chargeFailureCode          :: Maybe Text
+    , chargeAmountRefunded       :: Int
+    , chargeCustomerId           :: Maybe CustomerId 
+    , chargeInvoice              :: Maybe InvoiceId
+    , chargeDescription          :: Maybe Text
+    , chargeDispute              :: Maybe Text
+    , chargeStatementDescription :: Maybe Text
+    , chargeReceiptEmail         :: Maybe Text
     } deriving Show
 
 newtype StatementDescription = StatementDescription Text deriving (Show, Eq)
@@ -52,11 +53,21 @@ instance FromJSON Charge where
                <*> (fromSeconds <$> o .: "created")
                <*> o .: "livemode"
                <*> o .: "paid"
-               -- <*> o .: "amount"
-               -- <*> o .: "currency"
-               -- <*> o .: "refunded"
-               -- <*> o .: "card"
-               -- <*> o .: "captured"
+               <*> o .: "amount"
+               <*> o .: "currency"
+               <*> o .: "refunded"
+               <*> o .: "card"
+               <*> o .: "captured"
+               <*> (TransactionId <$> o .: "balance_transaction")
+               <*> o .:? "failure_message"
+               <*> o .:? "failure_code"
+               <*> o .: "amount_refunded"
+               <*> (fmap CustomerId <$> o .:? "customer")
+               <*> (fmap InvoiceId <$> o .:? "invoice")
+               <*> o .:? "description"
+               <*> o .:? "dispute"
+               <*> o .:? "statement_description"
+               <*> o .:? "receipt_email"
 
 -- Customer --
 newtype CustomerId = CustomerId Text deriving (Show)

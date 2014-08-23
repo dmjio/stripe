@@ -2,10 +2,16 @@
 {-# LANGUAGE RecordWildCards   #-}
 
 module Web.Stripe.Charge 
-    ( Charge(..)
+    ( -- * Charge type
+      Charge   (..)
+    , ChargeId (..)  
+      -- * API functions
     , chargeCustomer
     , chargeCard
     , chargeCardByToken
+    , getCharge
+    , updateChargeDescription
+    , captureCharge
     ) where
 
 import           Control.Applicative
@@ -59,7 +65,7 @@ createCharge :: Currency ->          -- ^ Required, 3-letter ISO Code
                 Maybe TokenId ->     -- ^ Optional, either CustomerId or TokenId has to be specified
                 Maybe StatementDescription -> -- ^ Optional, Arbitrary string to include on CC statements
                 Maybe ReceiptEmail -> -- ^ Optional, Arbitrary string to include on CC statements
-                Capture ->           -- ^ Optional, default is True 
+                Capture ->            -- ^ Optional, default is True 
                 Maybe CardNumber ->
                 Maybe ExpMonth ->
                 Maybe ExpYear ->
@@ -93,13 +99,14 @@ createCharge (Currency currency)
                    ]
                   ]
 
-getCharge :: ChargeId -> Stripe Charge
+getCharge :: ChargeId -> -- ^ The Charge to update
+             Stripe Charge
 getCharge (ChargeId charge) = callAPI request
   where request = StripeRequest GET url params
         url     = "charges/" <> charge
         params  = []
 
-updateChargeDescription :: ChargeId -> -- ^ The Charge to update
+updateChargeDescription :: ChargeId ->    -- ^ The Charge to update
                            Description -> -- ^ The Charge Description to update
                            Stripe Charge
 updateChargeDescription (ChargeId chargeId) (Description description) 
@@ -108,8 +115,8 @@ updateChargeDescription (ChargeId chargeId) (Description description)
         url     = "charges/" <> chargeId
         params  = ("description", T.encodeUtf8 description) : []
 
-captureCharge :: ChargeId -> -- ^ The Charge to capture
-                 Maybe Amount -> -- ^ If Nothing the entire charge will be captured, otherwise the remaining will be refunded
+captureCharge :: ChargeId ->           -- ^ The Charge to capture
+                 Maybe Amount ->       -- ^ If Nothing the entire charge will be captured, otherwise the remaining will be refunded
                  Maybe ReceiptEmail -> -- ^ Email address to send this charge's receipt to
                  Stripe Charge
 captureCharge (ChargeId chargeId) amount receiptEmail
