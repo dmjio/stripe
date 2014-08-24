@@ -23,7 +23,7 @@ data Charge = Charge {
     , chargeLiveMode             :: Bool
     , chargePaid                 :: Bool
     , chargeAmount               :: Int
-    , chargeCurrency             :: Text
+    , chargeCurrency             :: Currency
     , chargeRefunded             :: Bool
     , chargeCreditCard           :: Card
     , chargeCaptured             :: Bool
@@ -57,7 +57,7 @@ instance FromJSON Charge where
                <*> o .: "livemode"
                <*> o .: "paid"
                <*> o .: "amount"
-               <*> o .: "currency"
+               <*> (Currency <$> o .: "currency")
                <*> o .: "refunded"
                <*> o .: "card"
                <*> o .: "captured"
@@ -78,9 +78,10 @@ data Refund = Refund {
     , refundAmount             :: Int
     , refundCurrency           :: Text
     , refundCreated            :: UTCTime
+    , refundObject             :: Text
     , refundCharge             :: ChargeId
     , refundBalanceTransaction :: TransactionId
-    , refundMetaData           :: [(Text,Text)]
+--    , refundMetaData           :: [(Text,Text)]
     } deriving (Show, Eq)
 
 instance FromJSON Refund where
@@ -89,37 +90,44 @@ instance FromJSON Refund where
                <*> o .: "amount"
                <*> o .: "currency"
                <*> (fromSeconds <$> o .: "created")
+               <*> o .: "object"
                <*> (ChargeId <$> o .: "charge")
                <*> (TransactionId <$> o .: "balance_transaction")
-               <*> o .: "metadata"
+--               <*> o .: "metadata"
 
 newtype RefundId = RefundId Text deriving (Show)
 
 -- Customer --
-newtype CustomerId = CustomerId Text deriving (Show)
+newtype CustomerId = CustomerId Text deriving (Show,Eq)
 
 data Customer = Customer {
-      customerCreated        :: UTCTime
-    , customerId             :: Text
-    , delinquent             :: Bool
+      customerObject         :: Text
+    , customerCreated        :: UTCTime
+    , customerId             :: CustomerId
+    , customerLiveMode       :: Bool
     , customerDescription    :: Maybe Text
     , customerEmail          :: Maybe Text
-    , customerAccountBalance :: Maybe Int
-    , customerCurrency       :: Maybe Text
-    , customerDiscount       :: Maybe Discount
+    , customerDelinquent     :: Bool
+    , customerDiscount       :: Maybe Text
+    , customerAccountBalance :: Int
+    , customerCurrency       :: Maybe Currency
+    , customerDefaultCard    :: Maybe CardId
     } deriving (Show, Eq)
 
 instance FromJSON Customer where
     parseJSON (Object o)
         = Customer
-           <$> (fromSeconds <$> o .: "created")
-           <*> o .: "id"
-           <*> o .: "delinquent"
+           <$> o .: "object"
+           <*> (fromSeconds <$> o .: "created")
+           <*> (CustomerId <$> o .: "id")
+           <*> o .: "livemode"
            <*> o .:? "description"
            <*> o .:? "email"
-           <*> o .:? "account_balance"
-           <*> o .:? "currency"
+           <*> o .: "delinquent"
            <*> o .:? "discount"
+           <*> o .: "account_balance"
+           <*> (fmap Currency <$> o .:? "currency")
+           <*> (fmap CardId <$> o .:? "default_card")
 
 ---- ==== Card ==== -----
 newtype CardId         = CardId Text deriving (Show, Eq)
