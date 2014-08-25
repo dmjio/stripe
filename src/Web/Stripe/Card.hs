@@ -15,9 +15,9 @@ import           Control.Applicative        ((<$>), (<*>))
 import           Data.Monoid
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as T
+
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
-import           Web.Stripe.Util
 
 -- | Create card
 createCard :: CustomerId -> -- ^ The Customer to which the card will be added

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Util
+module Web.Stripe.Client.Util
     ( fromSeconds
     , paramsToByteString
     , toBS

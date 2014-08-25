@@ -10,6 +10,7 @@ module Web.Stripe.Client.Internal
     , StripeConfig       (..)
     , StripeDeleteResult (..)
     , Method             (..)
+    , module Web.Stripe.Client.Util
     ) where
 
 import           Control.Applicative             ((<$>), (<*>))
@@ -17,7 +18,6 @@ import           Control.Monad.IO.Class          (MonadIO (liftIO))
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Data.Aeson                      (FromJSON, Value (Object),
                                                   decodeStrict, parseJSON, (.:))
-import           Data.Maybe
 import           Data.ByteString                 (ByteString)
 import           Data.Maybe                      (fromMaybe)
 import           Data.Monoid                     ((<>))
@@ -32,7 +32,7 @@ import           Network.Http.Client             (Method(..), baselineContextSSL
 import           OpenSSL                         (withOpenSSL)
 import           Web.Stripe.Client.Error         (StripeError (..),
                                                   StripeErrorHTTPCode (..))
-import           Web.Stripe.Util                 (paramsToByteString)
+import           Web.Stripe.Client.Util          (paramsToByteString)
 import           Web.Stripe.Client.Types 
 
 import qualified Data.ByteString                 as S
