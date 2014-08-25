@@ -220,21 +220,24 @@ instance FromJSON TokenType where
    parseJSON _ = error "Additional token type not documented in Stripe's API"
 
 data Token = Token {
-      tokenId      :: TokenId
-    , tokenCreated :: UTCTime
-    , tokenUsed    :: Bool
-    , tokenType    :: TokenType
-    , tokenCard    :: Card
+      tokenId       :: TokenId
+    , tokenLiveMode :: Bool
+    , tokenCreated  :: UTCTime
+    , tokenUsed     :: Bool
+    , tokenObject   :: Text
+    , tokenType     :: TokenType
+    , tokenCard     :: Card
 } deriving (Show)
 
 instance FromJSON Token where
-   parseJSON (Object o) = undefined
-       -- Token <$> (TokenId <$> (o .: "id"))
-       --       <*> o .: "livemode"
-       --       <*> (fromSeconds <$> o .: "created")
-       --       <*> o .: "used"
-       --       <*> o .: "type"
-       --       <*> o .: "card"
+   parseJSON (Object o) = do
+       Token <$> (TokenId <$> (o .: "id"))
+             <*> o .: "livemode"
+             <*> (fromSeconds <$> o .: "created")
+             <*> o .: "used"
+             <*> o .: "object"
+             <*> o .: "type"
+             <*> o .: "card"
 
 ---- == Invoice Item == ------
 data InvoiceLineItem = InvoiceLineItem {
@@ -280,7 +283,65 @@ data Invoice = Invoice {
     , invoiceDescription          :: Maybe Text
 } deriving Show
 
+--- Subscriptions ---
+
 newtype SubscriptionId = SubscriptionId Text deriving (Show, Eq)
+
+data Subscription = Subscription {
+      subscriptionId                    :: SubscriptionId
+    , subscriptionPlan                  :: Plan
+    , subscriptionObject                :: Text
+    , subscriptionStart                 :: UTCTime
+    , subscriptionStatus                :: SubscriptionStatus
+    , subscriptionCustomerId            :: CustomerId
+    , subscriptionCancelAtPeriodEnd     :: Bool
+    , subscriptionCurrentPeriodStart    :: UTCTime
+    , subscriptionCurrentPeriodEnd      :: UTCTime
+    , subscriptionEndedAt               :: Maybe UTCTime
+    , subscriptionTrialStart            :: Maybe UTCTime
+    , subscriptionTrialEnd              :: Maybe UTCTime
+    , subscriptionCanceledAt            :: Maybe UTCTime
+    , subscriptionQuantity              :: Int
+    , subscriptionApplicationFeePercent :: Maybe Double
+    , subscriptionDiscount              :: Maybe Text
+} deriving (Show, Eq)
+
+instance FromJSON Subscription where
+   parseJSON (Object o) = 
+       Subscription <$> (SubscriptionId <$> o .: "id")
+                    <*> o .: "plan"
+                    <*> o .: "object"
+                    <*> o .: "start"
+                    <*> o .: "status"
+                    <*> (CustomerId <$> o .: "customer")
+                    <*> o .: "cancel_at_period_end"
+                    <*> o .: "cancel_at_period_start"
+                    <*> o .: "current_period_end"
+                    <*> o .:? "ended_at"
+                    <*> o .:? "trial_start"
+                    <*> o .:? "trial_end"
+                    <*> o .:? "canceled_at"
+                    <*> o .:  "quantity"
+                    <*> o .:? "application_fee_percent"
+                    <*> o .:? "discount"
+
+data SubscriptionStatus =
+          Trialing
+        | Active
+        | PastDue
+        | Canceled
+        | UnPaid
+          deriving (Show, Eq)
+
+instance FromJSON SubscriptionStatus where
+   parseJSON (String "trialing") = pure Trialing
+   parseJSON (String "active")   = pure Active
+   parseJSON (String "past_due") = pure PastDue
+   parseJSON (String "canceled") = pure Canceled
+   parseJSON (String "unpaid")   = pure UnPaid
+
+
+--- /Subscriptions ---
 
 instance FromJSON Invoice where
    parseJSON (Object o) = undefined

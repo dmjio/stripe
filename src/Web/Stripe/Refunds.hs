@@ -26,11 +26,11 @@ getRefund (ChargeId chargeId) (RefundId refId) = callAPI request
          url     = "charges" </> chargeId </> "refunds" </> refId
          params  = []
 
-updateRefund :: ChargeId -> RefundId -> Key -> Value -> Stripe Refund
+updateRefund :: ChargeId -> RefundId -> Stripe Refund
 updateRefund (ChargeId chargeId) (RefundId refId) key value = callAPI request 
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "refunds" </> refId
-        params  = [ ("metadata[" <> T.encodeUtf8 key <> "]", T.encodeUtf8 value)]
+        params  = []
 
 -- getRefunds :: ChargeId -> Stripe Refunds
 -- getRefunds (ChargeId chargeId) = callAPI request 

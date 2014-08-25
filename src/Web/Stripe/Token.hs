@@ -1,6 +1,6 @@
 module Web.Stripe.Token 
    ( -- * API Functions
-   , createCardToken
+     createCardToken
    , createBankAccountToken
    , getToken
      -- * Types
@@ -8,21 +8,28 @@ module Web.Stripe.Token
    ) where
 
 import           Data.Monoid
+import qualified Data.Text.Encoding as T
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Util
 import           Web.Stripe.Types
 
-config :: StripeConfig
-config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
-
-createCardToken :: Stripe Token
-createCardToken = callAPI request 
+createCardToken :: 
+    CardNumber -> -- ^ Credit Card Number
+    ExpMonth   -> -- ^ Credit Card Expiration Month
+    ExpYear    -> -- ^ Credit Card Expiration Year
+    CVC        -> -- ^ Credit Card CVC 
+    Stripe Token
+createCardToken 
+      (CardNumber number)
+      (ExpMonth month)
+      (ExpYear year)
+      (CVC cvc) =  callAPI request 
   where request = StripeRequest POST url params
         url     = "tokens"
-        params  = [ ("card[number]", "4242424242424242")
-                  , ("card[exp_month]", "12")
-                  , ("card[exp_year]", "2015")
-                  , ("card[cvc]", "123")
+        params  = [ ("card[number]", toBS number)
+                  , ("card[exp_month]", toBS month)
+                  , ("card[exp_year]", toBS year)
+                  , ("card[cvc]", toBS cvc)
                   ]
 
 createBankAccountToken :: Stripe Token
