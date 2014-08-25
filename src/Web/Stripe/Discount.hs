@@ -1,28 +1,33 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Web.Stripe.Discount where
+module Web.Stripe.Discount
+    ( -- * Discount Types
+      Discount   (..)
+      -- * API Functions
+    , deleteCustomerDiscount
+    , deleteSubscriptionDiscount
+    ) where
 
-import           Data.Monoid               ((<>))
-import           Web.Stripe.Types          (Discount(..))
+import           Web.Stripe.Client.Internal
+import           Web.Stripe.Types
+import           Web.Stripe.Util
 
-
-deleteCustomerDiscount :: CustomerId -> Stripe StripeDeleteResult
-deleteCustomerDiscount (CustomerId customerId) = callAPI request
+deleteCustomerDiscount :: 
+    CustomerId -> -- ^ The Customer to remove the discount from
+    Stripe StripeDeleteResult
+deleteCustomerDiscount 
+    (CustomerId customerId) = callAPI request
   where request = StripeRequest DELETE url params
-        url     = "customers/" <> customerId <> "/discount"
+        url     = "customers" </> customerId </> "discount"
         params  = []
 
 deleteSubscriptionDiscount ::
-  CustomerId -> 
-  SubscriptionId -> 
+  CustomerId ->     -- ^ The Customer to remove the discount from
+  SubscriptionId -> -- ^ The Subscription to remove the discount from
   Stripe StripeDeleteResult
-deleteSubscriptionDiscount (CustomerId customerId) (SubscriptionId subId) =
-    callAPI request
+deleteSubscriptionDiscount 
+    (CustomerId customerId) 
+    (SubscriptionId subId) = callAPI request
   where request = StripeRequest DELETE url params
+        url     = "customers" </> customerId </> "subscriptions" </> subId </> "discount"
         params  = []
-        url     = T.concat ["customers/"
-                           , customerId
-                           , "/subscriptions/"
-                           , subId
-                           , "/discount"
-                           ]

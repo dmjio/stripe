@@ -1,10 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Web.Stripe.Plan 
-    ( -- * Types
-      PlanId (..)
-    , Plan (..)
+    ( -- * Plan Types
+      PlanId   (..)
+    , Plan     (..)
     , Interval (..)
       -- * API Functions
     , createPlan
