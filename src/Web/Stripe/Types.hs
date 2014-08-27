@@ -669,6 +669,10 @@ data Transfer = Transfer {
     , transferRecipient :: Maybe RecipientId
 } deriving (Show)
 
+newtype RoutingNumber = RoutingNumber Text deriving (Show, Eq)
+newtype Country       = Country Text deriving (Show, Eq)
+newtype AccountNumber = AccountNumber Text deriving (Show, Eq)
+
 instance FromJSON Transfer where
     parseJSON (Object o) =
         Transfer <$> (TransferId <$> o .: "id")

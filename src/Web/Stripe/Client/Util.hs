@@ -2,7 +2,7 @@
 module Web.Stripe.Client.Util
     ( fromSeconds
     , paramsToByteString
-    , toBS
+    , toText
     , getParams
     , (</>)
     ) where
@@ -13,12 +13,15 @@ import qualified Data.ByteString.Char8 as BC8
 import qualified Data.ByteString.Lazy  as BL
 import           Data.Monoid
 import           Data.String
+import           Data.Text             (Text)
+import qualified Data.Text             as T
+import qualified Data.Text.Encoding    as T
 import           Data.Time.Clock
 import           Data.Time.Clock.POSIX (posixSecondsToUTCTime,
                                         utcTimeToPOSIXSeconds)
 
-toBS :: Show a => a -> S.ByteString
-toBS = BC8.pack . show
+toText :: Show a => a -> Text
+toText= T.pack . show
 
 paramsToByteString :: [(S.ByteString, S.ByteString)] -> S.ByteString
 paramsToByteString [] = ""
@@ -31,5 +34,5 @@ m1 </> m2 = m1 <> "/" <> m2
 fromSeconds :: Integer -> UTCTime
 fromSeconds  = posixSecondsToUTCTime . fromInteger
 
-getParams :: [(a, Maybe b)] -> [(a, b)]
-getParams xs = [ (x,y) | (x, Just y) <- xs ]
+getParams :: [(ByteString, Maybe Text)] -> [(ByteString, ByteString)]
+getParams xs = [ (x, T.encodeUtf8 y) | (x, Just y) <- xs ]

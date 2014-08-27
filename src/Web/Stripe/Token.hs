@@ -25,23 +25,24 @@ createCardToken
       (CVC cvc) =  callAPI request 
   where request = StripeRequest POST url params
         url     = "tokens"
-        params  = [ ("card[number]", toBS number)
-                  , ("card[exp_month]", toBS month)
-                  , ("card[exp_year]", toBS year)
-                  , ("card[cvc]", toBS cvc)
+        params  = [ ("card[number]", Just $ toText number)
+                  , ("card[exp_month]", Just $ toText month)
+                  , ("card[exp_year]", Just $ toText year)
+                  , ("card[cvc]", Just $ toText cvc)
                   ]
 
 createBankAccountToken :: 
-    Country ->
-    RoutingNumber ->
-    AccountNumber ->
+    (Country country) ->
+    (RoutingNumber routingNumber) ->
+    (AccountNumber number) ->
     Stripe Token
 createBankAccountToken = callAPI request 
   where request = StripeRequest POST url params
         url     = "tokens"
-        params  = [ ("bank_account[country]", "US")
-                  , ("bank_account[routing_number]", "110000000")
-                  , ("bank_account[account_number]", "000123456789")
+        params  = getParams [ 
+                    ("bank_account[country]", country)
+                  , ("bank_account[routing_number]", routingNumber)
+                  , ("bank_account[account_number]", accountNumber)
                   ]
 
 getToken :: TokenId -> Stripe Token
