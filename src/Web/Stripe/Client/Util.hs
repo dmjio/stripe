@@ -3,6 +3,7 @@ module Web.Stripe.Client.Util
     ( fromSeconds
     , paramsToByteString
     , toBS
+    , getParams
     , (</>)
     ) where
 
@@ -29,3 +30,6 @@ m1 </> m2 = m1 <> "/" <> m2
 
 fromSeconds :: Integer -> UTCTime
 fromSeconds  = posixSecondsToUTCTime . fromInteger
+
+getParams :: [(a, Maybe b)] -> [(a, b)]
+getParams xs = [ (x,y) | (x, Just y) <- xs ]

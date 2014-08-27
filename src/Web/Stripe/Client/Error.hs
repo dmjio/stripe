@@ -43,7 +43,7 @@ data StripeError = StripeError {
     , errorMsg   :: Text
     , errorCode  :: Maybe StripeErrorCode
     , errorParam :: Maybe Text
-    , errorHTTP  :: StripeErrorHTTPCode
+    , errorHTTP  :: Maybe StripeErrorHTTPCode
     } deriving Show
 
 toErrorType :: Text -> StripeErrorType
@@ -65,6 +65,7 @@ toErrorCode "card_declined"        = CardDeclined
 toErrorCode "missing"              = Missing
 toErrorCode "processing_error"     = ProcessingError
 toErrorCode "rate_limit"           = RateLimit
+toErrorCode _                      = UnknownError
 
 instance FromJSON StripeError where
     parseJSON (Object o) = do
@@ -73,5 +74,5 @@ instance FromJSON StripeError where
         msg   <- e .: "message"
         code  <- fmap toErrorCode <$> e .:? "code"
         param <- e .:? "param"
-        return $ StripeError typ msg code param UnknownHTTPCode
+        return $ StripeError typ msg code param Nothing
 

@@ -1,15 +1,16 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
 module Web.Stripe.Types where
 
 import           Control.Applicative
+import           Control.Monad
 import           Data.Aeson
-import           Data.Text           (Text)
-import           Data.Time
+import           Data.Text                  (Text)
+import           Data.Time                  (UTCTime)
 import           Data.Vector
-import           Web.Stripe.Util
+
+import           Web.Stripe.Client.Internal
 
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
@@ -27,6 +28,7 @@ data Charge = Charge {
     , chargeRefunded             :: Bool
     , chargeCreditCard           :: Card
     , chargeCaptured             :: Bool
+    , chargeRefunds              :: StripeList Refund
     , chargeBalanceTransaction   :: TransactionId
     , chargeFailureMessage       :: Maybe Text
     , chargeFailureCode          :: Maybe Text
@@ -44,10 +46,21 @@ type Capture = Bool
 
 newtype ReceiptEmail = ReceiptEmail Text deriving (Show, Eq)
 
--- instance FromJSON [Charge] where
---     parseJSON (Object o) = do
---       Array d <- o .: "data"
---       return d
+data StripeList a = StripeList {
+      list       :: [a]
+    , url        :: Text
+    , object     :: Text
+    , totalCount :: Maybe Int
+    , hasMore    :: Bool
+    } deriving (Show, Eq)
+
+instance FromJSON a => FromJSON (StripeList a) where
+    parseJSON (Object o) =
+        StripeList <$> o .:  "data"
+                   <*> o .:  "url"
+                   <*> o .:  "object"
+                   <*> o .:? "total_count"
+                   <*> o .:  "has_more"
 
 instance FromJSON Charge where
     parseJSON (Object o) =
@@ -61,6 +74,7 @@ instance FromJSON Charge where
                <*> o .: "refunded"
                <*> o .: "card"
                <*> o .: "captured"
+               <*> o .: "refunds"
                <*> (TransactionId <$> o .: "balance_transaction")
                <*> o .:? "failure_message"
                <*> o .:? "failure_code"
@@ -108,6 +122,7 @@ data Customer = Customer {
     , customerDescription    :: Maybe Text
     , customerEmail          :: Maybe Text
     , customerDelinquent     :: Bool
+    , customerSubscriptions  :: StripeList Subscription
     , customerDiscount       :: Maybe Text
     , customerAccountBalance :: Int
     , customerCurrency       :: Maybe Currency
@@ -124,6 +139,7 @@ instance FromJSON Customer where
            <*> o .:? "description"
            <*> o .:? "email"
            <*> o .: "delinquent"
+           <*> o .: "subscriptions"
            <*> o .:? "discount"
            <*> o .: "account_balance"
            <*> (fmap Currency <$> o .:? "currency")
@@ -217,7 +233,7 @@ data TokenType = TokenCard | TokenBankAccount deriving (Show, Eq)
 instance FromJSON TokenType where
    parseJSON (String "bank_account") = pure TokenBankAccount
    parseJSON (String "card") = pure TokenCard
-   parseJSON _ = error "Additional token type not documented in Stripe's API"
+   parseJSON _ = mzero
 
 data Token = Token {
       tokenId       :: TokenId
@@ -307,7 +323,7 @@ data Subscription = Subscription {
 } deriving (Show, Eq)
 
 instance FromJSON Subscription where
-   parseJSON (Object o) = 
+   parseJSON (Object o) =
        Subscription <$> (SubscriptionId <$> o .: "id")
                     <*> o .: "plan"
                     <*> o .: "object"
@@ -381,10 +397,10 @@ instance Show Duration where
 
 instance FromJSON Duration where
    parseJSON (String x)
-       | x == "forever" = pure Forever
-       | x == "once" = pure Once
+       | x == "forever"   = pure Forever
+       | x == "once"      = pure Once
        | x == "repeating" = pure Repeating
-       | otherwise = error "Invalid Duration"
+       | otherwise        = mzero
 
 data Coupon = Coupon {
       couponId               :: Text
@@ -610,3 +626,66 @@ instance FromJSON BalanceTransaction where
                           <*> o .: "fee_details"
                           <*> o .: "source"
                           <*> o .: "description"
+
+---- Transfers
+newtype RecipientId = RecipientId { recipientId :: Text } deriving (Show, Eq)
+newtype TransferId = TransferId Text deriving (Show, Eq)
+
+data TransferStatus = TransferPaid
+                    | TransferPending
+                    | TransferCanceled
+                    | TransferFailed
+                      deriving (Show, Eq)
+
+data TransferType = CardTransfer | BankAccountTransfer deriving (Show, Eq)
+
+instance FromJSON TransferType where
+    parseJSON (String "card")         = pure CardTransfer
+    parseJSON (String "bank_account") = pure BankAccountTransfer
+    parseJSON _                       = mzero
+
+instance FromJSON TransferStatus where
+    parseJSON (String "paid")     = pure TransferPaid
+    parseJSON (String "pending")  = pure TransferPending
+    parseJSON (String "canceled") = pure TransferCanceled
+    parseJSON _                   = mzero
+
+data Transfer = Transfer {
+      transferId                   :: TransferId
+    , transferObject               :: Text
+    , transferCreated              :: UTCTime
+    , transferDate                 :: UTCTime
+    , transferLiveMode             :: Bool
+    , transferAmount               :: Int
+    , transferCurrency             :: Text
+    , transferStatus               :: TransferStatus
+    , transferType                 :: TransferType
+    , transferBalanceTransaction   :: TransactionId
+    , transferDescription          :: Text
+    , transferBankAccount          :: Account
+    , transferFailureMessage       :: Maybe Text
+    , transferFailureCode          :: Maybe Text
+    , transferStatementDescription :: Maybe Text
+    , transferRecipient :: Maybe RecipientId
+} deriving (Show)
+
+instance FromJSON Transfer where
+    parseJSON (Object o) =
+        Transfer <$> (TransferId <$> o .: "id")
+                 <*> o .: "object"
+                 <*> (fromSeconds <$> o .: "created")
+                 <*> (fromSeconds <$> o .: "date")
+                 <*> o .: "livemode"
+                 <*> o .: "amount"
+                 <*> o .: "currency"
+                 <*> o .: "status"
+                 <*> o .: "type"
+                 <*> (TransactionId <$> o .: "balance_transaction")
+                 <*> o .: "description"
+                 <*> o .: "account"
+                 <*> o .:? "failure_message"
+                 <*> o .:? "failure_code"
+                 <*> o .:? "statement_description"
+                 <*> (fmap RecipientId <$> o .:? "recipient")
+
+

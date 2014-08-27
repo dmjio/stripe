@@ -21,7 +21,7 @@ import           Data.Text                       (Text)
 import qualified Data.Text.Encoding              as T
 import           Network.Http.Client
 import           Web.Stripe.Client.Internal
-import           Web.Stripe.Util
+import           Web.Stripe.Client.Util
 import           Web.Stripe.Types
 
 chargeCustomer :: CustomerId ->        -- ^ The ID of the customer to be charged
@@ -128,8 +128,8 @@ captureCharge (ChargeId chargeId) amount receiptEmail
                     ]
                   ]
 
--- getCharges ::  Stripe [Charge]
--- getCharges = callAPI request 
---   where request = StripeRequest GET url []
---         url     = "charges"
---         params  = []
+getCharges :: Stripe (StripeList Charge)
+getCharges = callAPI request
+  where request = StripeRequest GET url params
+        url     = "charges"
+        params  = [ ("", "1") ]

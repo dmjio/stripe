@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.Subscriptions
     ( Subscription(..)
     , SubscriptionId(..)
@@ -13,7 +15,6 @@ import           Data.Monoid
 import           Data.Text                       (Text)
 import           Data.Time
 import           Web.Stripe.Client.Internal
-import           Web.Stripe.Util
 import           Web.Stripe.Types
 import qualified Data.Text.Encoding as T
 

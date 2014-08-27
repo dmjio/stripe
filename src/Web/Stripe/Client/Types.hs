@@ -2,7 +2,6 @@
 
 module Web.Stripe.Client.Types 
   ( Stripe 
-  , Params
   , StripeRequest (..)
   , StripeConfig (..)
   , StripeDeleteResult (..)

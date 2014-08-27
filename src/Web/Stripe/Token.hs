@@ -10,7 +10,6 @@ module Web.Stripe.Token
 import           Data.Monoid
 import qualified Data.Text.Encoding as T
 import           Web.Stripe.Client.Internal
-import           Web.Stripe.Util
 import           Web.Stripe.Types
 
 createCardToken :: 
@@ -32,7 +31,11 @@ createCardToken
                   , ("card[cvc]", toBS cvc)
                   ]
 
-createBankAccountToken :: Stripe Token
+createBankAccountToken :: 
+    Country ->
+    RoutingNumber ->
+    AccountNumber ->
+    Stripe Token
 createBankAccountToken = callAPI request 
   where request = StripeRequest POST url params
         url     = "tokens"
@@ -44,7 +47,7 @@ createBankAccountToken = callAPI request
 getToken :: TokenId -> Stripe Token
 getToken (TokenId token) = callAPI request
   where request = StripeRequest GET url params
-        url     = "tokens/" <> token
+        url     = "tokens" </> token
         params  = []
 
 

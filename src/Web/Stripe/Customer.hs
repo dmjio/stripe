@@ -11,11 +11,10 @@ module Web.Stripe.Customer
     , getCustomer
     ) where
 
-import           Data.Aeson
-import           Data.Monoid                ((<>))
 import           Web.Stripe.Client.Internal
+import           Web.Stripe.Client.Util
 import           Web.Stripe.Types
-import           Web.Stripe.Util
+
 
 -- createCustomer = 
 --     createCustomerBase 

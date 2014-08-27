@@ -27,6 +27,8 @@ library
                      , HsOpenSSL
                      , io-streams
                      , time
+                     , transformers
+                     , mtl
   default-language:    Haskell2010
   exposed-modules:     Web.Stripe.Client
 

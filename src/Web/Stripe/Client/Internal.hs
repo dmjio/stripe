@@ -7,10 +7,11 @@ module Web.Stripe.Client.Internal
     , config
     , Stripe             (..)
     , StripeRequest      (..)
+    , StripeError      (..)
     , StripeConfig       (..)
     , StripeDeleteResult (..)
     , Method             (..)
-    , module Web.Stripe.Client.Util
+    , module Web.Stripe.Client.Util 
     ) where
 
 import           Control.Applicative             ((<$>), (<*>))
@@ -19,7 +20,7 @@ import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Data.Aeson                      (FromJSON, Value (Object),
                                                   decodeStrict, parseJSON, (.:))
 import           Data.ByteString                 (ByteString)
-import           Data.Maybe                      (fromMaybe)
+import           Data.Maybe                      (fromMaybe, fromJust)
 import           Data.Monoid                     ((<>))
 import           Data.Text                       (Text)
 import           Network.Http.Client             (Method(..), baselineContextSSL,
@@ -32,7 +33,7 @@ import           Network.Http.Client             (Method(..), baselineContextSSL
 import           OpenSSL                         (withOpenSSL)
 import           Web.Stripe.Client.Error         (StripeError (..),
                                                   StripeErrorHTTPCode (..))
-import           Web.Stripe.Client.Util          (paramsToByteString)
+import           Web.Stripe.Client.Util          
 import           Web.Stripe.Client.Types 
 
 import qualified Data.ByteString                 as S
@@ -69,7 +70,7 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
   sendRequest con req $ inputStreamBody body
   receiveResponse con $ \response inputStream ->
            Streams.read inputStream >>= \res -> do
-             print (decodeStrict (fromJust res) :: Maybe Value)
+             -- print (decodeStrict (fromJust res) :: Maybe Value)
              maybeStream response res
   where
     maybeStream response = maybe (error "Couldn't read stream") (handleStream response)
@@ -79,12 +80,12 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
                    code | code >= 400 ->
                      do let json = fromMaybe (error "Parse Failure") (decodeStrict x :: Maybe StripeError)
                         Left $ case code of
-                                 400 -> json { errorHTTP = BadRequest }
-                                 401 -> json { errorHTTP = UnAuthorized }
-                                 402 -> json { errorHTTP = RequestFailed }
-                                 404 -> json { errorHTTP = NotFound }
-                                 500 -> json { errorHTTP = StripeServerError }
-                                 502 -> json { errorHTTP = StripeServerError }
-                                 503 -> json { errorHTTP = StripeServerError }
-                                 504 -> json { errorHTTP = StripeServerError }
-                                 _   -> json { errorHTTP = UnknownHTTPCode }
+                                 400 -> json { errorHTTP = Just BadRequest }
+                                 401 -> json { errorHTTP = Just UnAuthorized }
+                                 402 -> json { errorHTTP = Just RequestFailed }
+                                 404 -> json { errorHTTP = Just NotFound }
+                                 500 -> json { errorHTTP = Just StripeServerError }
+                                 502 -> json { errorHTTP = Just StripeServerError }
+                                 503 -> json { errorHTTP = Just StripeServerError }
+                                 504 -> json { errorHTTP = Just StripeServerError }
+                                 _   -> json { errorHTTP = Just UnknownHTTPCode }
