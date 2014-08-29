@@ -21,7 +21,7 @@ import           Data.Aeson                      (FromJSON, Value (Object),
                                                   decodeStrict, parseJSON, (.:))
 import           Data.ByteString                 (ByteString)
 import           Data.Maybe                      (fromMaybe, fromJust)
-import           Data.Monoid                     ((<>))
+import           Data.Monoid                     (mempty)
 import           Data.Text                       (Text)
 import           Network.Http.Client             (Method(..), baselineContextSSL,
                                                   buildRequest, getStatusCode,
@@ -29,7 +29,7 @@ import           Network.Http.Client             (Method(..), baselineContextSSL
                                                   openConnectionSSL,
                                                   receiveResponse, sendRequest,
                                                   setAuthorizationBasic,
-                                                  setContentType, setHeader)
+                                                  setContentType, setHeader, closeConnection)
 import           OpenSSL                         (withOpenSSL)
 import           Web.Stripe.Client.Error         (StripeError (..),
                                                   StripeErrorHTTPCode (..))
@@ -61,18 +61,19 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
   ctx <- baselineContextSSL
   con <- openConnectionSSL ctx "api.stripe.com" 443
   req <- buildRequest $ do
-          http method $ "/v1/" <> T.encodeUtf8 url
-          setAuthorizationBasic secretKey ""
+          http method $ "/v1" </> T.encodeUtf8 url
+          setAuthorizationBasic secretKey mempty
           setContentType "application/x-www-form-urlencoded"
           setHeader "Stripe-Version" apiVersion
   body <- Streams.fromByteString $ paramsToByteString params
-  
   sendRequest con req $ inputStreamBody body
-  receiveResponse con $ \response inputStream ->
-           Streams.read inputStream >>= \res -> do
-             -- print (decodeStrict (fromJust res) :: Maybe Value)
-             maybeStream response res
-  where
+  resp <- receiveResponse con $ 
+          \response inputStream -> 
+              Streams.read inputStream >>= \res -> 
+                  maybeStream response res
+  closeConnection con
+  return resp
+    where
     maybeStream response = maybe (error "Couldn't read stream") (handleStream response)
     handleStream p x =
         return $ case getStatusCode p of
