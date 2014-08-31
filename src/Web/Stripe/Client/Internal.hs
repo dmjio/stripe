@@ -44,7 +44,7 @@ import qualified Data.Text.Encoding              as T
 import qualified System.IO.Streams               as Streams
 
 config :: StripeConfig
-config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-08-20"
+config = StripeConfig "sk_test_BQokikJOvBiI2HlWgH4olfQ2" "2014-08-20"
 
 runStripe :: FromJSON a => StripeConfig -> Stripe a -> IO (Either StripeError a)
 runStripe = flip runReaderT
@@ -68,14 +68,16 @@ sendStripeRequest StripeConfig{..} StripeRequest{..} = withOpenSSL $ do
   body <- Streams.fromByteString $ paramsToByteString params
   sendRequest con req $ inputStreamBody body
   resp <- receiveResponse con $ 
-          \response inputStream -> 
-              Streams.read inputStream >>= \res -> 
+          \response inputStream -> do
+              -- Streams.connect inputStream Streams.stdout
+              Streams.read inputStream >>= \res -> do
+                  print (fromJust res)
                   maybeStream response res
   closeConnection con
   return resp
     where
     maybeStream response = maybe (error "Couldn't read stream") (handleStream response)
-    handleStream p x =
+    handleStream p x = do
         return $ case getStatusCode p of
                    200 -> maybe (error "Parse failure") Right (decodeStrict x)
                    code | code >= 400 ->

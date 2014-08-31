@@ -61,8 +61,8 @@ updateCard (CustomerId custId)
            name = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> custId </> "cards" </> cardId
-        params  = [ (k, v) | (k, Just v) <- [
-                     ("address_city",  (\(AddressCity x) -> T.encodeUtf8 x) <$> addressCity)
+        params  = getParams [
+                     ("address_city",  (\(AddressCity x) -> x) <$> addressCity)
                    , ("address_country", (\(AddressCountry x) -> T.encodeUtf8 x) <$> addressCountry)
                    , ("address_line1", (\(AddressLine1 x) -> T.encodeUtf8 x) <$> addressLine1 )
                    , ("address_line2", (\(AddressLine2 x) -> T.encodeUtf8 x) <$> addressLine2 )
@@ -71,8 +71,7 @@ updateCard (CustomerId custId)
                    , ("exp_month", (\(ExpMonth x) -> toBS x) <$> expMonth )
                    , ("exp_year", (\(ExpYear x) -> toBS x) <$> expYear )
                    , ("name", (\(Name x) -> T.encodeUtf8 x) <$> name )
-                   ]
-                 ]
+                  ]
 
 deleteCard :: CustomerId -> CardId -> Stripe StripeDeleteResult
 deleteCard (CustomerId custId) (CardId cardId) = callAPI request

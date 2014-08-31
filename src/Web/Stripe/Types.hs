@@ -526,17 +526,40 @@ instance FromJSON Account where
 
 -- Application Fee --
 data ApplicationFee = ApplicationFee {
-      applicationFeeId             :: Text
-    , applicationFeeCreated        :: UTCTime
-    , applicationFeeLiveMode       :: Bool
-    , applicationFeeAmount         :: Int
-    , applicationFeeCurrency       :: Text
-    , applicationFeeRefunded       :: Bool
-    , applicationFeeAmountRefunded :: Int
+      applicationFeeId                 :: Text
+    , applicationFeeObjecet            :: Text
+    , applicationFeeCreated            :: UTCTime
+    , applicationFeeLiveMode           :: Bool
+    , applicationFeeAmount             :: Int
+    , applicationFeeCurrency           :: Text
+    , applicationFeeRefunded           :: Bool
+    , applicationFeeAmountRefunded     :: Int
+    , applicationFeeRefunds            :: StripeList Refund
+    , applicationFeeBalanceTransaction :: TransactionId
+    , applicationFeeAccountId          :: AccountId
+    , applicationFeeApplicationId      :: ApplicationId
+    , applicationFeeChargeId           :: ChargeId
 } deriving (Show)
 
+newtype ApplicationId = ApplicationId Text deriving (Show)
+
 instance FromJSON ApplicationFee where
-   parseJSON (Object o) = undefined
+   parseJSON (Object o) =
+       ApplicationFee <$> o .: "id"
+                      <*> o .: "object"
+                      <*> (fromSeconds <$> o .: "created")
+                      <*> o .: "livemode"
+                      <*> o .: "amount"
+                      <*> o .: "currency"
+                      <*> o .: "refunded"
+                      <*> o .: "amount_refunded"
+                      <*> o .: "refunds"
+                      <*> (TransactionId <$> o .: "balance_transaction")
+                      <*> (AccountId <$> o .: "account")
+                      <*> (ApplicationId <$> o .: "application")
+                      <*> (ChargeId <$> o .: "charge")
+
+
 
 newtype FeeId = FeeId { feeId :: Text } deriving (Show, Eq)
 
@@ -574,6 +597,7 @@ data Balance = Balance {
 
 data BalanceTransaction = BalanceTransaction {
       balanceTransactionId             :: TransactionId
+    , balanceTransactionObject         :: Text
     , balanceTransactionAmount         :: Int
     , balanceTransactionCurrency       :: Text
     , balanceTransactionNet            :: Int
@@ -583,15 +607,34 @@ data BalanceTransaction = BalanceTransaction {
     , balanceTransactionStatus         :: Text
     , balanceTransactionFee            :: Int
     , balanceTransactionFeeDetails     :: [FeeDetails]
-    , balanceTransactionFeeSource      :: Text
-    , balanceTransactionFeeDescription :: Text
+    , balanceTransactionFeeSource      :: ChargeId
+    , balanceTransactionFeeDescription :: Maybe Text
     } deriving Show
+
+
+instance FromJSON BalanceTransaction where
+   parseJSON (Object o) =
+       BalanceTransaction <$> (TransactionId <$> o .: "id")
+                          <*> o .: "object"
+                          <*> o .: "amount"
+                          <*> o .: "currency"
+                          <*> o .: "net"
+                          <*> o .: "type"
+                          <*> (fromSeconds <$> o .: "created")
+                          <*> (fromSeconds <$> o .: "available_on")
+                          <*> o .: "status"
+                          <*> o .: "fee"
+                          <*> o .: "fee_details"
+                          <*> (ChargeId <$> o .: "source")
+                          <*> o .:? "description"
+   parseJSON _ = mzero
 
 data FeeDetails = FeeDetails {
       feeDetailsAmount   :: Int
     , feeDetailsCurrency :: Text
     , feeType            :: Text
     , feeDescription     :: Text
+    , feeApplication     :: Maybe Text
 } deriving (Show)
 
 newtype TransactionId = TransactionId Text deriving (Show, Eq)
@@ -602,6 +645,8 @@ instance FromJSON FeeDetails where
                   <*> o .: "currency"
                   <*> o .: "type"
                   <*> o .: "description"
+                  <*> o .:? "application"
+   parseJSON _ = mzero
 
 instance FromJSON BalanceAmount where
    parseJSON (Object o) =
@@ -612,20 +657,6 @@ instance FromJSON Balance where
        Balance <$> o .: "pending"
                <*> o .: "available"
 
-instance FromJSON BalanceTransaction where
-   parseJSON (Object o) =
-       BalanceTransaction <$> (TransactionId <$> o .: "id")
-                          <*> o .: "amount"
-                          <*> o .: "currency"
-                          <*> o .: "net"
-                          <*> o .: "type"
-                          <*> (fromSeconds <$> o .: "created")
-                          <*> (fromSeconds <$> o .: "available_on")
-                          <*> o .: "status"
-                          <*> o .: "fee"
-                          <*> o .: "fee_details"
-                          <*> o .: "source"
-                          <*> o .: "description"
 
 ---- Transfers
 newtype RecipientId = RecipientId { recipientId :: Text } deriving (Show, Eq)
@@ -666,7 +697,7 @@ data Transfer = Transfer {
     , transferFailureMessage       :: Maybe Text
     , transferFailureCode          :: Maybe Text
     , transferStatementDescription :: Maybe Text
-    , transferRecipient :: Maybe RecipientId
+    , transferRecipient            :: Maybe RecipientId
 } deriving (Show)
 
 newtype RoutingNumber = RoutingNumber Text deriving (Show, Eq)
@@ -691,5 +722,34 @@ instance FromJSON Transfer where
                  <*> o .:? "failure_code"
                  <*> o .:? "statement_description"
                  <*> (fmap RecipientId <$> o .:? "recipient")
+
+newtype ApplicationFeeRefundId = ApplicationFeeRefundId Text deriving (Show, Eq)
+
+data ApplicationFeeRefund = ApplicationFeeRefund {
+       applicationFeeRefundId                 :: ApplicationFeeRefundId
+     , applicationFeeRefundAmount             :: Int
+     , applicationFeeRefundCurrency           :: Text
+     , applicationFeeRefundCreated            :: UTCTime
+     , applicationFeeRefundObject             :: Text
+     , applicationFeeRefundBalanceTransaction :: Maybe Text
+     , applicationFeeRefundFee                :: FeeId
+     } deriving Show
+
+instance FromJSON ApplicationFeeRefund where
+    parseJSON (Object o) = ApplicationFeeRefund
+              <$> (ApplicationFeeRefundId <$> o .: "id")
+              <*> o .: "amount"
+              <*> o .: "currency"
+              <*> (fromSeconds <$> o .: "created")
+              <*> o .: "object"
+              <*> o .:? "balance_transaction"
+              <*> (FeeId <$> o .: "fee")
+
+data Dispute = Dispute {
+
+} deriving (Show)
+
+instance FromJSON Dispute where
+    parseJSON (Object o) = undefined
 
 

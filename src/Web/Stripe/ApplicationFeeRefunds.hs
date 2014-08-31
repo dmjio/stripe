@@ -1,22 +1,51 @@
-module Web.Stripe.ApplicationFeeRefunds where
+{-# LANGUAGE OverloadedStrings #-}
+module Web.Stripe.ApplicationFeeRefunds
+    ( -- * Types
+      ApplicationFee (..)
+    , ApplicationFeeRefundId (..)
+    , FeeId (..)
+      -- * API calls
+    , createApplicationFeeRefund
+    , retrieveApplicationFeeRefund
+    , getApplicationFeeRefunds
+    ) where
 
-import Data.Text
-import Web.Stripe.Types
+import           Web.Stripe.Client.Internal
+import           Web.Stripe.Types
+import           Control.Applicative
 
-config :: StripeConfig
-config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpHss" "2014-03-28"
+-- | Create a new application refund
+createApplicationFeeRefund 
+    :: FeeId 
+    -> Maybe Amount 
+    -> Stripe ApplicationFeeRefund
+createApplicationFeeRefund (FeeId feeId) amount 
+    = callAPI request
+  where request = StripeRequest POST url params
+        url     = "application_fees" </> feeId </> "refunds"
+        params  = getParams [ 
+                   ("amount", (\(Amount x) -> toText x) <$> amount) 
+                  ]
 
--- Application Fee Refund
-newtype ApplicationFeeRefundId = ApplicationFeeRefundId Text deriving (Show, Eq)
+-- | Create an existing application refund
+retrieveApplicationFeeRefund 
+    :: FeeId
+    -> RefundId
+    -> Stripe ApplicationFeeRefund
+retrieveApplicationFeeRefund (FeeId feeId) (RefundId refundId)
+    = callAPI request
+  where request = StripeRequest GET url params
+        url     = "application_fees" </> feeId </> "refunds" </> refundId
+        params  = []
 
-data ApplicationFeeRefund = ApplicationFeeRefund {  
-       applicationFeeRefundId :: ApplicationFeeRefundId
-     , applicationFeeRefundAmount :: Int
-     , applicationFeeRefundCreated :: UTCTime
-     , applicationFeeRefundCurrency :: Text
-     , applicationFeeRefundBalanceTransaction :: Maybe Text
-     , applicationFeeRefundFee :: FeeId
-     } deriving Show
+-- | Get a list of all application fee refunds
+getApplicationFeeRefunds 
+    :: FeeId 
+    -> Stripe (StripeList ApplicationFeeRefund)
+getApplicationFeeRefunds (FeeId feeId) 
+    = callAPI request
+  where
+    request = StripeRequest GET url params
+    url     = "application_fees" </> feeId </> "refunds" 
+    params  = []
 
-instance FromJSON ApplicationFeeRefund where
-    parseJSON (Object o) = undefined  	

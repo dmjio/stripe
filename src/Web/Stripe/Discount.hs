@@ -10,7 +10,6 @@ module Web.Stripe.Discount
 
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
-import           Web.Stripe.Util
 
 deleteCustomerDiscount :: 
     CustomerId -> -- ^ The Customer to remove the discount from

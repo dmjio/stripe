@@ -11,10 +11,8 @@ module Web.Stripe.Coupon
     ) where
 
 import           Control.Applicative
-import qualified Data.Text.Encoding         as T
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
-import           Web.Stripe.Util
 
 createCoupon :: Maybe CouponId ->
                 Duration ->
@@ -35,16 +33,15 @@ createCoupon couponId
              redeemBy = callAPI request
   where request = StripeRequest POST url params
         url     = "coupons"
-        params  = [ (k,v) | (k, Just v) <- [
-                    ("id", (\(CouponId x) -> toBS x) <$> couponId )
-                  , ("duration", Just $ toBS duration )
-                  , ("amount_off", (\(AmountOff x) -> toBS x) <$> amountOff )
-                  , ("currency", (\(Currency x) -> T.encodeUtf8 x) <$> currency )
-                  , ("duration_in_months", (\(DurationInMonths x) -> toBS x) <$> durationInMonths )
-                  , ("max_redemptions", (\(MaxRedemptions x) -> toBS x) <$> maxRedemptions )
-                  , ("percent_off", (\(PercentOff x) -> toBS x) <$> percentOff )
-                  , ("redeem_by", (\(RedeemBy x) -> toBS x) <$> redeemBy )
-                  ]
+        params  = getParams [
+                    ("id", (\(CouponId x) -> x) <$> couponId )
+                  , ("duration", Just $ toText duration )
+                  , ("amount_off", (\(AmountOff x) -> toText x) <$> amountOff )
+                  , ("currency", currency >>= \(Currency x) -> Just x)
+                  , ("duration_in_months", (\(DurationInMonths x) -> toText x) <$> durationInMonths )
+                  , ("max_redemptions", (\(MaxRedemptions x) -> toText x) <$> maxRedemptions )
+                  , ("percent_off", (\(PercentOff x) -> toText x) <$> percentOff )
+                  , ("redeem_by", (\(RedeemBy x) -> toText x) <$> redeemBy )
                  ]
 
 getCoupon :: CouponId -> Stripe Coupon

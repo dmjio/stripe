@@ -1,21 +1,23 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.ApplicationFee
     ( ApplicationFee(..)
     , FeeId(..)
     , getApplicationFee
-    , refundApplicationFee
     ) where
 
-import           Data.Monoid
 import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types                (ApplicationFee(..))
+import           Web.Stripe.Types
 
 getApplicationFee :: FeeId -> Stripe ApplicationFee
 getApplicationFee (FeeId feeId) = callAPI request
-  where request = StripeRequest GET url []
-        url     = "application_fees/" <> feeId
+  where request = StripeRequest GET url params
+        url     = "application_fees" </> feeId
+        params  = []
 
-refundApplicationFee :: FeeId -> Stripe ApplicationFee
-refundApplicationFee (FeeId feeId) = callAPI request
-  where request = StripeRequest POST url []
-        url     = "application_fees/" <> feeId <> "/refund"
+getApplicationFees :: Stripe (StripeList ApplicationFee)
+getApplicationFees = callAPI request
+  where request = StripeRequest GET url params
+        url     = "application_fees"
+        params  = []
+
 

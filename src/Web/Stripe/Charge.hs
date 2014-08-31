@@ -14,7 +14,6 @@ module Web.Stripe.Charge
     ) where
 
 import           Control.Applicative
-import           Data.Aeson
 import           Data.Bool
 import           Data.Monoid
 import           Data.Text                       (Text)
@@ -84,18 +83,17 @@ createCharge (Currency currency)
              cvc = callAPI request
   where request = StripeRequest POST url params
         url     = "charges"
-        params  = [ (x,y) | (x, Just y) <- [ 
-                     ("amount", Just $ toBS amount)
-                   , ("customer", (\(CustomerId cid) -> T.encodeUtf8 cid) <$> customerId)
-                   , ("currency", Just $ T.encodeUtf8 currency)
-                   , ("description", (\(Description desc) -> T.encodeUtf8 desc) <$> description)
-                   , ("receipt_email", (\(ReceiptEmail email) -> T.encodeUtf8 email) <$> receiptEmail)
+        params  = getParams [ 
+                     ("amount", Just $ toText amount)
+                   , ("customer", (\(CustomerId cid) -> cid) <$> customerId)
+                   , ("currency", Just currency)
+                   , ("description", (\(Description desc) -> desc) <$> description)
+                   , ("receipt_email", (\(ReceiptEmail email) -> email) <$> receiptEmail)
                    , ("capture", Just $ bool "false" "true" capture)
-                   , ("card[number]", (\(CardNumber c) -> toBS c) <$> cardNumber)
-                   , ("card[exp_month]", (\(ExpMonth m) -> toBS m) <$> expMonth)
-                   , ("card[exp_year]", (\(ExpYear y) -> toBS y) <$> expYear)
-                   , ("card[cvc]", (\(CVC cvc) -> toBS cvc) <$> cvc)
-                   ]
+                   , ("card[number]", (\(CardNumber c) -> toText c) <$> cardNumber)
+                   , ("card[exp_month]", (\(ExpMonth m) -> toText m) <$> expMonth)
+                   , ("card[exp_year]", (\(ExpYear y) -> toText y) <$> expYear)
+                   , ("card[cvc]", (\(CVC cvc) -> toText cvc) <$> cvc)
                   ]
 
 getCharge :: ChargeId -> -- ^ The Charge to update
@@ -112,7 +110,7 @@ updateChargeDescription (ChargeId chargeId) (Description description)
     = callAPI request
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId
-        params  = [("description", T.encodeUtf8 description)]
+        params  = getParams [("description", Just description)]
 
 captureCharge :: ChargeId ->           -- ^ The Charge to capture
                  Maybe Amount ->       -- ^ If Nothing the entire charge will be captured, otherwise the remaining will be refunded
@@ -122,14 +120,13 @@ captureCharge (ChargeId chargeId) amount receiptEmail
     = callAPI request
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "capture" 
-        params  = [ (x,y) | (x, Just y) <- [
-                      ("amount", (\(Amount amount) -> toBS amount) <$> amount)
-                    , ("receipt_email", (\(ReceiptEmail email) -> T.encodeUtf8 email) <$> receiptEmail)
-                    ]
+        params  = getParams [
+                      ("amount", (\(Amount amount) -> toText amount) <$> amount)
+                    , ("receipt_email", (\(ReceiptEmail email) -> email) <$> receiptEmail)
                   ]
 
 getCharges :: Stripe (StripeList Charge)
 getCharges = callAPI request
   where request = StripeRequest GET url params
         url     = "charges"
-        params  = [ ("", "1") ]
+        params  = []
