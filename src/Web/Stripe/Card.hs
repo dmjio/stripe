@@ -5,6 +5,7 @@ module Web.Stripe.Card
     , CardId(..)
       -- * API Functions
     , createCard 
+    , createCardByToken
     , getCard 
     , updateCard 
     , deleteCard 
@@ -15,7 +16,7 @@ import           Control.Applicative        ((<$>), (<*>))
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
--- | Create card
+-- | Create card using a Token
 createCardByToken 
     :: CustomerId -- ^ The Customer to which the card will be added
     -> TokenId    -- ^ The Token representative of the card
@@ -28,7 +29,6 @@ createCardByToken
         params  = getParams [
                    ("card", Just tokenId)
                   ]
-
 
 -- | Get card by CustomerID and CardID
 getCard 
