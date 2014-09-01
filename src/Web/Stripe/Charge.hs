@@ -9,6 +9,7 @@ module Web.Stripe.Charge
     , chargeCard
     , chargeCardByToken
     , getCharge
+    , getCharges
     , updateCharge
     , captureCharge
     ) where

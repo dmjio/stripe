@@ -34,7 +34,7 @@ createCardByToken
 getCard 
     :: CustomerId -- ^ CustomerID of the Card to retrieve
     -> CardId     -- ^ ID of the card to retrieve
-    Stripe Card
+    -> Stripe Card
 getCard 
     (CustomerId custId) 
     (CardId cardId) = callAPI request
@@ -75,8 +75,11 @@ updateCard
 updateCard customerId cardId = 
     modifyCard customerId (Just cardId)
 
+type URL = Text
+
 modifyCard 
-     :: CustomerId
+     :: Either CustomerId RecipientId
+     -> URL
      -> Maybe CardId
      -> Maybe ExpMonth
      -> Maybe ExpYear
@@ -90,7 +93,8 @@ modifyCard
      -> Maybe AddressZip
      -> Stripe Card
 modifyCard 
-    (CustomerId custId)
+    userId
+    url
     cardId
     expMonth
     expYear
@@ -103,7 +107,8 @@ modifyCard
     addressState
     addressZip = callAPI request
   where request = StripeRequest POST url params
-        url     = let requestUrl = "customers" </> custId </> "cards"
+        url     = let requestUrl = url </> path </> "cards"
+                      path       = either (\(CustomerId c) -> c) (\(RecipientId r) -> r) userId 
                   in maybe requestUrl (\(CardId c) -> requestUrl </> c) cardId
         params  = getParams [
                      ("address_city",  (\(AddressCity x) -> x) <$> addressCity)

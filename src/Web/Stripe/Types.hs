@@ -379,7 +379,6 @@ data Discount = Discount {
 } deriving (Show, Eq)
 
 
-
 instance FromJSON Discount where
     parseJSON (Object o) =
         Discount <$> o .: "start"
@@ -566,23 +565,20 @@ newtype FeeId = FeeId { feeId :: Text } deriving (Show, Eq)
 -- Events --
 newtype EventId = EventId Text deriving (Show, Eq)
 
-data EventType = ChargeEvent
-   | RefundEvent
-   | AdjustmentEvent
-   | ApplicationFeeEvent
-   | ApplicationFeeRefundEvent
-   | TransferEvent
-   | TransferFailureEvent
-      deriving (Show, Eq)
-
 data Event = Event {
       eventId      :: EventId
     , eventCreated :: UTCTime
+    , eventLiveMode  :: Text
     , eventType    :: Text
 } deriving (Show)
 
 instance FromJSON Event where
-   parseJSON (Object o) = undefined
+   parseJSON (Object o) = 
+       Event <$> (EventId <$> o .: "id")
+             <*> (fromSeconds <$> o .: "created")
+             <*> o .: "livemode"
+             <*> o .: "type"
+             
 
 -- Balance --
 data BalanceAmount = BalanceAmount {
@@ -745,11 +741,81 @@ instance FromJSON ApplicationFeeRefund where
               <*> o .:? "balance_transaction"
               <*> (FeeId <$> o .: "fee")
 
-data Dispute = Dispute {
 
-} deriving (Show)
+--- Disputes ---
+
+data DisputeStatus 
+    = WarningNeedsResponse
+    | WarningUnderReview
+    | NeedsResponse
+    | UnderReview
+    | ChargeRefunded
+    | Won
+    | Lost
+    deriving (Show, Eq)
+
+instance FromJSON DisputeReason where
+   parseJSON (String "duplicate") = pure Duplicate
+   parseJSON (String "fraudulent") = pure Fraudulent
+   parseJSON (String "subscription_canceled") = pure SubscriptionCanceled
+   parseJSON (String "product_unacceptable") = pure ProductUnacceptable
+   parseJSON (String "product_not_received") = pure ProductNotReceived
+   parseJSON (String "credit_not_processed") = pure CreditNotProcessed
+   parseJSON (String "general") = pure General
+   parseJSON _ = mzero
+
+data DisputeReason 
+    = Duplicate
+    | Fraudulent
+    | SubscriptionCanceled
+    | ProductUnacceptable
+    | ProductNotReceived
+    | Unrecognized
+    | CreditNotProcessed
+    | General
+      deriving (Show, Eq)
+
+instance FromJSON DisputeStatus where
+   parseJSON (String "needs_response") = pure NeedsResponse
+   parseJSON (String "warning_needs_response") = pure WarningNeedsResponse
+   parseJSON (String "warning_under_review") = pure WarningUnderReview
+   parseJSON (String "under_review") = pure UnderReview
+   parseJSON (String "charge_refunded") = pure ChargeRefunded
+   parseJSON (String "won") = pure Won
+   parseJSON (String "lost") = pure Lost
+   parseJSON _ = mzero
+
+data Dispute = Dispute {
+      disputeChargeId :: ChargeId
+    , disputeAmount   :: Int
+    , disputeCreated  :: UTCTime
+    , disputeStatus   :: DisputeStatus
+    , disputeLiveMode :: Bool
+    , disputeCurrency :: Currency
+    , disputeObject   :: DisputeReason
+    , disputeReason   :: Text
+    , disputeIsChargeRefundable :: Bool
+    , disputeBalanceTransactions :: [Text]
+    , disputeEvidenceDueBy :: UTCTime
+    , disputeEvidence :: Maybe Text
+    } deriving (Show)
+
+newtype Evidence = Evidence Text deriving (Show, Eq)
 
 instance FromJSON Dispute where
-    parseJSON (Object o) = undefined
+    parseJSON (Object o) = 
+        Dispute <$> (ChargeId <$> o .: "charge")
+                <*> o .: "amount"
+                <*> (fromSeconds <$> o .: "created")
+                <*> o .: "status"
+                <*> o .: "live_mode"
+                <*> (Currency <$> o .: "currency")
+                <*> o .: "object"
+                <*> o .: "reason"
+                <*> o .: "is_charge_refundable"
+                <*> o .: "balance_transactions"
+                <*> (fromSeconds <$> o .: "evidence_due_by")
+                <*> o .:? "evidency"
+                
 
 

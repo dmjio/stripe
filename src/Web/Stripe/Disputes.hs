@@ -1,12 +1,39 @@
-module Web.Stripe.Disputes where
+{-# LANGUAGE OverloadedStrings #-}
 
+module Web.Stripe.Disputes
+    ( -- * Discount Types
+      Dispute       (..)
+    , DisputeReason (..)
+    , DisputeStatus (..)
+    , Evidence      (..)
+      -- * API Functions
+    , updateDispute
+    , closeDispute
+    ) where
 
-updateDispute :: ChargeId -> Stripe Dispute
-updateDispute (ChargeId chargeId) = callAPI config req []
-  where req = StripeRequest POST url
-        url = "charges/" <> chargeId <> "/dispute"
+import           Control.Applicative        ((<$>))
+import           Web.Stripe.Client.Internal
+import           Web.Stripe.Types
 
-closeDispute :: ChargeId -> Stripe Dispute
-closeDispute (ChargeId chargeId) = callAPI config req []
-  where req = StripeRequest POST url
-        url = "charges/" <> chargeId <> "/dispute/close"
+updateDispute
+    :: ChargeId        -- ^ The ID of the Charge being disputed
+    -> Maybe Evidence  -- ^ Text-only evidence of the dispute
+    -> Stripe Dispute
+updateDispute
+    (ChargeId chargeId)
+    evidence
+    = callAPI request
+  where request = StripeRequest POST url params
+        url     = "charges" </> chargeId </> "dispute"
+        params  = getParams [ 
+                   ("evidence", (\(Evidence x) -> x) <$> evidence) 
+                  ]
+
+closeDispute
+    :: ChargeId  -- ^ The ID of the Charge being disputed
+    -> Stripe Dispute
+closeDispute
+    (ChargeId chargeId) = callAPI request
+  where request = StripeRequest POST url params
+        url     = "charges" </> chargeId </> "dispute" </> "close"
+        params  = []

@@ -14,23 +14,25 @@ import           Control.Applicative
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
-createCoupon :: Maybe CouponId ->
-                Duration ->
-                Maybe AmountOff ->
-                Maybe Currency ->
-                Maybe DurationInMonths ->
-                Maybe MaxRedemptions ->
-                Maybe PercentOff ->
-                Maybe RedeemBy ->
-                Stripe Coupon
-createCoupon couponId
-             duration
-             amountOff
-             currency
-             durationInMonths
-             maxRedemptions
-             percentOff
-             redeemBy = callAPI request
+createCoupon
+  :: Maybe CouponId
+  -> Duration
+  -> Maybe AmountOff
+  -> Maybe Currency
+  -> Maybe DurationInMonths
+  -> Maybe MaxRedemptions
+  -> Maybe PercentOff
+  -> Maybe RedeemBy
+  -> Stripe Coupon
+createCoupon 
+    couponId
+    duration
+    amountOff
+    currency
+    durationInMonths
+    maxRedemptions
+    percentOff
+    redeemBy = callAPI request
   where request = StripeRequest POST url params
         url     = "coupons"
         params  = getParams [
@@ -44,17 +46,21 @@ createCoupon couponId
                   , ("redeem_by", (\(RedeemBy x) -> toText x) <$> redeemBy )
                  ]
 
-getCoupon :: CouponId -> Stripe Coupon
-getCoupon (CouponId couponId) = callAPI request
+getCoupon
+    :: CouponId
+    -> Stripe Coupon
+getCoupon
+    (CouponId couponId) = callAPI request
   where request = StripeRequest POST url params
         url     = "coupons" </> couponId
         params  = []
 
-deleteCoupon :: CouponId -> Stripe StripeDeleteResult
-deleteCoupon (CouponId couponId) = callAPI request
+deleteCoupon 
+    :: CouponId
+    -> Stripe StripeDeleteResult
+deleteCoupon 
+    (CouponId couponId) = callAPI request
   where request = StripeRequest DELETE url params
         url     = "coupons" </> couponId
         params  = []
-
-
 

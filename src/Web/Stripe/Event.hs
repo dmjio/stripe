@@ -3,20 +3,21 @@ module Web.Stripe.Event
     ) where
 
 import           Control.Applicative             ((<$>), (<*>))
-import           Data.Aeson
-import           Data.Monoid
-import           Data.Text                       (Text)
-import           Data.Time
 import           Web.Stripe.Client.Internal
-import           Web.Stripe.Util
-import           Web.Stripe.Internal.StripeError
+import           Web.Stripe.Types
 
-config :: StripeConfig
-config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
 
-getEvent :: EventId -> Stripe Event
+getEvent 
+    :: EventId -- ^ The ID of the Event to retrieve
+    -> Stripe Event
 getEvent (EventId eventId) = callAPI request
   where request = StripeRequest GET url params
-        url     = "events/" <> eventId
+        url     = "events" </> eventId
+        params  = []
+
+getEvents :: Stripe (StripeList Event)
+getEvents = callAPI request
+  where request = StripeRequest GET url params
+        url     = "events"
         params  = []
 
