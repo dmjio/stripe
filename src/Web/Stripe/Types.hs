@@ -17,6 +17,8 @@ newtype ChargeId = ChargeId Text deriving (Show, Eq)
 type Key = Text
 type Value = Text
 
+newtype Email = Email Text deriving (Show, Eq)
+
 data Charge = Charge {
       chargeId                   :: Text
     , chargeObject               :: Text
@@ -147,10 +149,10 @@ instance FromJSON Customer where
 
 ---- ==== Card ==== -----
 newtype CardId         = CardId Text deriving (Show, Eq)
-newtype CardNumber     = CardNumber Int deriving (Show, Eq, Ord)
+newtype CardNumber     = CardNumber Text deriving (Show, Eq, Ord)
 newtype ExpMonth       = ExpMonth Int deriving (Show, Eq, Ord)
 newtype ExpYear        = ExpYear Int deriving (Show, Eq, Ord)
-newtype CVC            = CVC Int deriving (Show, Eq, Ord)
+newtype CVC            = CVC Text deriving (Show, Eq, Ord)
 newtype AddressCity    = AddressCity Text deriving (Show, Eq)
 newtype AddressCountry = AddressCountry Text deriving (Show, Eq)
 newtype AddressLine1   = AddressLine1 Text deriving (Show, Eq)
@@ -255,30 +257,18 @@ instance FromJSON Token where
              <*> o .: "type"
              <*> o .: "card"
 
----- == Invoice Item == ------
-data InvoiceLineItem = InvoiceLineItem {
-      invoiceLineItemId          :: Text
-    , invoiceLineItemLiveMode    :: Bool
-    , invoiceLineItemAmount      :: Int
-    , invoiceLineItemCurrency    :: Text
-    , invoiceLineItemProration   :: Bool
-    , invoiceLineItemStart       :: UTCTime
-    , invoiceLineItemEnd         :: UTCTime
-    , invoiceLineItemQuantity    :: Maybe Int
-    , invoiceLineItemPlan        :: Maybe Plan
-    , invoiceLineItemDescription :: Maybe Text
-  } deriving Show
 
 ---- == Invoice == ------
 data Invoice = Invoice {
       invoiceDate                 :: UTCTime
-    , invoiceId                   :: Text
+    , invoiceId                   :: InvoiceId
     , invoicePeriodStart          :: UTCTime
     , invoicePeriodEnd            :: UTCTime
---    , invoiceLineItems            :: StripeList InvoiceLineItem
+    , invoiceLineItems            :: StripeList InvoiceLineItem
     , invoiceSubTotal             :: Int
     , invoiceTotal                :: Int
-    , invoiceCustomer             :: Text
+    , invoiceCustomer             :: CustomerId
+    , invoiceObject               :: Text
     , invoiceAttempted            :: Bool
     , invoiceClosed               :: Bool
     , invoiceForgiven             :: Bool
@@ -286,18 +276,48 @@ data Invoice = Invoice {
     , invoiceLiveMode             :: Bool
     , invoiceAttemptCount         :: Int
     , invoiceAmountDue            :: Int
-    , invoiceCurrency             :: Text
+    , invoiceCurrency             :: Currency
     , invoiceStartingBalance      :: Int
     , invoiceEndingBalance        :: Maybe Int
     , invoiceNextPaymentAttempt   :: UTCTime
     , invoiceWebHooksDeliveredAt  :: UTCTime
     , invoiceCharge               :: Maybe ChargeId
-    , invoiceDiscount             :: Maybe Text
-    , invoiceApplicateFee         :: Maybe ApplicationFee
+    , invoiceDiscount             :: Maybe Discount
+    , invoiceApplicateFee         :: Maybe FeeId
     , invoiceSubscription         :: SubscriptionId
     , invoiceStatementDescription :: Maybe Text
     , invoiceDescription          :: Maybe Text
 } deriving Show
+
+instance FromJSON Invoice where
+   parseJSON (Object o) = 
+       Invoice <$> (fromSeconds <$> o .: "date")
+               <*> (InvoiceId <$> o .: "id")
+               <*> (fromSeconds <$> o .: "period_start")
+               <*> (fromSeconds <$> o .: "period_end")
+               <*> o .: "lines"
+               <*> o .: "subtotal"
+               <*> o .: "total"
+               <*> (CustomerId <$> o .: "customer")
+               <*> o .: "object"
+               <*> o .: "attempted"
+               <*> o .: "closed"
+               <*> o .: "forgiven"
+               <*> o .: "paid"
+               <*> o .: "livemode"
+               <*> o .: "attempt_count"
+               <*> o .: "amount_due"
+               <*> (Currency <$> o .: "currency")
+               <*> o .: "starting_balance"
+               <*> o .:? "ending_balance"
+               <*> (fromSeconds <$> o .: "next_payment_attempt")
+               <*> (fromSeconds <$> o .: "webhooks_delivered_at")
+               <*> (fmap ChargeId <$> o .:? "charge")
+               <*> o .:? "discount"
+               <*> (fmap FeeId <$> o .:? "application_fee")
+               <*> (SubscriptionId <$> o .: "subscription")
+               <*> o .:? "statement_description"
+               <*> o .:? "description"
 
 --- Subscriptions ---
 
@@ -355,17 +375,64 @@ instance FromJSON SubscriptionStatus where
    parseJSON (String "past_due") = pure PastDue
    parseJSON (String "canceled") = pure Canceled
    parseJSON (String "unpaid")   = pure UnPaid
-
+   parseJSON _                   = mzero
 
 --- /Subscriptions ---
 
-instance FromJSON Invoice where
-   parseJSON (Object o) = undefined
+newtype InvoiceLineItemId = 
+    InvoiceLineItemId Text deriving (Show, Eq)
+
+data InvoiceLineItemType 
+    = InvoiceItem
+    | SubscriptionItem 
+      deriving (Show,Eq)
+
+instance FromJSON InvoiceLineItemType where
+   parseJSON (String "invoiceitem")  = pure InvoiceItem
+   parseJSON (String "subscription") = pure SubscriptionItem
+   parseJSON _ = mzero
+
+---- == Invoice Item == ------
+data InvoiceLineItem = InvoiceLineItem {
+      invoiceLineItemId          :: InvoiceLineItemId
+    , invoiceLineItemObject      :: Text
+    , invoiceLineItemType        :: InvoiceLineItemType
+    , invoiceLineItemLiveMode    :: Bool
+    , invoiceLineItemAmount      :: Int
+    , invoiceLineItemCurrency    :: Currency
+    , invoiceLineItemProration   :: Bool
+    , invoiceLineItemPeriod      :: Period
+    , invoiceLineItemQuantity    :: Maybe Int
+    , invoiceLineItemPlan        :: Maybe Plan
+    , invoiceLineItemDescription :: Maybe Text
+  } deriving Show
+
+newtype Quantity = Quantity Int deriving (Show, Eq)
+
+data Period = Period {
+      start :: UTCTime
+    , end   :: UTCTime
+    } deriving (Show, Eq)
+
+instance FromJSON Period where
+   parseJSON (Object o) = 
+       Period <$> (fromSeconds <$> o .: "start")
+              <*> (fromSeconds <$> o .: "end")
 
 instance FromJSON InvoiceLineItem where
-   parseJSON (Object o) = undefined
+   parseJSON (Object o) = 
+       InvoiceLineItem <$> (InvoiceLineItemId <$> o .: "id")
+                       <*> o .: "object"
+                       <*> o .: "type"
+                       <*> o .: "livemode"
+                       <*> o .: "amount"
+                       <*> (Currency <$> o .: "currency")
+                       <*> o .: "proration"
+                       <*> o .: "period"
+                       <*> o .:? "quantity"
+                       <*> o .:? "plan"
+                       <*> o .:? "description"
 
--- https://stripe.com/docs/api#retrieve_invoiceitem
 newtype InvoiceId = InvoiceId Text deriving (Show, Eq)
 -- Invoice Item --
 newtype InvoiceItemId = InvoiceItemId Text deriving (Eq, Show)
@@ -492,7 +559,7 @@ instance FromJSON Plan where
 
 --- Account ---
 newtype AccountId = AccountId Text deriving (Show, Eq)
-
+    
 data Account = Account {
        accountId                  :: AccountId
      , accountEmail               :: Text
@@ -578,7 +645,6 @@ instance FromJSON Event where
              <*> (fromSeconds <$> o .: "created")
              <*> o .: "livemode"
              <*> o .: "type"
-             
 
 -- Balance --
 data BalanceAmount = BalanceAmount {

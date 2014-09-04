@@ -44,7 +44,7 @@ import qualified Data.Text.Encoding              as T
 import qualified System.IO.Streams               as Streams
 
 config :: StripeConfig
-config = StripeConfig "sk_test_BQokikJOvBiI2HlWgH4olfQ2" "2014-08-20"
+config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-08-20"
 
 runStripe :: FromJSON a => StripeConfig -> Stripe a -> IO (Either StripeError a)
 runStripe = flip runReaderT
