@@ -1,11 +1,15 @@
 module Web.Stripe.Event
-    ( 
+    ( -- * Event Types
+      EventId (..)
+    , Event   (..)
+      -- * API calls
+    , getEvent
+    , getEvents
     ) where
 
 import           Control.Applicative             ((<$>), (<*>))
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
-
 
 getEvent 
     :: EventId -- ^ The ID of the Event to retrieve

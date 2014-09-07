@@ -1,42 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Web.Stripe.Customer
-    ( -- * Types
+    ( -- * Customer Types
       Customer  (..)
     , CustomerId(..)
       -- * API Calls
     , createEmptyCustomer
     , createCustomerByEmail
+    , createCustomerByToken
     , createCustomerBase
     , updateCustomer
     , deleteCustomer
     , getCustomer
     ) where
 
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
-
 import           Control.Applicative
 import           Data.Time
 
-createCustomerByEmail 
-    :: Email
-    -> Stripe Customer
-createCustomerByEmail e = 
-    createCustomerBase Nothing Nothing Nothing Nothing 
-                       Nothing Nothing Nothing Nothing 
-                      (Just e) Nothing Nothing Nothing 
-
-createEmptyCustomer
-    :: Stripe Customer
-createEmptyCustomer = 
-    createCustomerBase Nothing Nothing Nothing Nothing 
-                       Nothing Nothing Nothing Nothing 
-                       Nothing Nothing Nothing Nothing 
+import           Web.Stripe.Client.Internal
+import           Web.Stripe.Types
 
 createCustomerBase
     :: Maybe Integer        -- ^ Integer amount
-    -> Maybe CardId         -- ^ Either a dictionary of a card or a tokenId
+    -> Maybe TokenId        -- ^ Either a dictionary of a card or a tokenId
     -> Maybe CardNumber     -- ^ Either a dictionary of a card or a tokenId
     -> Maybe ExpMonth       -- ^ Card Expiration Month
     -> Maybe ExpYear        -- ^ Card Expiration Year
@@ -64,7 +50,7 @@ createCustomerBase
   where request = StripeRequest POST "customers" params
         params  = getParams [
                      ("account_balance", toText <$> accountBalance)
-                   , ("card", (\(CardId x) -> x) <$> cardId)
+                   , ("card", (\(TokenId x) -> x) <$> cardId)
                    , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
                    , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
                    , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
@@ -77,6 +63,29 @@ createCustomerBase
                    , ("trial_end", toText <$> trialEnd)
                 ]
 
+createCustomerByEmail
+    :: Email
+    -> Stripe Customer
+createCustomerByEmail e =
+    createCustomerBase Nothing Nothing Nothing Nothing
+                       Nothing Nothing Nothing Nothing
+                      (Just e) Nothing Nothing Nothing
+
+createEmptyCustomer
+    :: Stripe Customer
+createEmptyCustomer =
+    createCustomerBase Nothing Nothing Nothing Nothing
+                       Nothing Nothing Nothing Nothing
+                       Nothing Nothing Nothing Nothing
+
+createCustomerByToken
+    :: TokenId
+    -> Stripe Customer
+createCustomerByToken t =
+    createCustomerBase Nothing (Just t) Nothing Nothing
+                       Nothing Nothing Nothing Nothing
+                       Nothing Nothing Nothing Nothing
+
 getCustomer
     :: CustomerId
     -> Stripe Customer
@@ -86,11 +95,13 @@ getCustomer (CustomerId cid) = callAPI request
         params  = []
 
 getCustomers
-    :: Stripe (StripeList Customer)
-getCustomers = callAPI request
+    :: Maybe Limit
+    -> Stripe (StripeList Customer)
+getCustomers limit
+    = callAPI request
   where request = StripeRequest GET url params
         url     = "customers"
-        params  = []
+        params  = getParams [ ("limit", toText <$> limit )]
 
 updateCustomer
     :: CustomerId
@@ -102,7 +113,7 @@ updateCustomer (CustomerId cid) = callAPI request
 
 deleteCustomer
     :: CustomerId
-    -> Stripe Customer
+    -> Stripe StripeDeleteResult
 deleteCustomer (CustomerId cid) = callAPI request
   where request = StripeRequest DELETE url params
         url     = "customers" </> cid

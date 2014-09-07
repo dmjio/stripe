@@ -4,7 +4,7 @@ module Web.Stripe.Charge
     ( -- * Charge Types
       Charge   (..)
     , ChargeId (..)  
-      -- * API Functions
+      -- * API calls
     , chargeCustomer
     , chargeCard
     , chargeCardByToken

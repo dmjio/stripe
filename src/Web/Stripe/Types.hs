@@ -17,6 +17,7 @@ newtype ChargeId = ChargeId Text deriving (Show, Eq)
 type Key = Text
 type Value = Text
 
+
 newtype Email = Email Text deriving (Show, Eq)
 
 data Charge = Charge {
@@ -161,7 +162,7 @@ newtype AddressState   = AddressState Text deriving (Show, Eq)
 newtype AddressZip     = AddressZip Text deriving (Show, Eq)
 newtype EndingBefore   = EndingBefore Text deriving (Show, Eq)
 newtype StartingAfter  = StartingAfter Text deriving (Show, Eq)
-newtype Limit          = Limit Int deriving (Show, Eq)
+type Limit             = Int
 
 data Brand = Visa
            | AMEX
@@ -173,7 +174,7 @@ data Brand = Visa
              deriving (Show, Eq)
 
 data Card = Card {
-      cardId                  :: Text
+      cardId                  :: CardId
     , cardLastFour            :: Text
     , cardBrand               :: Brand
     , cardFunding             :: Text
@@ -207,7 +208,7 @@ instance FromJSON Brand where
 
 instance FromJSON Card where
     parseJSON (Object o) =
-        Card <$> o .: "id"
+        Card <$> (CardId <$> o .: "id")
              <*> o .: "last4"
              <*> o .: "brand"
              <*> o .: "funding"
@@ -720,8 +721,25 @@ instance FromJSON Balance where
                <*> o .: "available"
 
 
----- Transfers
+-- * Recipients
 newtype RecipientId = RecipientId { recipientId :: Text } deriving (Show, Eq)
+
+data RecipientType = 
+    Individual | Corporation deriving Eq
+
+instance Show RecipientType where
+    show Individual  = "individual"
+    show Corporation = "corporation"
+
+data Recipient = Recipient { 
+
+} deriving (Show)
+
+instance FromJSON Recipient where
+   parseJSON (Object o) = undefined
+
+---- Transfers
+
 newtype TransferId = TransferId Text deriving (Show, Eq)
 
 data TransferStatus = TransferPaid

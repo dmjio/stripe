@@ -1,16 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.Account
-    ( AccountId(..)
-    , Account(..)
+    ( -- * Account Types
+      AccountId (..)
+    , Account   (..)
+      -- * API calls
     , getAccountDetails
     ) where
 
-import           Control.Applicative        ((<$>), (<*>))
-import           Data.Text                  (Text)
-import           Web.Stripe.Client.Internal (Method (GET), Stripe,
-                                             StripeRequest (StripeRequest),
-                                             callAPI)
-import           Web.Stripe.Types           (Account (..), AccountId (..))
+import           Web.Stripe.Client.Internal
+import           Web.Stripe.Types          
 
 -- | Retrieve the object that represents your Stripe account
 getAccountDetails :: Stripe Account

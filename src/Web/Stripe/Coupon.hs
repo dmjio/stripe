@@ -4,7 +4,7 @@ module Web.Stripe.Coupon
     ( -- * Coupon Types
       Coupon   (..)
     , CouponId (..)
-     -- * API Functions
+     -- * API calls
     , createCoupon
     , getCoupon
     , deleteCoupon

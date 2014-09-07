@@ -1,18 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Client.Error where
 
-import           Control.Applicative
-import           Data.Aeson
+module Web.Stripe.Client.Error 
+    ( -- * Types
+      StripeErrorHTTPCode (..)
+    , StripeErrorType     (..)
+    , StripeErrorCode     (..)
+    , StripeError         (..)
+    ) where
+
+import           Control.Applicative ((<$>))
+import           Data.Aeson          
 import           Data.Text           (Text)
-import qualified Data.Text           as T
 
 data StripeErrorHTTPCode = 
-          BadRequest        -- * 400
-        | UnAuthorized      -- * 401
-        | RequestFailed     -- * 402
-        | NotFound          -- * 404
-        | StripeServerError -- * (>500)
-        | UnknownHTTPCode   -- * All other codes
+          BadRequest        -- ^ 400
+        | UnAuthorized      -- ^ 401
+        | RequestFailed     -- ^ 402
+        | NotFound          -- ^ 404
+        | StripeServerError -- ^ (>500)
+        | UnknownHTTPCode   -- ^ All other codes
           deriving Show
 
 data StripeErrorType =
@@ -46,13 +52,17 @@ data StripeError = StripeError {
     , errorHTTP  :: Maybe StripeErrorHTTPCode
     } deriving Show
 
-toErrorType :: Text -> StripeErrorType
+toErrorType
+    :: Text
+    -> StripeErrorType
 toErrorType "invalid_request_error" = InvalidRequest
 toErrorType "api_error"             = APIError
 toErrorType "card_error"            = CardError
 toErrorType _                       = UnknownErrorType
 
-toErrorCode :: Text -> StripeErrorCode
+toErrorCode
+    :: Text
+    -> StripeErrorCode
 toErrorCode "incorrect_number"     = IncorrectNumber
 toErrorCode "invalid_number"       = InvalidNumber
 toErrorCode "invalid_expiry_month" = InvalidExpiryMonth

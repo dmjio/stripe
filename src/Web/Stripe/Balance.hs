@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.Balance
-    ( Balance       (..)
+    ( -- * Balance Types
+      Balance       (..)
     , TransactionId (..)
+      -- * API calls
     , getBalance
     , getBalanceTransaction
     , getBalanceTransactionHistory
@@ -16,16 +19,17 @@ getBalance = callAPI req
         url    = "balance"
         params = []
 
-getBalanceTransaction :: TransactionId -> Stripe BalanceTransaction
-getBalanceTransaction (TransactionId transactionId) 
-    = callAPI request 
+getBalanceTransaction
+    :: TransactionId
+    -> Stripe BalanceTransaction
+getBalanceTransaction
+    (TransactionId transactionId) = callAPI request 
   where request = StripeRequest GET url params
         url     = "balance" </> "history" </> transactionId
         params  = []
    
 getBalanceTransactionHistory :: Stripe (StripeList BalanceTransaction)
-getBalanceTransactionHistory
-    = callAPI request 
+getBalanceTransactionHistory = callAPI request 
   where request = StripeRequest GET url params
         url     = "balance" </> "history"
         params  = []

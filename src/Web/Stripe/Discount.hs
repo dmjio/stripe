@@ -3,7 +3,7 @@
 module Web.Stripe.Discount
     ( -- * Discount Types
       Discount   (..)
-      -- * API Functions
+      -- * API calls
     , deleteCustomerDiscount
     , deleteSubscriptionDiscount
     ) where

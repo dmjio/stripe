@@ -1,39 +1,50 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.Invoice
-    ( getInvoice
+    ( -- * Invoice Types
+    , Invoice   (..)
+    , InvoiceId (..)
+     -- * API calls
+      getInvoice
     , createInvoice
     , payInvoice
     , updateInvoice
-    -- , getUpComingInvoice
+    , getUpcomingInvoice
     ) where
 
-import Web.Stripe.Client.Internal
-import Web.Stripe.Types
+import           Control.Applicative        ((<$>))
+import           Web.Stripe.Client.Internal
+import           Web.Stripe.Types
 
 getInvoice
     :: InvoiceId
     -> Stripe Invoice
-getInvoice 
+getInvoice
     (InvoiceId invoiceId) = callAPI request
   where request = StripeRequest GET url params
         url     = "invoices" </> invoiceId
         params  = []
 
-getInvoices :: Stripe (StripeList Invoice)
-getInvoices = callAPI request
+getInvoices
+    :: Maybe Limit
+    -> Stripe (StripeList Invoice)
+getInvoices
+    limit = callAPI request
   where request = StripeRequest GET url params
         url     = "invoices"
-        params  = []
+        params  = getParams [
+                   ("limit", toText <$> limit)
+                  ]
 
 createInvoice
     :: CustomerId
     -> Stripe Invoice
-createInvoice 
+createInvoice
     (CustomerId customerId) = callAPI request
   where request = StripeRequest POST url params
         url     = "invoices"
-        params  = getParams [ 
-                   ("customer", Just customerId) 
+        params  = getParams [
+                   ("customer", Just customerId)
                   ]
 
 payInvoice
@@ -60,6 +71,8 @@ getUpcomingInvoice
 getUpcomingInvoice
     (CustomerId customerId) = callAPI request
   where request = StripeRequest GET url params
-        url     = "invoices/upcoming?customer=" <> customerId
-        params  = [] 
+        url     = "invoices" </> "upcoming"
+        params  = getParams [
+                   ("customer", Just customerId)
+                  ]
 

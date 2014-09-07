@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Refunds 
     ( -- * Refund Types
       Refund (..)
@@ -5,36 +6,52 @@ module Web.Stripe.Refunds
       -- * API Functions
     , createRefund
     , getRefund
+    , getRefunds
     , updateRefund
     ) where
 
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Util
-import           Web.Stripe.Types
-import qualified Data.Text.Encoding as T
-import           Data.Monoid
+import           Control.Applicative
+import           Data.Time
 
-createRefund :: ChargeId -> Stripe Refund
-createRefund (ChargeId chargeId) = callAPI request 
+import           Web.Stripe.Client.Internal
+import           Web.Stripe.Types
+
+createRefund
+    :: ChargeId
+    -> Stripe Refund
+createRefund
+    (ChargeId chargeId) = callAPI request 
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "refunds"
         params  = []
 
-getRefund :: ChargeId -> RefundId -> Stripe Refund
-getRefund (ChargeId chargeId) (RefundId refId) = callAPI request 
+getRefund
+    :: ChargeId
+    -> RefundId
+    -> Stripe Refund
+getRefund
+    (ChargeId chargeId)
+    (RefundId refId) = callAPI request 
    where request = StripeRequest GET url params
          url     = "charges" </> chargeId </> "refunds" </> refId
          params  = []
 
-updateRefund :: ChargeId -> RefundId -> Stripe Refund
-updateRefund (ChargeId chargeId) (RefundId refId) key value = callAPI request 
+updateRefund
+    :: ChargeId
+    -> RefundId
+    -> Stripe Refund
+updateRefund
+   (ChargeId chargeId)
+   (RefundId refId) = callAPI request 
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "refunds" </> refId
         params  = []
 
--- getRefunds :: ChargeId -> Stripe Refunds
--- getRefunds (ChargeId chargeId) = callAPI request 
---   where request = StripeRequestuest GET url params
---         url     = "charges/" <> chargeId <> "/refunds"
---         params  = []
+getRefunds
+    :: ChargeId
+    -> Stripe (StripeList Refund)
+getRefunds (ChargeId chargeId) = callAPI request 
+  where request = StripeRequest GET url params
+        url     = "charges" </> chargeId </> "refunds"
+        params  = []
 

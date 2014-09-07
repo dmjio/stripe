@@ -1,44 +1,58 @@
-module Web.Stripe.Recipient where
+{-# LANGUAGE OverloadedStrings #-}
+module Web.Stripe.Recipient 
+    ( -- * Types
+      Recipient (..)
+    , RecipientId (..)
+    , RecipientType (..)
+    -- * API Calls
+    , createRecipient
+    , getRecipient
+    , updateRecipient
+    ) where
 
-import Data.Text.Encoding as T
+import           Control.Applicative
+import           Data.Time
+
 import           Web.Stripe.Client.Internal
-import           Web.Stripe.Util
+import           Web.Stripe.Types
 
-config :: StripeConfig
-config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-03-28"
-
-data RecipientType = Individual | Corporation deriving (Eq, Show)
-
-data Recipient = Recipient { 
-
-} deriving (Show)
-
-instance FromJSON Recipient where
-   parseJSON (Object o) = undefined
-
--- Text should be name?
-createRecipient :: Text -> RecipientType -> IO (Either StripeError Recipient)
-createRecipient name recipientType  = callAPI request
+createRecipient
+    :: Name
+    -> RecipientType
+    -> Stripe Recipient
+createRecipient 
+    (Name name)
+    recipientType  = callAPI request
   where request = StripeRequest POST url params
         url     = "recipients"
-        params  = [ ("name", T.encodeUtf8 name)
-                  , ("type", if recipientType == Individual
-                             then "individual"
-                             else "corporation")
+        params  = getParams [ 
+                    ("name", Just name)
+                  , ("type", toText <$> Just recipientType)
                   ]
 
-getRecipient :: RecipientId -> IO (Either StripeError Recipient)
-getRecipient (RecipientId recipientId) = callAPI config req []
-  where req =  StripeRequest GET url 
-        url = "recipients/" <> recipientId
+getRecipient
+    :: RecipientId
+    -> Stripe Recipient
+getRecipient 
+    (RecipientId recipientId) = callAPI request
+  where request =  StripeRequest GET url params
+        url     = "recipients" </> recipientId
+        params  = []
 
--- -- see optional
-updateRecipient :: RecipientId -> IO (Either StripeError Recipient)
-updateRecipient (RecipientId recipientId) = callAPI config req []
-  where req = StripeRequest POST url
-        url = "recipients/" <> recipientId
+updateRecipient
+    :: RecipientId
+    -> Stripe Recipient
+updateRecipient
+    (RecipientId recipientId) = callAPI request
+  where request = StripeRequest POST url params
+        url     = "recipients" </> recipientId
+        params  = []
 
-deleteRecipient :: RecipientId -> IO (Either StripeError Recipient)
-deleteRecipient (RecipientId recipientId) = callAPI config req []
-  where req =  StripeRequest DELETE url 
-        url = "recipients/" <> recipientId
+deleteRecipient
+    :: RecipientId
+    -> Stripe Recipient
+deleteRecipient
+   (RecipientId recipientId) = callAPI request
+  where request =  StripeRequest DELETE url params
+        url     = "recipients" </> recipientId
+        params  = []

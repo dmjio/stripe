@@ -1,15 +1,22 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.ApplicationFee
-    ( ApplicationFee(..)
-    , FeeId(..)
+    ( -- * Application Fee Types
+      ApplicationFee (..)
+    , FeeId          (..)
+    -- * API calls
     , getApplicationFee
+    , getApplicationFees
     ) where
 
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
-getApplicationFee :: FeeId -> Stripe ApplicationFee
-getApplicationFee (FeeId feeId) = callAPI request
+getApplicationFee 
+    :: FeeId -- ^ The FeeID associated with the application
+    -> Stripe ApplicationFee
+getApplicationFee 
+    (FeeId feeId) = callAPI request
   where request = StripeRequest GET url params
         url     = "application_fees" </> feeId
         params  = []

@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.ApplicationFeeRefunds
-    ( -- * Types
-      ApplicationFee (..)
+    ( -- * Application Fee Refund Types
+      FeeId                  (..)
+    , ApplicationFee         (..)
     , ApplicationFeeRefundId (..)
-    , FeeId (..)
       -- * API calls
     , createApplicationFeeRefund
     , retrieveApplicationFeeRefund
@@ -16,11 +17,12 @@ import           Control.Applicative
 
 -- | Create a new application refund
 createApplicationFeeRefund 
-    :: FeeId 
-    -> Maybe Amount 
+    :: FeeId        -- ^ The FeeID associated with the application
+    -> Maybe Amount -- ^ The Amount associated with the Fee (optional)
     -> Stripe ApplicationFeeRefund
-createApplicationFeeRefund (FeeId feeId) amount 
-    = callAPI request
+createApplicationFeeRefund
+    (FeeId feeId) 
+    amount      = callAPI request
   where request = StripeRequest POST url params
         url     = "application_fees" </> feeId </> "refunds"
         params  = getParams [ 

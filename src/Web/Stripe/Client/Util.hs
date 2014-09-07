@@ -23,7 +23,7 @@ import           Data.Time.Clock.POSIX (posixSecondsToUTCTime,
 toText :: Show a => a -> Text
 toText= T.pack . show
 
-paramsToByteString :: [(S.ByteString, S.ByteString)] -> S.ByteString
+paramsToByteString :: [(ByteString, ByteString)] -> ByteString
 paramsToByteString [] = ""
 paramsToByteString ((x,y) : []) = x <> "=" <> y
 paramsToByteString ((x,y) : xs) = x <> "=" <> y <> "&" <> paramsToByteString xs

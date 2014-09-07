@@ -1,7 +1,7 @@
 name:                stripe-simple
 version:             0.1.0.0
-synopsis:            stripe bindings
-description:         stripe bindings
+synopsis:            Simple haskell bindings to the Stripe API
+description:         Simple haskell bindings to the Stripe API
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson
@@ -11,10 +11,18 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 Test-Suite Tests
-    type:       exitcode-stdio-1.0
-    main-is:    test-suite/Web/Client/TestClient.hs
-    build-depends: base, QuickCheck, stripe-simple
-    hs-source-dirs: src, test-suite
+    type:             exitcode-stdio-1.0
+    main-is:          tests/Main.hs
+    build-depends:    base, stripe-simple, tasty
+    default-language: Haskell2010
+    ghc-options:      -Wall
+
+Benchmark Benchmarks
+    type:             exitcode-stdio-1.0
+    main-is:          benchmarks/Main.hs
+    build-depends:    base, stripe-simple, criterion
+    default-language: Haskell2010
+    ghc-options:      -Wall
 
 library 
   hs-source-dirs:      src
@@ -31,4 +39,5 @@ library
                      , mtl
   default-language:    Haskell2010
   exposed-modules:     Web.Stripe.Client
+  ghc-options:        -Wall
 

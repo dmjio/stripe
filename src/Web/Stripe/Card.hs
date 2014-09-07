@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.Card
-    ( -- * Types
-      Card(..)
-    , CardId(..)
-      -- * API Functions
+    ( -- * Card Types
+      Card   (..)
+    , CardId (..)
+      -- * API calls
     , createCard 
     , createCardByToken
     , getCard 

@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Web.Stripe.Disputes
-    ( -- * Discount Types
+    ( -- * Disput Types
       Dispute       (..)
     , DisputeReason (..)
     , DisputeStatus (..)
     , Evidence      (..)
-      -- * API Functions
+      -- * API calls
     , updateDispute
     , closeDispute
     ) where
