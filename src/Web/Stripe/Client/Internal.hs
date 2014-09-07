@@ -85,12 +85,12 @@ sendStripeRequest
           setHeader "Stripe-Version" apiVersion
   body <- Streams.fromByteString reqBody
   sendRequest con req $ inputStreamBody body
-  resp <- receiveResponse con $
+  json <- receiveResponse con $
           \response inputStream ->
               concatHandler response inputStream >>= \res ->
                   handleStream response res
   closeConnection con
-  return resp
+  return json
       where
         handleStream p x =
           return $ case getStatusCode p of
