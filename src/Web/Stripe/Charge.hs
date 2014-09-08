@@ -31,7 +31,7 @@ chargeCustomer
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
 chargeCustomer customerId currency amount description = 
-    createCharge currency amount description (Just customerId) 
+    createCharge amount currency description (Just customerId) 
     Nothing Nothing Nothing False
     Nothing Nothing Nothing Nothing 
 
@@ -42,7 +42,7 @@ chargeCardByToken
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
 chargeCardByToken tokenId currency amount description = 
-    createCharge currency amount description Nothing (Just tokenId) 
+    createCharge amount currency description Nothing (Just tokenId) 
     Nothing Nothing True Nothing Nothing Nothing Nothing
 
 chargeCard 
@@ -55,14 +55,14 @@ chargeCard
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
 chargeCard cardNumber expMonth expYear cvc currency amount description = 
-    createCharge currency amount description
+    createCharge amount currency description
     Nothing Nothing Nothing Nothing True
     (Just cardNumber) (Just expMonth) 
     (Just expYear) (Just cvc)
 
 createCharge 
-    :: Currency           -- ^ Required, 3-letter ISO Code
-    -> Amount             -- ^ Required, Integer value of 100 represents $1 
+    :: Amount             -- ^ Required, Integer value of 100 represents $1 
+    -> Currency           -- ^ Required, 3-letter ISO Code
     -> Maybe Description  -- ^ Optional, default is nullo
     -> Maybe CustomerId   -- ^ Optional, either CustomerId or TokenId has to be specified
     -> Maybe TokenId      -- ^ Optional, either CustomerId or TokenId has to be specified
@@ -75,8 +75,8 @@ createCharge
     -> Maybe CVC 
     -> Stripe Charge
 createCharge 
-    (Currency currency)
     (Amount amount) 
+    (Currency currency)
     description 
     customerId
     tokenId

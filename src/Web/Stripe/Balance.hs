@@ -10,6 +10,8 @@ module Web.Stripe.Balance
     , getBalanceTransactionHistory
     ) where
 
+import           Control.Applicative
+
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
@@ -28,9 +30,14 @@ getBalanceTransaction
         url     = "balance" </> "history" </> transactionId
         params  = []
    
-getBalanceTransactionHistory :: Stripe (StripeList BalanceTransaction)
-getBalanceTransactionHistory = callAPI request 
+getBalanceTransactionHistory
+    :: Maybe Limit 
+    -> Stripe (StripeList BalanceTransaction)
+getBalanceTransactionHistory
+    limit = callAPI request 
   where request = StripeRequest GET url params
         url     = "balance" </> "history"
-        params  = []
+        params  = getParams [ 
+                   ("limit", toText <$> limit) 
+                  ]
                         

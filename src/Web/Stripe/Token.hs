@@ -18,19 +18,22 @@ createCardToken
     -> ExpMonth   -- ^ Credit Card Expiration Month
     -> ExpYear    -- ^ Credit Card Expiration Year
     -> CVC        -- ^ Credit Card CVC
+    -- -> Maybe Name         -- ^ Name on Credit Card
+    -- -> Maybe AddressLine1 -- ^ Name on Credit Card
     -> Stripe Token
 createCardToken
       (CardNumber number)
       (ExpMonth month)
       (ExpYear year)
-      (CVC cvc) = callAPI request
+      (CVC cvc) 
+          = callAPI request
   where request = StripeRequest POST url params
         url     = "tokens"
         params  = getParams [
-                    ("card[number]", toText <$> Just number)
+                    ("card[number]", Just number)
                   , ("card[exp_month]", toText <$> Just month)
                   , ("card[exp_year]", toText <$> Just year)
-                  , ("card[cvc]", toText <$> Just cvc)
+                  , ("card[cvc]", Just cvc)
                   ]
 
 createBankAccountToken
