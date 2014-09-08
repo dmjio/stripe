@@ -14,6 +14,7 @@ module Web.Stripe.Client.Internal
     , module Web.Stripe.Client.Util
     ) where
 
+import           Control.Exception         
 import           Control.Applicative        ((<$>), (<*>))
 import           Control.Monad.IO.Class     (MonadIO (liftIO))
 import           Control.Monad.Reader       (ReaderT, ask, runReaderT)
@@ -24,15 +25,17 @@ import           Data.Maybe                 (fromJust, fromMaybe)
 import           Data.Monoid                (mempty, (<>))
 import           Data.Text                  (Text)
 import           Network.Http.Client        (Method (..), baselineContextSSL,
-                                             buildRequest, closeConnection,
+                                             buildRequest, closeConnection, Connection,
                                              emptyBody, getStatusCode, http,
                                              inputStreamBody, openConnectionSSL,
                                              receiveResponse, sendRequest, concatHandler,
                                              setAuthorizationBasic,
                                              setContentType, setHeader)
 import           OpenSSL                    (withOpenSSL)
-import           Web.Stripe.Client.Error    (StripeError (..),
-                                             StripeErrorHTTPCode (..))
+import           Web.Stripe.Client.Error    (StripeError (..)
+                                            , StripeErrorHTTPCode (..)
+                                            , StripeErrorType(..)
+                                            )
 import           Web.Stripe.Client.Types
 import           Web.Stripe.Client.Util
 
@@ -68,32 +71,37 @@ sendStripeRequest
     -> IO (Either StripeError a)
 sendStripeRequest
     StripeConfig {..}
-    StripeRequest{..} = withOpenSSL $ do
-  ctx <- baselineContextSSL
-  con <- openConnectionSSL ctx "api.stripe.com" 443
-  let reqBody | method == GET = mempty
-              | otherwise     = paramsToByteString params
-      reqURL  | method == GET = S.concat [ T.encodeUtf8 url
-                                         , "?"
-                                         , paramsToByteString params
-                                         ]
-              | otherwise = mempty
-  req <- buildRequest $ do
+    StripeRequest{..} = 
+        withOpenSSL $ do
+          ctx <- baselineContextSSL
+          result <- try (openConnectionSSL ctx "api.stripe.com" 443) :: IO (Either SomeException Connection)
+          case result of
+            Left  msg -> return $ Left $ StripeError ConnectionFailure (toText msg) Nothing Nothing Nothing
+            Right con -> handleConnection con
+  where
+    handleConnection con = do
+      let reqBody | method == GET = mempty
+                  | otherwise     = paramsToByteString params
+          reqURL  | method == GET = S.concat [ T.encodeUtf8 url
+                                             , "?"
+                                             , paramsToByteString params
+                                             ]
+                  | otherwise = T.encodeUtf8 url
+      req <- buildRequest $ do
           http method $ "/v1/" <> reqURL
           setAuthorizationBasic secretKey mempty
           setContentType "application/x-www-form-urlencoded"
           setHeader "Stripe-Version" apiVersion
-  body <- Streams.fromByteString reqBody
-  sendRequest con req $ inputStreamBody body
-  json <- receiveResponse con $
-          \response inputStream ->
-              concatHandler response inputStream >>= \res ->
-                  handleStream response res
-  closeConnection con
-  return json
-      where
-        handleStream p x =
-          return $ case getStatusCode p of
+      body <- Streams.fromByteString reqBody
+      sendRequest con req $ inputStreamBody body
+      json <- receiveResponse con $
+              \response inputStream ->
+                  concatHandler response inputStream >>= \result -> 
+                      handleStream response result
+      closeConnection con
+      return json
+    handleStream p x =
+        return $ case getStatusCode p of
                    200 -> maybe (error "Parse failure") Right (decodeStrict x)
                    code | code >= 400 ->
                      do let json = fromMaybe (error "Parse Failure") (decodeStrict x :: Maybe StripeError)

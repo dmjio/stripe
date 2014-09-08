@@ -25,6 +25,7 @@ data StripeErrorType =
           InvalidRequest
         | APIError
         | CardError
+        | ConnectionFailure
         | UnknownErrorType 
           deriving Show
 
