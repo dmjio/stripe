@@ -1,8 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- |
+-- Module      : Web.Stripe.Customer
+-- Description : Module for handling Stripe Customers with the Stripe API
+-- Copyright   : (c) David Johnson, 2014
+-- License     : BSD3
+-- Maintainer  : djohnson.m@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
+
 module Web.Stripe.Customer
     ( -- * Customer Types
-      Customer  (..)
+      Customer  (..) 
     , CustomerId(..)
       -- * API Calls
     , createEmptyCustomer
@@ -20,6 +29,8 @@ import           Data.Time
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
+------------------------------------------------------------------------------
+-- | The base request for customer creation
 createCustomerBase
     :: Maybe Integer        -- ^ Integer amount
     -> Maybe TokenId        -- ^ Either a dictionary of a card or a tokenId
@@ -63,6 +74,8 @@ createCustomerBase
                    , ("trial_end", toText <$> trialEnd)
                 ]
 
+------------------------------------------------------------------------------
+-- | Creates a customer by his/her email
 createCustomerByEmail
     :: Email
     -> Stripe Customer
@@ -71,6 +84,8 @@ createCustomerByEmail e =
                        Nothing Nothing Nothing Nothing
                       (Just e) Nothing Nothing Nothing
 
+------------------------------------------------------------------------------
+-- | Creates a blank customer
 createEmptyCustomer
     :: Stripe Customer
 createEmptyCustomer =
@@ -78,6 +93,8 @@ createEmptyCustomer =
                        Nothing Nothing Nothing Nothing
                        Nothing Nothing Nothing Nothing
 
+------------------------------------------------------------------------------
+-- | Creates a customer by a Token created from stripe.js or the stripe API.
 createCustomerByToken
     :: TokenId
     -> Stripe Customer
@@ -86,6 +103,8 @@ createCustomerByToken t =
                        Nothing Nothing Nothing Nothing
                        Nothing Nothing Nothing Nothing
 
+------------------------------------------------------------------------------
+-- | Retrieves a customer by his/her ID.
 getCustomer
     :: CustomerId
     -> Stripe Customer
@@ -94,6 +113,8 @@ getCustomer (CustomerId cid) = callAPI request
         url     = "customers" </> cid
         params  = []
 
+------------------------------------------------------------------------------
+-- | Retrieve up to 100 customers at a time
 getCustomers
     :: Maybe Limit
     -> Stripe (StripeList Customer)
@@ -103,6 +124,8 @@ getCustomers limit
         url     = "customers"
         params  = getParams [ ("limit", toText <$> limit )]
 
+------------------------------------------------------------------------------
+-- | Updates a customer
 updateCustomer
     :: CustomerId
     -> Stripe Customer
@@ -111,6 +134,8 @@ updateCustomer (CustomerId cid) = callAPI request
         url     = "customers" </> cid
         params  = []
 
+------------------------------------------------------------------------------
+-- | Deletes the specified customer
 deleteCustomer
     :: CustomerId
     -> Stripe StripeDeleteResult

@@ -2,10 +2,10 @@
 
 module Web.Stripe.Invoice
     ( -- * Invoice Types
-    , Invoice   (..)
+      Invoice   (..)
     , InvoiceId (..)
      -- * API calls
-      getInvoice
+    , getInvoice
     , createInvoice
     , payInvoice
     , updateInvoice

@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Web.Stripe.InvoiceItem 
     ( -- * Types 
       InvoiceItemId (..)
@@ -9,20 +11,37 @@ module Web.Stripe.InvoiceItem
     , deleteInvoiceItem
     ) where  
 
+import           Control.Applicative        ((<$>))
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
+------------------------------------------------------------------------------
+-- | Create an invoice for a Customer
 createInvoiceItem
     :: CustomerId
+    -> Amount
+    -> Currency
+    -> Maybe InvoiceId
+    -> Maybe SubscriptionId
+    -> Maybe Description
     -> Stripe InvoiceItem
 createInvoiceItem
-    (CustomerId customerId) = callAPI request
+    (CustomerId customerId)
+    amount
+    (Currency currency)
+    invoiceId
+    subscriptionId
+    description
+        = callAPI request
   where request = StripeRequest POST url params
         url     = "invoiceitems"
         params  = getParams [ 
-                    ("customer", customerId)
-                  , ("amount", "1000")
-                  , ("currency", "usd")
+                    ("customer", Just customerId)
+                  , ("amount", toText <$> Just amount)
+                  , ("currency", Just currency)
+                  , ("invoice", (\(InvoiceId x) -> x) <$> invoiceId)
+                  , ("subscription", (\(SubscriptionId x) -> x) <$> subscriptionId)
+                  , ("description", (\(Description x) -> x) <$> description)
                   ]
 
 getInvoiceItem

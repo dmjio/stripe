@@ -5,10 +5,10 @@ module Web.Stripe.Card
       Card   (..)
     , CardId (..)
       -- * API calls
-    , createCard 
+--    , createCard 
     , createCardByToken
     , getCard 
-    , updateCard 
+--    , updateCard 
     , deleteCard 
     , getCards
     ) where
@@ -43,40 +43,38 @@ getCard
         url     = "customers" </> custId </> "cards" </> cardId
         params  = []
 
-createCard
-  :: CustomerId
-  -> ExpMonth
-  -> ExpYear
-  -> CVC
-  -> Maybe Name
-  -> Maybe AddressCity
-  -> Maybe AddressCountry
-  -> Maybe AddressLine1
-  -> Maybe AddressLine2
-  -> Maybe AddressState
-  -> Maybe AddressZip
-  -> Stripe Card
-createCard customerId expMonth expYear cvc
-    = modifyCard customerId Nothing (Just expMonth) (Just expYear) (Just cvc)
+-- createCard
+--   :: CustomerId
+--   -> ExpMonth
+--   -> ExpYear
+--   -> CVC
+--   -> Maybe Name
+--   -> Maybe AddressCity
+--   -> Maybe AddressCountry
+--   -> Maybe AddressLine1
+--   -> Maybe AddressLine2
+--   -> Maybe AddressState
+--   -> Maybe AddressZip
+--   -> Stripe Card
+-- createCard customerId expMonth expYear cvc
+--     = modifyCard customerId Nothing (Just expMonth) (Just expYear) (Just cvc)
 
-updateCard
-    :: CustomerId
-    -> CardId
-    -> Maybe ExpMonth
-    -> Maybe ExpYear
-    -> Maybe CVC
-    -> Maybe Name
-    -> Maybe AddressCity
-    -> Maybe AddressCountry
-    -> Maybe AddressLine1
-    -> Maybe AddressLine2
-    -> Maybe AddressState
-    -> Maybe AddressZip
-    -> Stripe Card
-updateCard customerId cardId = 
-    modifyCard customerId (Just cardId)
-
-type URL = Text
+-- updateCard
+--     :: CustomerId
+--     -> CardId
+--     -> Maybe ExpMonth
+--     -> Maybe ExpYear
+--     -> Maybe CVC
+--     -> Maybe Name
+--     -> Maybe AddressCity
+--     -> Maybe AddressCountry
+--     -> Maybe AddressLine1
+--     -> Maybe AddressLine2
+--     -> Maybe AddressState
+--     -> Maybe AddressZip
+--     -> Stripe Card
+-- updateCard customerId cardId = 
+--     modifyCard customerId (Just cardId)
 
 modifyCard 
      :: Either CustomerId RecipientId

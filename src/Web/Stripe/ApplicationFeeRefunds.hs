@@ -26,7 +26,7 @@ createApplicationFeeRefund
   where request = StripeRequest POST url params
         url     = "application_fees" </> feeId </> "refunds"
         params  = getParams [ 
-                   ("amount", (\(Amount x) -> toText x) <$> amount) 
+                   ("amount", toText <$> amount) 
                   ]
 
 -- | Create an existing application refund

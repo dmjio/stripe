@@ -22,7 +22,7 @@ createTransfer
     -> Stripe Transfer
 createTransfer
     (RecipientId recipientId)
-    (Amount amount) 
+    amount
     (Currency currency) = callAPI request
   where request = StripeRequest POST url params
         url     = "transfers"

@@ -14,9 +14,9 @@ import           Web.Stripe.Client.Internal
 
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
-type Key = Text
+type Key   = Text
 type Value = Text
-
+type URL   = Text
 
 newtype Email = Email Text deriving (Show, Eq)
 
@@ -291,7 +291,7 @@ data Invoice = Invoice {
 } deriving Show
 
 instance FromJSON Invoice where
-   parseJSON (Object o) = 
+   parseJSON (Object o) =
        Invoice <$> (fromSeconds <$> o .: "date")
                <*> (InvoiceId <$> o .: "id")
                <*> (fromSeconds <$> o .: "period_start")
@@ -380,18 +380,48 @@ instance FromJSON SubscriptionStatus where
 
 --- /Subscriptions ---
 
-newtype InvoiceLineItemId = 
+newtype InvoiceLineItemId =
     InvoiceLineItemId Text deriving (Show, Eq)
 
-data InvoiceLineItemType 
-    = InvoiceItem
-    | SubscriptionItem 
+data InvoiceLineItemType
+    = --InvoiceItem
+     SubscriptionItem
       deriving (Show,Eq)
 
 instance FromJSON InvoiceLineItemType where
-   parseJSON (String "invoiceitem")  = pure InvoiceItem
+--   parseJSON (String "invoiceitem")  = pure InvoiceItem
    parseJSON (String "subscription") = pure SubscriptionItem
    parseJSON _ = mzero
+
+
+
+data InvoiceItem = InvoiceItem {
+      invoiceItemObject       :: Text
+    , invoiceItemId           :: InvoiceItemId
+    , invoiceItemDate         :: UTCTime
+    , invoiceItemAmount       :: Int
+    , invoiceItemLiveMode     :: Bool
+    , invoiceItemProration    :: Bool
+    , invoiceItemCurrency     :: Currency
+    , invoiceItemCustomer     :: CustomerId
+    , invoiceItemDescription  :: Text
+    , invoiceItemInvoice      :: Maybe Invoice
+    , invoiceItemSubscription :: Maybe Subscription
+    } deriving Show
+
+instance FromJSON InvoiceItem where
+   parseJSON (Object o) =
+       InvoiceItem <$> o .: "object"
+                   <*> (InvoiceItemId <$> o .: "id")
+                   <*> (fromSeconds <$> o .: "date")
+                   <*> o .: "amount"
+                   <*> o .: "livemode"
+                   <*> o .: "proration"
+                   <*> (Currency <$> o .: "currency")
+                   <*> (CustomerId <$> o .: "customer")
+                   <*> o .: "description"
+                   <*> o .:? "invoice"
+                   <*> o .:? "subscription"
 
 ---- == Invoice Item == ------
 data InvoiceLineItem = InvoiceLineItem {
@@ -416,12 +446,12 @@ data Period = Period {
     } deriving (Show, Eq)
 
 instance FromJSON Period where
-   parseJSON (Object o) = 
+   parseJSON (Object o) =
        Period <$> (fromSeconds <$> o .: "start")
               <*> (fromSeconds <$> o .: "end")
 
 instance FromJSON InvoiceLineItem where
-   parseJSON (Object o) = 
+   parseJSON (Object o) =
        InvoiceLineItem <$> (InvoiceLineItemId <$> o .: "id")
                        <*> o .: "object"
                        <*> o .: "type"
@@ -437,6 +467,8 @@ instance FromJSON InvoiceLineItem where
 newtype InvoiceId = InvoiceId Text deriving (Show, Eq)
 -- Invoice Item --
 newtype InvoiceItemId = InvoiceItemId Text deriving (Eq, Show)
+
+
 
 --- Discount --
 
@@ -514,7 +546,7 @@ newtype Currency        = Currency Text deriving (Show, Eq)
 newtype IntervalCount   = IntervalCount Int deriving (Show, Eq)
 newtype TrialPeriodDays = TrialPeriodDays Int deriving (Show, Eq)
 newtype Description     = Description Text deriving (Show, Eq)
-newtype Amount          = Amount Int deriving (Show, Eq)
+type Amount = Int
 
 data Interval = Week | Month | Year deriving (Eq)
 
@@ -560,7 +592,7 @@ instance FromJSON Plan where
 
 --- Account ---
 newtype AccountId = AccountId Text deriving (Show, Eq)
-    
+
 data Account = Account {
        accountId                  :: AccountId
      , accountEmail               :: Text
@@ -634,14 +666,14 @@ newtype FeeId = FeeId { feeId :: Text } deriving (Show, Eq)
 newtype EventId = EventId Text deriving (Show, Eq)
 
 data Event = Event {
-      eventId      :: EventId
-    , eventCreated :: UTCTime
-    , eventLiveMode  :: Text
-    , eventType    :: Text
+      eventId       :: EventId
+    , eventCreated  :: UTCTime
+    , eventLiveMode :: Text
+    , eventType     :: Text
 } deriving (Show)
 
 instance FromJSON Event where
-   parseJSON (Object o) = 
+   parseJSON (Object o) =
        Event <$> (EventId <$> o .: "id")
              <*> (fromSeconds <$> o .: "created")
              <*> o .: "livemode"
@@ -724,14 +756,14 @@ instance FromJSON Balance where
 -- * Recipients
 newtype RecipientId = RecipientId { recipientId :: Text } deriving (Show, Eq)
 
-data RecipientType = 
+data RecipientType =
     Individual | Corporation deriving Eq
 
 instance Show RecipientType where
     show Individual  = "individual"
     show Corporation = "corporation"
 
-data Recipient = Recipient { 
+data Recipient = Recipient {
 
 } deriving (Show)
 
@@ -828,7 +860,7 @@ instance FromJSON ApplicationFeeRefund where
 
 --- Disputes ---
 
-data DisputeStatus 
+data DisputeStatus
     = WarningNeedsResponse
     | WarningUnderReview
     | NeedsResponse
@@ -848,7 +880,7 @@ instance FromJSON DisputeReason where
    parseJSON (String "general") = pure General
    parseJSON _ = mzero
 
-data DisputeReason 
+data DisputeReason
     = Duplicate
     | Fraudulent
     | SubscriptionCanceled
@@ -870,24 +902,24 @@ instance FromJSON DisputeStatus where
    parseJSON _ = mzero
 
 data Dispute = Dispute {
-      disputeChargeId :: ChargeId
-    , disputeAmount   :: Int
-    , disputeCreated  :: UTCTime
-    , disputeStatus   :: DisputeStatus
-    , disputeLiveMode :: Bool
-    , disputeCurrency :: Currency
-    , disputeObject   :: DisputeReason
-    , disputeReason   :: Text
-    , disputeIsChargeRefundable :: Bool
+      disputeChargeId            :: ChargeId
+    , disputeAmount              :: Int
+    , disputeCreated             :: UTCTime
+    , disputeStatus              :: DisputeStatus
+    , disputeLiveMode            :: Bool
+    , disputeCurrency            :: Currency
+    , disputeObject              :: DisputeReason
+    , disputeReason              :: Text
+    , disputeIsChargeRefundable  :: Bool
     , disputeBalanceTransactions :: [Text]
-    , disputeEvidenceDueBy :: UTCTime
-    , disputeEvidence :: Maybe Text
+    , disputeEvidenceDueBy       :: UTCTime
+    , disputeEvidence            :: Maybe Text
     } deriving (Show)
 
 newtype Evidence = Evidence Text deriving (Show, Eq)
 
 instance FromJSON Dispute where
-    parseJSON (Object o) = 
+    parseJSON (Object o) =
         Dispute <$> (ChargeId <$> o .: "charge")
                 <*> o .: "amount"
                 <*> (fromSeconds <$> o .: "created")
@@ -900,6 +932,6 @@ instance FromJSON Dispute where
                 <*> o .: "balance_transactions"
                 <*> (fromSeconds <$> o .: "evidence_due_by")
                 <*> o .:? "evidency"
-                
+
 
 

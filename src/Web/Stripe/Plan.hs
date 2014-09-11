@@ -31,7 +31,7 @@ createPlan
     -> Stripe Plan
 createPlan 
     (PlanId planId)
-    (Amount amount)
+    amount
     (Currency currency)
     interval
     (Name name) 

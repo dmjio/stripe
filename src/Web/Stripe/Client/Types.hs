@@ -1,20 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Web.Stripe.Client.Types 
-  ( Stripe 
+module Web.Stripe.Client.Types
+  ( Stripe
   , StripeRequest (..)
   , StripeConfig (..)
   , StripeDeleteResult (..)
   ) where
 
-import           Control.Applicative
-import           Control.Monad.IO.Class          (MonadIO (liftIO))
-import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
-import           Data.Aeson
-import           Data.ByteString                 (ByteString)
-import           Data.Text                       (Text)
-import           Network.Http.Client
-import           Web.Stripe.Client.Error
+import           Control.Applicative     ((<$>), (<*>))
+import           Control.Monad           (mzero)
+import           Control.Monad.Reader    (ReaderT)
+import           Data.Aeson              (FromJSON(parseJSON), (.:), Value(Object))
+import           Data.ByteString         (ByteString)
+import           Data.Text               (Text)
+import           Network.Http.Client     (Method)
+import           Web.Stripe.Client.Error (StripeError)
 
 -- Base Type we use for Stripe
 type Stripe a = ReaderT StripeConfig IO (Either StripeError a)
@@ -41,4 +41,5 @@ data StripeDeleteResult = StripeDeleteResult {
 instance FromJSON StripeDeleteResult where
    parseJSON (Object o) =
        StripeDeleteResult <$> o .: "deleted"
-                          <*> o .: "id"    
+                          <*> o .: "id"
+   parseJSON _ = mzero

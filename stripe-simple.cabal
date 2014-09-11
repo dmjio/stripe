@@ -26,18 +26,39 @@ Benchmark Benchmarks
 
 library 
   hs-source-dirs:      src
-  build-depends:       base >=4.7 && <4.8
-                     , http-streams
-                     , aeson
+  build-depends:       aeson
+                     , base >=4.7 && <4.8
                      , bytestring
-                     , unordered-containers
-                     , text
                      , HsOpenSSL
+                     , http-streams
                      , io-streams
+                     , mtl
+                     , text
                      , time
                      , transformers
-                     , mtl
+                     , unordered-containers
+                     , vector
+              
   default-language:    Haskell2010
   exposed-modules:     Web.Stripe.Client
+                       Web.Stripe.Account
+                       Web.Stripe.ApplicationFee
+                       Web.Stripe.ApplicationFeeRefunds
+                       Web.Stripe.Balance
+                       Web.Stripe.Card
+                       Web.Stripe.Charge
+                       Web.Stripe.Coupon
+                       Web.Stripe.Customer
+                       Web.Stripe.Discount
+                       Web.Stripe.Disputes
+                       Web.Stripe.Event
+                       Web.Stripe.Invoice
+                       Web.Stripe.InvoiceItem
+                       Web.Stripe.Plan
+                       Web.Stripe.Recipient
+                       Web.Stripe.Refunds
+                       Web.Stripe.Subscriptions
+                       Web.Stripe.Token
+                       Web.Stripe.Transfers
   ghc-options:        -Wall
 

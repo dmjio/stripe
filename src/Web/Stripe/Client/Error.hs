@@ -11,6 +11,7 @@ module Web.Stripe.Client.Error
 import           Control.Applicative ((<$>))
 import           Data.Aeson          
 import           Data.Text           (Text)
+import           Control.Monad       (mzero)
 
 data StripeErrorHTTPCode = 
           BadRequest        -- ^ 400
@@ -86,4 +87,5 @@ instance FromJSON StripeError where
         code  <- fmap toErrorCode <$> e .:? "code"
         param <- e .:? "param"
         return $ StripeError typ msg code param Nothing
+    parseJSON _ = mzero
 

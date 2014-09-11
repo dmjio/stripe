@@ -75,7 +75,7 @@ createCharge
     -> Maybe CVC 
     -> Stripe Charge
 createCharge 
-    (Amount amount) 
+    amount
     (Currency currency)
     description 
     customerId
@@ -90,7 +90,7 @@ createCharge
   where request = StripeRequest POST url params
         url     = "charges"
         params  = getParams [ 
-                     ("amount", Just $ toText amount)
+                     ("amount", toText <$> Just amount)
                    , ("customer", (\(CustomerId cid) -> cid) <$> customerId)
                    , ("currency", Just currency)
                    , ("description", (\(Description desc) -> desc) <$> description)
@@ -133,7 +133,7 @@ captureCharge
   where request  = StripeRequest POST url params
         url      = "charges" </> chargeId </> "capture" 
         params   = getParams [
-                     ("amount", (\(Amount amount) -> toText amount) <$> amount)
+                     ("amount", toText <$> amount)
                    , ("receipt_email", (\(ReceiptEmail email) -> email) <$> receiptEmail)
                    ]
 
