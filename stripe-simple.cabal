@@ -10,19 +10,19 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
 
-Test-Suite Tests
+Test-Suite tests
     type:             exitcode-stdio-1.0
     main-is:          tests/Main.hs
-    build-depends:    base, stripe-simple, tasty
+    build-depends:    base, stripe-simple, bytestring, mtl, text, transformers
     default-language: Haskell2010
-    ghc-options:      -Wall
+    ghc-options:      -Wall -threaded
 
-Benchmark Benchmarks
+Benchmark benchmarks
     type:             exitcode-stdio-1.0
     main-is:          benchmarks/Main.hs
     build-depends:    base, stripe-simple, criterion
     default-language: Haskell2010
-    ghc-options:      -Wall
+    ghc-options:      -Wall -threaded
 
 library 
   hs-source-dirs:      src
@@ -40,6 +40,11 @@ library
                      , vector
               
   default-language:    Haskell2010
+  other-modules:       Web.Stripe.Client.Internal
+                       Web.Stripe.Client.Error
+                       Web.Stripe.Client.Types
+                       Web.Stripe.Client.Util
+                       Web.Stripe.Types
   exposed-modules:     Web.Stripe.Client
                        Web.Stripe.Account
                        Web.Stripe.ApplicationFee
@@ -60,5 +65,8 @@ library
                        Web.Stripe.Subscriptions
                        Web.Stripe.Token
                        Web.Stripe.Transfers
-  ghc-options:        -Wall
+  ghc-options:        -Wall -threaded
 
+source-repository head
+  type:     git
+  location: git://github.com/dmjio/stripe-simple.git

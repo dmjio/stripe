@@ -11,6 +11,7 @@ module Web.Stripe.Account
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types          
 
+------------------------------------------------------------------------------
 -- | Retrieve the object that represents your Stripe account
 getAccountDetails :: Stripe Account
 getAccountDetails = callAPI request

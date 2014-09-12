@@ -17,6 +17,7 @@ newtype ChargeId = ChargeId Text deriving (Show, Eq)
 type Key   = Text
 type Value = Text
 type URL   = Text
+type AccountBalance = Int
 
 newtype Email = Email Text deriving (Show, Eq)
 

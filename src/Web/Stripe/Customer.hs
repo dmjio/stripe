@@ -18,9 +18,11 @@ module Web.Stripe.Customer
     , createCustomerByEmail
     , createCustomerByToken
     , createCustomerBase
-    , updateCustomer
+    , updateCustomerBase
+    , updateCustomerAccountBalance
     , deleteCustomer
     , getCustomer
+    , getCustomers
     ) where
 
 import           Control.Applicative
@@ -126,13 +128,60 @@ getCustomers limit
 
 ------------------------------------------------------------------------------
 -- | Updates a customer
-updateCustomer
+updateCustomerBase
     :: CustomerId
+    -> Maybe AccountBalance -- ^ Integer amount
+    -> Maybe TokenId        -- ^ Either a dictionary of a card or a tokenId
+    -> Maybe CardNumber     -- ^ Either a dictionary of a card or a tokenId
+    -> Maybe ExpMonth       -- ^ Card Expiration Month
+    -> Maybe ExpYear        -- ^ Card Expiration Year
+    -> Maybe CVC            -- ^ Card CVC
+    -> Maybe CouponId       -- ^ Discount on all recurring charges
+    -> Maybe CardId         -- ^ CardID to set as default for customer
+    -> Maybe Description    -- ^ Arbitrary string to attach to a customer object
+    -> Maybe Email          -- ^ Email address of customer
     -> Stripe Customer
-updateCustomer (CustomerId cid) = callAPI request
+updateCustomerBase
+    (CustomerId cid)
+    accountBalance
+    cardId
+    cardNumber
+    expMonth
+    expYear
+    cvc
+    couponId
+    defaultCardId
+    description
+    email       = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> cid
-        params  = []
+        params  = getParams [ 
+                    ("account_balance", toText <$> accountBalance) 
+                  , ("card", (\(TokenId x) -> x) <$> cardId)
+                  , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
+                  , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
+                  , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
+                  , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
+                  , ("coupon", (\(CouponId x) -> x) <$> couponId)
+                  , ("default_card", (\(CardId x) -> x) <$> defaultCardId)
+                  , ("description", (\(Description x) -> x) <$> description)
+                  , ("email", (\(Email x) -> x) <$> email)
+                  ]
+
+------------------------------------------------------------------------------
+-- | Update Customer Account Balance
+updateCustomerAccountBalance
+    :: CustomerId
+    -> AccountBalance
+    -> Stripe Customer
+updateCustomerAccountBalance
+    customerId
+    accountBalance 
+        = updateCustomerBase customerId (Just accountBalance)
+            Nothing Nothing Nothing
+            Nothing Nothing Nothing
+            Nothing Nothing Nothing
+
 
 ------------------------------------------------------------------------------
 -- | Deletes the specified customer
