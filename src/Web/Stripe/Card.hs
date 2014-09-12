@@ -1,100 +1,93 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Web.Stripe.Card
-    ( -- * Card Types
-      Card   (..)
-    , CardId (..)
-      -- * API calls
---    , createCard 
+    ( -- * Types
+      Card           (..)
+    , CardId         (..)
+    , CardNumber     (..)
+    , ExpMonth       (..)
+    , ExpYear        (..)
+    , CVC            (..)
+    , Name           (..)
+    , AddressLine1   (..)
+    , AddressLine2   (..)
+    , AddressCity    (..)
+    , AddressCountry (..)
+    , AddressState   (..)
+    , AddressZip     (..)
+      -- * API Calls
+      -- ** Create Card
+    , createCardBase
+    , createCard
     , createCardByToken
+    -- ** Update Card
+    , updateCard
+    -- ** Get Card(s)
     , getCard 
---    , updateCard 
-    , deleteCard 
     , getCards
+    -- ** Delete Card
+    , deleteCard 
     ) where
 
 import           Control.Applicative        ((<$>), (<*>))
-import           Web.Stripe.Client.Internal
+import           Web.Stripe.Client.Internal 
 import           Web.Stripe.Types
 
+------------------------------------------------------------------------------
 -- | Create card using a Token
 createCardByToken 
     :: CustomerId -- ^ The Customer to which the card will be added
     -> TokenId    -- ^ The Token representative of the card
     -> Stripe Card  
 createCardByToken 
-    (CustomerId cid)
-    (TokenId tokenId) = callAPI request
-  where request = StripeRequest POST url params
-        url     = "customers" </> cid </> "cards"
-        params  = getParams [
-                   ("card", Just tokenId)
-                  ]
+    customerId
+    tokenId = createCardBase customerId (Just tokenId)
+              Nothing Nothing Nothing
+              Nothing Nothing Nothing
+              Nothing Nothing Nothing
+              Nothing Nothing 
 
--- | Get card by CustomerID and CardID
-getCard 
-    :: CustomerId -- ^ CustomerID of the Card to retrieve
-    -> CardId     -- ^ ID of the card to retrieve
-    -> Stripe Card
-getCard 
-    (CustomerId custId) 
-    (CardId cardId) = callAPI request
-  where request = StripeRequest GET url params
-        url     = "customers" </> custId </> "cards" </> cardId
-        params  = []
+------------------------------------------------------------------------------
+-- | Create card by 'CardNumber'
+createCard
+    :: CustomerId -- ^ 'Customer' to which the card will be added
+    -> CardNumber -- ^ 'Card' digits
+    -> ExpMonth   -- ^ 'Card' expiration month
+    -> ExpYear    -- ^ 'Card' expiration year
+    -> CVC        -- ^ 'Card' cvc number
+    -> Stripe Card  
+createCard 
+    customerId
+    cardNumber
+    expMonth
+    expYear
+    cvc = createCardBase customerId Nothing
+              (Just cardNumber) (Just expMonth) (Just expYear)
+              (Just cvc) Nothing Nothing
+              Nothing Nothing Nothing
+              Nothing Nothing 
 
--- createCard
---   :: CustomerId
---   -> ExpMonth
---   -> ExpYear
---   -> CVC
---   -> Maybe Name
---   -> Maybe AddressCity
---   -> Maybe AddressCountry
---   -> Maybe AddressLine1
---   -> Maybe AddressLine2
---   -> Maybe AddressState
---   -> Maybe AddressZip
---   -> Stripe Card
--- createCard customerId expMonth expYear cvc
---     = modifyCard customerId Nothing (Just expMonth) (Just expYear) (Just cvc)
-
--- updateCard
---     :: CustomerId
---     -> CardId
---     -> Maybe ExpMonth
---     -> Maybe ExpYear
---     -> Maybe CVC
---     -> Maybe Name
---     -> Maybe AddressCity
---     -> Maybe AddressCountry
---     -> Maybe AddressLine1
---     -> Maybe AddressLine2
---     -> Maybe AddressState
---     -> Maybe AddressZip
---     -> Stripe Card
--- updateCard customerId cardId = 
---     modifyCard customerId (Just cardId)
-
-modifyCard 
-     :: Either CustomerId RecipientId
-     -> URL
-     -> Maybe CardId
-     -> Maybe ExpMonth
-     -> Maybe ExpYear
-     -> Maybe CVC
-     -> Maybe Name
-     -> Maybe AddressCity
-     -> Maybe AddressCountry
-     -> Maybe AddressLine1
-     -> Maybe AddressLine2
-     -> Maybe AddressState
-     -> Maybe AddressZip
-     -> Stripe Card
-modifyCard 
-    userId
-    url
-    cardId
+------------------------------------------------------------------------------
+-- | Base request type for card creation
+createCardBase
+  :: CustomerId
+  -> Maybe TokenId
+  -> Maybe CardNumber
+  -> Maybe ExpMonth
+  -> Maybe ExpYear
+  -> Maybe CVC
+  -> Maybe Name
+  -> Maybe AddressCity
+  -> Maybe AddressCountry
+  -> Maybe AddressLine1
+  -> Maybe AddressLine2
+  -> Maybe AddressState
+  -> Maybe AddressZip
+  -> Stripe Card
+createCardBase
+    (CustomerId customerId)
+    tokenId
+    cardNumber
     expMonth
     expYear
     cvc
@@ -104,24 +97,85 @@ modifyCard
     addressLine1
     addressLine2
     addressState
-    addressZip = callAPI request
+    addressZip  = callAPI request
   where request = StripeRequest POST url params
-        url     = let requestUrl = url </> path </> "cards"
-                      path       = either (\(CustomerId c) -> c) (\(RecipientId r) -> r) userId 
-                  in maybe requestUrl (\(CardId c) -> requestUrl </> c) cardId
+        url     = "customers" </> customerId </> "cards"
         params  = getParams [
-                     ("address_city",  (\(AddressCity x) -> x) <$> addressCity)
+                     ("card",  (\(TokenId x) -> x) <$> tokenId)
+                   , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
+                   , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
+                   , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
+                   , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
+                   , ("name", (\(Name x) -> x) <$> name)
+                   , ("address_city", (\(AddressCity x) -> x) <$> addressCity)
                    , ("address_country", (\(AddressCountry x) -> x) <$> addressCountry)
                    , ("address_line1", (\(AddressLine1 x) -> x) <$> addressLine1 )
                    , ("address_line2", (\(AddressLine2 x) -> x) <$> addressLine2 )
                    , ("address_state", (\(AddressState x) -> x) <$> addressState )
                    , ("address_zip", (\(AddressZip x) -> x) <$> addressZip )
-                   , ("cvc", (\(ExpMonth x) -> toText x) <$> expMonth )
-                   , ("exp_month", (\(ExpMonth x) -> toText x) <$> expMonth )
-                   , ("exp_year", (\(ExpYear x) -> toText x) <$> expYear )
-                   , ("name", (\(Name x) -> x) <$> name )
                   ]
 
+------------------------------------------------------------------------------
+-- | Update a 'Card', any fields not specified will remain the same
+updateCard
+    :: CustomerId
+    -> CardId
+    -> Maybe Name
+    -> Maybe AddressCity
+    -> Maybe AddressCountry
+    -> Maybe AddressLine1
+    -> Maybe AddressLine2
+    -> Maybe AddressState
+    -> Maybe AddressZip
+    -> Stripe Card
+updateCard
+    (CustomerId customerId)
+    (CardId cardId)
+    name
+    addressCity
+    addressCountry
+    addressLine1
+    addressLine2
+    addressState
+    addressZip  = callAPI request
+  where request = StripeRequest POST url params
+        url     = "customers" </> customerId </> "cards" </> cardId
+        params  =  getParams [ 
+                     ("name", (\(Name x) -> x) <$> name)
+                   , ("address_city", (\(AddressCity x) -> x) <$> addressCity)
+                   , ("address_country", (\(AddressCountry x) -> x) <$> addressCountry)
+                   , ("address_line1", (\(AddressLine1 x) -> x) <$> addressLine1 )
+                   , ("address_line2", (\(AddressLine2 x) -> x) <$> addressLine2 )
+                   , ("address_state", (\(AddressState x) -> x) <$> addressState )
+                   , ("address_zip", (\(AddressZip x) -> x) <$> addressZip )
+                   ]
+
+------------------------------------------------------------------------------
+-- | Get card by 'CustomerId' and 'CardId'
+getCard 
+    :: CustomerId -- ^ 'CustomerId' of the 'Card' to retrieve
+    -> CardId     -- ^ 'CardId' of the card to retrieve
+    -> Stripe Card
+getCard 
+    (CustomerId customerId) 
+    (CardId cardId) = callAPI request
+  where request = StripeRequest GET url params
+        url     = "customers" </> customerId </> "cards" </> cardId
+        params  = []
+
+------------------------------------------------------------------------------
+-- | Retrieves a customer's cards
+getCards 
+    :: CustomerId
+    -> Stripe (StripeList Card)
+getCards 
+    (CustomerId custId) = callAPI request
+  where request = StripeRequest GET url params
+        url     = "customers" </> custId </> "cards"
+        params  = []
+
+------------------------------------------------------------------------------
+-- | Removes a card from a customer
 deleteCard 
     :: CustomerId 
     -> CardId
@@ -131,14 +185,5 @@ deleteCard
     (CardId cardId) = callAPI request
   where request = StripeRequest DELETE url params
         url     = "customers" </> custId </> "cards" </> cardId
-        params  = []
-
-getCards 
-    :: CustomerId
-    -> Stripe (StripeList Card)
-getCards 
-    (CustomerId custId) = callAPI request
-  where request = StripeRequest GET url params
-        url     = "customers" </> custId </> "cards"
         params  = []
 

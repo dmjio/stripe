@@ -51,7 +51,7 @@ m1 </> m2 = m1 <> "/" <> m2
 fromSeconds
     :: Integer
     -> UTCTime
-fromSeconds  = posixSecondsToUTCTime . fromInteger
+fromSeconds = posixSecondsToUTCTime . fromInteger
 
 getParams
     :: [(ByteString, Maybe Text)]

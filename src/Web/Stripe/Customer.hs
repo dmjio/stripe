@@ -2,7 +2,6 @@
 
 -- |
 -- Module      : Web.Stripe.Customer
--- Description : Module for handling Stripe Customers with the Stripe API
 -- Copyright   : (c) David Johnson, 2014
 -- License     : BSD3
 -- Maintainer  : djohnson.m@gmail.com
@@ -14,13 +13,18 @@ module Web.Stripe.Customer
       Customer  (..) 
     , CustomerId(..)
       -- * API Calls
+      ---- * Create customer 
     , createEmptyCustomer
     , createCustomerByEmail
     , createCustomerByToken
     , createCustomerBase
+      ---- * Update customer
     , updateCustomerBase
     , updateCustomerAccountBalance
+    , updateCustomerDefaultCard
+      ---- * Delete customer
     , deleteCustomer
+      ---- * Get customer(s)
     , getCustomer
     , getCustomers
     ) where
@@ -35,8 +39,8 @@ import           Web.Stripe.Types
 -- | The base request for customer creation
 createCustomerBase
     :: Maybe Integer        -- ^ Integer amount
-    -> Maybe TokenId        -- ^ Either a dictionary of a card or a tokenId
-    -> Maybe CardNumber     -- ^ Either a dictionary of a card or a tokenId
+    -> Maybe TokenId        -- ^ Either a dictionary of a card or a 'TokenId'
+    -> Maybe CardNumber     -- ^ Either a dictionary of a card or a 'TokenId'
     -> Maybe ExpMonth       -- ^ Card Expiration Month
     -> Maybe ExpYear        -- ^ Card Expiration Year
     -> Maybe CVC            -- ^ Card CVC
@@ -181,6 +185,20 @@ updateCustomerAccountBalance
             Nothing Nothing Nothing
             Nothing Nothing Nothing
             Nothing Nothing Nothing
+
+------------------------------------------------------------------------------
+-- | Update Customer Account Balance
+updateCustomerDefaultCard
+    :: CustomerId
+    -> CardId -- ^ 'CardId' to become default card 
+    -> Stripe Customer
+updateCustomerDefaultCard
+    customerId
+    defaultCard
+        = updateCustomerBase customerId Nothing
+            Nothing Nothing Nothing
+            Nothing Nothing Nothing
+            (Just defaultCard) Nothing Nothing
 
 
 ------------------------------------------------------------------------------

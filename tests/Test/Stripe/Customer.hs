@@ -44,7 +44,9 @@ createCustomerTest = do
         putStrLn "Could not create customer! -> fail" >> error "Couldn't create customer"
       Right c@Customer{..} ->
         do if customerLiveMode
-              then error errMsg
+              then do
+                runStripe config $ deleteCustomer customerId
+                error errMsg
               else putStrLn "Created Customer Successfully"
            return customerId
 
