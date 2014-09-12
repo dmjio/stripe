@@ -96,7 +96,8 @@ sendStripeRequest
       sendRequest con req $ inputStreamBody body
       json <- receiveResponse con $
               \response inputStream ->
-                  concatHandler response inputStream >>= \result -> 
+                  concatHandler response inputStream >>= \result -> do
+                      print result
                       handleStream response result
       closeConnection con
       return json

@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
+
 module Web.Stripe.Types where
 
 import           Control.Applicative
@@ -17,12 +18,13 @@ newtype ChargeId = ChargeId Text deriving (Show, Eq)
 type Key   = Text
 type Value = Text
 type URL   = Text
+type Description   = Text
 type AccountBalance = Int
 
 newtype Email = Email Text deriving (Show, Eq)
 
 data Charge = Charge {
-      chargeId                   :: Text
+      chargeId                   :: ChargeId
     , chargeObject               :: Text
     , chargeCreated              :: UTCTime
     , chargeLiveMode             :: Bool
@@ -45,7 +47,9 @@ data Charge = Charge {
     , chargeReceiptEmail         :: Maybe Text
     } deriving Show
 
-newtype StatementDescription = StatementDescription Text deriving (Show, Eq)
+newtype StatementDescription = 
+    StatementDescription Text deriving (Show, Eq)
+
 type Capture = Bool
 
 newtype ReceiptEmail = ReceiptEmail Text deriving (Show, Eq)
@@ -65,10 +69,11 @@ instance FromJSON a => FromJSON (StripeList a) where
                    <*> o .:  "object"
                    <*> o .:? "total_count"
                    <*> o .:  "has_more"
+    parseJSON _ = mzero
 
 instance FromJSON Charge where
     parseJSON (Object o) =
-        Charge <$> o .: "id"
+        Charge <$> (ChargeId <$> o .: "id")
                <*> o .: "object"
                <*> (fromSeconds <$> o .: "created")
                <*> o .: "livemode"
@@ -89,6 +94,7 @@ instance FromJSON Charge where
                <*> o .:? "dispute"
                <*> o .:? "statement_description"
                <*> o .:? "receipt_email"
+    parseJSON _ = mzero
 
 --- Refund ---
 data Refund = Refund {
@@ -99,7 +105,6 @@ data Refund = Refund {
     , refundObject             :: Text
     , refundCharge             :: ChargeId
     , refundBalanceTransaction :: TransactionId
---    , refundMetaData           :: [(Text,Text)]
     } deriving (Show, Eq)
 
 instance FromJSON Refund where
@@ -111,7 +116,7 @@ instance FromJSON Refund where
                <*> o .: "object"
                <*> (ChargeId <$> o .: "charge")
                <*> (TransactionId <$> o .: "balance_transaction")
---               <*> o .: "metadata"
+   parseJSON _ = mzero
 
 newtype RefundId = RefundId Text deriving (Show)
 
@@ -129,9 +134,13 @@ data Customer = Customer {
     , customerSubscriptions  :: StripeList Subscription
     , customerDiscount       :: Maybe Text
     , customerAccountBalance :: Int
+    , customerCards          :: StripeList Card
     , customerCurrency       :: Maybe Currency
     , customerDefaultCard    :: Maybe CardId
-    } deriving (Show, Eq)
+    } | DeletedCustomer { -- ^ This is necessary because of an inconsistency in Stripe's API
+      deletedCustomer   :: Bool
+    , deletedCustomerId :: CustomerId
+  } deriving (Show, Eq)
 
 instance FromJSON Customer where
     parseJSON (Object o)
@@ -146,8 +155,13 @@ instance FromJSON Customer where
            <*> o .: "subscriptions"
            <*> o .:? "discount"
            <*> o .: "account_balance"
+           <*> o .: "cards"
            <*> (fmap Currency <$> o .:? "currency")
            <*> (fmap CardId <$> o .:? "default_card")
+           <|> DeletedCustomer 
+           <$> o .: "deleted"
+           <*> (CustomerId <$> o .: "id")
+    parseJSON _ = mzero
 
 ---- ==== Card ==== -----
 newtype CardId         = CardId Text deriving (Show, Eq)
@@ -193,7 +207,27 @@ data Card = Card {
     , cardCvc_check           :: Maybe Text
     , cardAddress_line1_check :: Maybe Text
     , cardAddress_zip_check   :: Maybe Text
-    , cardCustomer            :: Maybe Text
+    , cardCustomerId          :: Maybe CustomerId
+} | RecipientCard {
+      cardId                  :: CardId
+    , cardLastFour            :: Text
+    , cardBrand               :: Brand
+    , cardFunding             :: Text
+    , cardExpMonth            :: Int
+    , cardExpYear             :: Int
+    , cardFingerprint         :: Text
+    , cardCountry             :: Text
+    , cardName                :: Maybe Text
+    , cardAddress_line1       :: Maybe Text
+    , cardAddress_line2       :: Maybe Text
+    , cardAddress_city        :: Maybe Text
+    , cardAddress_state       :: Maybe Text
+    , cardAddress_zip         :: Maybe Text
+    , cardAddress_country     :: Maybe Text
+    , cardCvc_check           :: Maybe Text
+    , cardAddress_line1_check :: Maybe Text
+    , cardAddress_zip_check   :: Maybe Text
+    , cardRecipientId         :: Maybe RecipientId
 } deriving (Show, Eq)
 
 instance FromJSON Brand where
@@ -206,6 +240,7 @@ instance FromJSON Brand where
                    "Visa" -> Visa
                    "DinersClub" -> DinersClub
                    otherwise -> Unknown
+    parseJSON _ = mzero
 
 instance FromJSON Card where
     parseJSON (Object o) =
@@ -227,12 +262,36 @@ instance FromJSON Card where
              <*> o .:? "cvc_check"
              <*> o .:? "address_line1_check"
              <*> o .:? "address_zip_check"
-             <*> o .:? "customer"
+             <*> (fmap CustomerId <$> o .:? "customer") 
+             <|> RecipientCard 
+             <$> (CardId <$> o .: "id")
+             <*> o .: "last4"
+             <*> o .: "brand"
+             <*> o .: "funding"
+             <*> o .: "exp_month"
+             <*> o .: "exp_year"
+             <*> o .: "fingerprint"
+             <*> o .: "country"
+             <*> o .:? "name"
+             <*> o .:? "address_line1"
+             <*> o .:? "address_line2"
+             <*> o .:? "address_city"
+             <*> o .:? "address_state"
+             <*> o .:? "address_zip"
+             <*> o .:? "address_country"
+             <*> o .:? "cvc_check"
+             <*> o .:? "address_line1_check"
+             <*> o .:? "address_zip_check"
+             <*> (fmap RecipientId <$> o .:? "recipient")
+    parseJSON _ = mzero
 
 -- Token --
-newtype TokenId = TokenId Text deriving (Show, Eq, Ord)
+newtype TokenId = 
+    TokenId Text deriving (Show, Eq, Ord)
 
-data TokenType = TokenCard | TokenBankAccount deriving (Show, Eq)
+data TokenType = TokenCard
+               | TokenBankAccount
+                 deriving (Show, Eq)
 
 instance FromJSON TokenType where
    parseJSON (String "bank_account") = pure TokenBankAccount
@@ -258,7 +317,7 @@ instance FromJSON Token where
              <*> o .: "object"
              <*> o .: "type"
              <*> o .: "card"
-
+   parseJSON _ = mzero
 
 ---- == Invoice == ------
 data Invoice = Invoice {
@@ -320,10 +379,11 @@ instance FromJSON Invoice where
                <*> (SubscriptionId <$> o .: "subscription")
                <*> o .:? "statement_description"
                <*> o .:? "description"
+   parseJSON _ = mzero
 
 --- Subscriptions ---
-
-newtype SubscriptionId = SubscriptionId Text deriving (Show, Eq)
+newtype SubscriptionId = 
+    SubscriptionId Text deriving (Show, Eq)
 
 data Subscription = Subscription {
       subscriptionId                    :: SubscriptionId
@@ -362,6 +422,7 @@ instance FromJSON Subscription where
                     <*> o .:  "quantity"
                     <*> o .:? "application_fee_percent"
                     <*> o .:? "discount"
+   parseJSON _ = mzero
 
 data SubscriptionStatus =
           Trialing
@@ -450,6 +511,7 @@ instance FromJSON Period where
    parseJSON (Object o) =
        Period <$> (fromSeconds <$> o .: "start")
               <*> (fromSeconds <$> o .: "end")
+   parseJSON _ = mzero
 
 instance FromJSON InvoiceLineItem where
    parseJSON (Object o) =
@@ -464,6 +526,7 @@ instance FromJSON InvoiceLineItem where
                        <*> o .:? "quantity"
                        <*> o .:? "plan"
                        <*> o .:? "description"
+   parseJSON _ = mzero
 
 newtype InvoiceId = InvoiceId Text deriving (Show, Eq)
 -- Invoice Item --
@@ -485,6 +548,7 @@ instance FromJSON Discount where
         Discount <$> o .: "start"
                  <*> o .: "end"
                  <*> o .: "customer"
+    parseJSON _ = mzero
 
 
 -- Coupon --
@@ -546,7 +610,7 @@ newtype Name            = Name Text deriving (Show, Eq)
 newtype Currency        = Currency Text deriving (Show, Eq)
 newtype IntervalCount   = IntervalCount Int deriving (Show, Eq)
 newtype TrialPeriodDays = TrialPeriodDays Int deriving (Show, Eq)
-newtype Description     = Description Text deriving (Show, Eq)
+
 type Amount = Int
 
 data Interval = Week | Month | Year deriving (Eq)

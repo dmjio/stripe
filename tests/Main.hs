@@ -6,15 +6,21 @@ module Main where
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ask)
 import qualified Data.ByteString.Char8  as B8
+import           Data.Monoid
+import           Data.String
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as T
 
 import           Web.Stripe.Client
-import           Test.Stripe
 
-import           Test.Stripe.Customer
+import           Test.Stripe
 import           Test.Stripe.Account
+import           Test.Stripe.Charge
+import           Test.Stripe.Customer
+
+secretKey :: (IsString m, Monoid m) => m
+secretKey = "sk_test_zvqdM2SSA6WwySqM6KJQrqpH"
 
 main :: IO ()
 main = do
@@ -30,5 +36,6 @@ tests :: StripeTest ()
 tests = do
   runAccountTests
   runCustomerTests
+  runChargeTests
 
 

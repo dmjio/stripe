@@ -73,7 +73,7 @@ createCustomerBase
                    , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
                    , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
                    , ("coupon", (\(CouponId x) -> x) <$> couponId)
-                   , ("description", (\(Description x) -> x) <$> description)
+                   , ("description", description)
                    , ("email", (\(Email x) -> x) <$> email)
                    , ("plan", (\(PlanId x) -> x) <$> planId)
                    , ("quantity",  (\(Quantity x) -> toText x) <$> quantity)
@@ -168,7 +168,7 @@ updateCustomerBase
                   , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
                   , ("coupon", (\(CouponId x) -> x) <$> couponId)
                   , ("default_card", (\(CardId x) -> x) <$> defaultCardId)
-                  , ("description", (\(Description x) -> x) <$> description)
+                  , ("description", description)
                   , ("email", (\(Email x) -> x) <$> email)
                   ]
 

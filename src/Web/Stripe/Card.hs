@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Web.Stripe.Card
     ( -- * Types
       Card           (..)
@@ -16,17 +15,23 @@ module Web.Stripe.Card
     , AddressState   (..)
     , AddressZip     (..)
       -- * API Calls
-      -- ** Create Card
+      -- * Customers
+      -- ** Create Customer Card
     , createCardBase
     , createCard
     , createCardByToken
-    -- ** Update Card
+    -- ** Update Customer Card
     , updateCard
-    -- ** Get Card(s)
+    -- ** Get Customer Card(s)
     , getCard 
-    , getCards
+    , getCustomerCards
     -- ** Delete Card
     , deleteCard 
+      -- * Recipients
+      -- ** Create Recipient Card
+      -- ** Get Recipient Card(s)
+      -- ** Updated Recipient Card
+      -- ** Delete Recipient Card
     ) where
 
 import           Control.Applicative        ((<$>), (<*>))
@@ -164,15 +169,16 @@ getCard
         params  = []
 
 ------------------------------------------------------------------------------
--- | Retrieves a customer's cards
-getCards 
+-- | Retrieves a 'Customer''s cards
+getCustomerCards
     :: CustomerId
     -> Stripe (StripeList Card)
-getCards 
+getCustomerCards 
     (CustomerId custId) = callAPI request
   where request = StripeRequest GET url params
-        url     = "customers" </> custId </> "cards"
+        url     = "customers" </> custId </> "cards" 
         params  = []
+
 
 ------------------------------------------------------------------------------
 -- | Removes a card from a customer
@@ -186,4 +192,5 @@ deleteCard
   where request = StripeRequest DELETE url params
         url     = "customers" </> custId </> "cards" </> cardId
         params  = []
+
 
