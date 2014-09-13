@@ -16,8 +16,10 @@ import           Data.Time
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
+-- | <http://api.stripe.com/docs/api#refunds Refunds>
+
 createRefund
-    :: ChargeId
+    :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be refunded
     -> Stripe Refund
 createRefund
     (ChargeId chargeId) = callAPI request 
@@ -26,8 +28,8 @@ createRefund
         params  = []
 
 getRefund
-    :: ChargeId
-    -> RefundId
+    :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be retrieved
+    -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
     -> Stripe Refund
 getRefund
     (ChargeId chargeId)
@@ -37,8 +39,8 @@ getRefund
          params  = []
 
 updateRefund
-    :: ChargeId
-    -> RefundId
+    :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be updated
+    -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
     -> Stripe Refund
 updateRefund
    (ChargeId chargeId)
@@ -48,7 +50,7 @@ updateRefund
         params  = []
 
 getRefunds
-    :: ChargeId
+    :: ChargeId  -- ^ 'ChargeId' associated with the 'Charge' to be updated
     -> Stripe (StripeList Refund)
 getRefunds (ChargeId chargeId) = callAPI request 
   where request = StripeRequest GET url params
