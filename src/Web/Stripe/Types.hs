@@ -16,6 +16,7 @@ import           Web.Stripe.Client.Internal
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
 type Key   = Text
+type ID    = Text
 type Value = Text
 type URL   = Text
 type Description   = Text
@@ -47,7 +48,7 @@ data Charge = Charge {
     , chargeReceiptEmail         :: Maybe Text
     } deriving Show
 
-newtype StatementDescription = 
+newtype StatementDescription =
     StatementDescription Text deriving (Show, Eq)
 
 type Capture = Bool
@@ -158,7 +159,7 @@ instance FromJSON Customer where
            <*> o .: "cards"
            <*> (fmap Currency <$> o .:? "currency")
            <*> (fmap CardId <$> o .:? "default_card")
-           <|> DeletedCustomer 
+           <|> DeletedCustomer
            <$> o .: "deleted"
            <*> (CustomerId <$> o .: "id")
     parseJSON _ = mzero
@@ -189,45 +190,47 @@ data Brand = Visa
              deriving (Show, Eq)
 
 data Card = Card {
-      cardId                  :: CardId
-    , cardLastFour            :: Text
-    , cardBrand               :: Brand
-    , cardFunding             :: Text
-    , cardExpMonth            :: Int
-    , cardExpYear             :: Int
-    , cardFingerprint         :: Text
-    , cardCountry             :: Text
-    , cardName                :: Maybe Text
-    , cardAddress_line1       :: Maybe Text
-    , cardAddress_line2       :: Maybe Text
-    , cardAddress_city        :: Maybe Text
-    , cardAddress_state       :: Maybe Text
-    , cardAddress_zip         :: Maybe Text
-    , cardAddress_country     :: Maybe Text
-    , cardCvc_check           :: Maybe Text
-    , cardAddress_line1_check :: Maybe Text
-    , cardAddress_zip_check   :: Maybe Text
-    , cardCustomerId          :: Maybe CustomerId
-} | RecipientCard {
-      cardId                  :: CardId
-    , cardLastFour            :: Text
-    , cardBrand               :: Brand
-    , cardFunding             :: Text
-    , cardExpMonth            :: Int
-    , cardExpYear             :: Int
-    , cardFingerprint         :: Text
-    , cardCountry             :: Text
-    , cardName                :: Maybe Text
-    , cardAddress_line1       :: Maybe Text
-    , cardAddress_line2       :: Maybe Text
-    , cardAddress_city        :: Maybe Text
-    , cardAddress_state       :: Maybe Text
-    , cardAddress_zip         :: Maybe Text
-    , cardAddress_country     :: Maybe Text
-    , cardCvc_check           :: Maybe Text
-    , cardAddress_line1_check :: Maybe Text
-    , cardAddress_zip_check   :: Maybe Text
-    , cardRecipientId         :: Maybe RecipientId
+      cardId                :: CardId
+    , cardLastFour          :: Text
+    , cardBrand             :: Brand
+    , cardFunding           :: Text
+    , cardExpMonth          :: Int
+    , cardExpYear           :: Int
+    , cardFingerprint       :: Text
+    , cardCountry           :: Text
+    , cardName              :: Maybe Text
+    , cardAddressLine1      :: Maybe Text
+    , cardAddressLine2      :: Maybe Text
+    , cardAddressCity       :: Maybe Text
+    , cardAddressState      :: Maybe Text
+    , cardAddressZip        :: Maybe Text
+    , cardAddressCountry    :: Maybe Text
+    , cardCVCCheck          :: Maybe Text
+    , cardAddressLine1Check :: Maybe Text
+    , cardAddressZipCheck   :: Maybe Text
+    , cardCustomerId        :: Maybe CustomerId
+    } deriving (Show, Eq)
+
+data RecipientCard = RecipientCard {
+      recipientCardId                :: CardId
+    , recipientCardLastFour          :: Text
+    , recipientCardBrand             :: Brand
+    , recipientCardFunding           :: Text
+    , recipientCardExpMonth          :: Int
+    , recipientCardExpYear           :: Int
+    , recipientCardFingerprint       :: Text
+    , recipientCardCountry           :: Text
+    , recipientCardName              :: Maybe Text
+    , recipientCardAddressLine1      :: Maybe Text
+    , recipientCardAddressLine2      :: Maybe Text
+    , recipientCardAddressCity       :: Maybe Text
+    , recipientCardAddressState      :: Maybe Text
+    , recipientCardAddressZip        :: Maybe Text
+    , recipientCardAddressCountry    :: Maybe Text
+    , recipientCardCVCCheck          :: Maybe Text
+    , recipientCardAddressLine1Check :: Maybe Text
+    , recipientCardAddressZipCheck   :: Maybe Text
+    , recipientCardRecipientId       :: Maybe RecipientId
 } deriving (Show, Eq)
 
 instance FromJSON Brand where
@@ -262,8 +265,11 @@ instance FromJSON Card where
              <*> o .:? "cvc_check"
              <*> o .:? "address_line1_check"
              <*> o .:? "address_zip_check"
-             <*> (fmap CustomerId <$> o .:? "customer") 
-             <|> RecipientCard 
+             <*> (fmap CustomerId <$> o .:? "customer")
+
+instance FromJSON RecipientCard where
+    parseJSON (Object o) =
+       RecipientCard
              <$> (CardId <$> o .: "id")
              <*> o .: "last4"
              <*> o .: "brand"
@@ -286,7 +292,7 @@ instance FromJSON Card where
     parseJSON _ = mzero
 
 -- Token --
-newtype TokenId = 
+newtype TokenId =
     TokenId Text deriving (Show, Eq, Ord)
 
 data TokenType = TokenCard
@@ -382,7 +388,7 @@ instance FromJSON Invoice where
    parseJSON _ = mzero
 
 --- Subscriptions ---
-newtype SubscriptionId = 
+newtype SubscriptionId =
     SubscriptionId Text deriving (Show, Eq)
 
 data Subscription = Subscription {
