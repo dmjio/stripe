@@ -105,7 +105,7 @@ createCustomerCardByToken
     -> Stripe Card
 createCustomerCardByToken
     (CustomerId customerId)
-    tokenId = createCardBase "customer" customerId (Just tokenId)
+    tokenId = createCardBase "customers" customerId (Just tokenId)
               Nothing Nothing Nothing
               Nothing Nothing Nothing
               Nothing Nothing Nothing
@@ -119,7 +119,7 @@ createRecipientCardByToken
     -> Stripe RecipientCard
 createRecipientCardByToken
     (RecipientId recipientId)
-    tokenId = createCardBase "customer" recipientId (Just tokenId)
+    tokenId = createCardBase "customers" recipientId (Just tokenId)
               Nothing Nothing Nothing
               Nothing Nothing Nothing
               Nothing Nothing Nothing
@@ -139,7 +139,7 @@ createCustomerCard
     cardNumber
     expMonth
     expYear
-    cvc = createCardBase "customer" customerId Nothing
+    cvc = createCardBase "customers" customerId Nothing
               (Just cardNumber) (Just expMonth) (Just expYear)
               (Just cvc) Nothing Nothing
               Nothing Nothing Nothing
@@ -159,7 +159,7 @@ createRecipientCard
     cardNumber
     expMonth
     expYear
-    cvc = createCardBase "recipient" recipientId Nothing
+    cvc = createCardBase "recipients" recipientId Nothing
               (Just cardNumber) (Just expMonth) (Just expYear)
               (Just cvc) Nothing Nothing
               Nothing Nothing Nothing
@@ -217,7 +217,7 @@ updateCustomerCard
     -> Maybe AddressZip
     -> Stripe Card
 updateCustomerCard
-    (CustomerId customerId)  = updateCardBase "customer" customerId
+    (CustomerId customerId)  = updateCardBase "customers" customerId
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Card'
@@ -233,7 +233,7 @@ updateRecipientCard
     -> Maybe AddressZip
     -> Stripe RecipientCard
 updateRecipientCard
-    (RecipientId recipientId)  = updateCardBase "recipient" recipientId
+    (RecipientId recipientId)  = updateCardBase "recipients" recipientId
 
 ------------------------------------------------------------------------------
 -- | Base Request for retrieving cards from either a 'Customer' or 'Recipient'
@@ -257,7 +257,7 @@ getCustomerCard
     -> CardId     -- ^ 'CardId' of the card to retrieve
     -> Stripe Card
 getCustomerCard
-    (CustomerId customerId) = getCardBase "customer" customerId
+    (CustomerId customerId) = getCardBase "customers" customerId
 
 ------------------------------------------------------------------------------
 -- | Get card by 'RecipientId' and 'CardId'
@@ -266,7 +266,7 @@ getRecipientCard
     -> CardId      -- ^ 'CardId' of the card to retrieve
     -> Stripe Card
 getRecipientCard
-       (RecipientId recipientId) = getCardBase "recipient" recipientId
+       (RecipientId recipientId) = getCardBase "recipients" recipientId
 
 ------------------------------------------------------------------------------
 -- | Base Request for retrieving 'Customer' or 'Recipient' cards
@@ -288,7 +288,7 @@ getCustomerCards
     :: CustomerId   -- ^ The 'CustomerId' associated with the cards
     -> Stripe (StripeList Card)
 getCustomerCards
-    (CustomerId customerId) = getCardsBase "customer" customerId
+    (CustomerId customerId) = getCardsBase "customers" customerId
 
 ------------------------------------------------------------------------------
 -- | Retrieve all cards associated with a 'Recipient'
@@ -296,7 +296,7 @@ getRecipientCards
     :: RecipientId   -- ^ The 'RecipientId' associated with the cards
     -> Stripe (StripeList RecipientCard)
 getRecipientCards
-    (RecipientId recipientId) = getCardsBase "recipient" recipientId
+    (RecipientId recipientId) = getCardsBase "recipients" recipientId
 
 ------------------------------------------------------------------------------
 -- | Base request for 'Card' removal from a 'Customer' or 'Recipient'
@@ -316,20 +316,20 @@ deleteCardBase
 ------------------------------------------------------------------------------
 -- | Removes a card from a 'Customer'
 deleteCustomerCard
-    :: CustomerId
-    -> CardId
+    :: CustomerId -- ^ The 'CustomerId' associated with the 'Card' to be removed
+    -> CardId     -- ^ The 'CardId' of the 'Card' to be removed
     -> Stripe StripeDeleteResult
 deleteCustomerCard
-    (CustomerId customerId) = deleteCardBase "customer" customerId
+    (CustomerId customerId) = deleteCardBase "customers" customerId
 
 ------------------------------------------------------------------------------
 -- | Removes a card from a 'Customer'
 deleteRecipientCard
-    :: RecipientId
-    -> CardId
+    :: RecipientId -- ^ The 'RecipientId' associated with the 'Card' to be removed
+    -> CardId      -- ^ The 'CardId' of the 'Card' to be removed
     -> Stripe StripeDeleteResult
 deleteRecipientCard
-    (RecipientId recipientId) = deleteCardBase "recipient" recipientId
+    (RecipientId recipientId) = deleteCardBase "recipients" recipientId
 
 
 

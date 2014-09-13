@@ -14,7 +14,8 @@ runChargeTests :: StripeTest ()
 runChargeTests = 
   createChargeTest >>=
   getChargeTest    >>= 
-  updateChargeTest
+  updateChargeTest >>=
+  getChargesTest
 
 createChargeTest :: StripeTest ChargeId
 createChargeTest = do
@@ -43,7 +44,7 @@ getChargeTest chargeId = do
         putStrLn "Successfully retrieved charge"
         return chargeId
 
-updateChargeTest :: ChargeId -> StripeTest ()
+updateChargeTest :: ChargeId -> StripeTest (Maybe CustomerId)
 updateChargeTest chargeId = do
   config <- ask
   liftIO $ do
@@ -55,23 +56,26 @@ updateChargeTest chargeId = do
       Right charge@Charge{..} -> do
         print charge
         if chargeDescription == Just "new charge"
-          then putStrLn "Successfully updated Charge"
+          then putStrLn "Successfully updated Charge" >>
+               return chargeCustomerId
           else error "Could not update charge"
       
-getCharges :: CustomerId -> StripeTest ()
-getCharges customerId = do
+getChargesTest :: Maybe CustomerId -> StripeTest ()
+getChargesTest Nothing = error "Couldn't get Customer Id"
+getChargesTest (Just customerId) = do
   config <- ask
+  let deleteCustomerTest = runStripe config $ deleteCustomer customerId
   liftIO $ do
-    result <- runStripe config $ getCharges customerId 
+    result <- runStripe config $ getCustomerCharges customerId 
     case result of
       Left err -> do
         putStrLn "Couldn't get charges"
         error (show err)
       Right charges -> do
         if length (list charges) > 0
-          then putStrLn "Got multiple charges"
-
-
-    
-  
-
+          then do
+            print =<< deleteCustomerTest
+            putStrLn "Got charges"
+          else do
+            print =<< deleteCustomerTest
+            error "Couldn't retrieve charges"

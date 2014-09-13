@@ -4,6 +4,7 @@ module Web.Stripe.Charge
       Charge   (..)
     , ChargeId (..)  
     , Currency (..)  
+    , StripeList (..)  
       -- * API calls
       ---- * Create Charges
     , chargeCustomer
@@ -12,6 +13,7 @@ module Web.Stripe.Charge
       ---- * Get Charge(s)
     , getCharge
     , getCharges
+    , getCustomerCharges
       ---- * Update Charge
     , updateCharge
       ---- * Capture Charge
@@ -124,12 +126,26 @@ getCharge (ChargeId charge) = callAPI request
         params  = []
 
 ------------------------------------------------------------------------------
--- | retrieve all 'Charge'es
+-- | Retrieve all 'Charge's
 getCharges :: Stripe (StripeList Charge)
 getCharges = callAPI request
   where request = StripeRequest GET url params
         url     = "charges"
         params  = []
+
+------------------------------------------------------------------------------
+-- | Retrieve all 'Charge's for a specified 'Customer'
+getCustomerCharges
+    :: CustomerId
+    -> Stripe (StripeList Charge)
+getCustomerCharges 
+    (CustomerId customerId) = callAPI request
+  where request = StripeRequest GET url params
+        url     = "charges"
+        params  = getParams [ 
+                   ("customer", Just customerId )
+                  ]
+
 
 ------------------------------------------------------------------------------
 -- | A 'Charge' to be updated

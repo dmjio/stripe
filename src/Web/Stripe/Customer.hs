@@ -10,8 +10,9 @@
 
 module Web.Stripe.Customer
     ( -- * Customer Types
-      Customer  (..) 
-    , CustomerId(..)
+      Customer   (..) 
+    , CustomerId (..)
+    , StripeList (..)
       -- * API Calls
       ---- * Create customer 
     , createEmptyCustomer

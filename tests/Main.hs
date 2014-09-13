@@ -16,6 +16,7 @@ import           Web.Stripe.Client
 
 import           Test.Stripe
 import           Test.Stripe.Account
+import           Test.Stripe.Card
 import           Test.Stripe.Charge
 import           Test.Stripe.Customer
 
@@ -34,8 +35,9 @@ main = do
 -- | Top level testing function
 tests :: StripeTest ()
 tests = do
-  runAccountTests
-  runCustomerTests
-  runChargeTests
+  runCardTests
+  -- runAccountTests
+  -- runCustomerTests
+  -- runChargeTests
 
 
