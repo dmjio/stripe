@@ -17,7 +17,7 @@ description:
 Test-Suite tests
     type:             exitcode-stdio-1.0
     main-is:          tests/Main.hs
-    build-depends:    base, stripe-simple, bytestring, mtl, text, transformers
+    build-depends:    base, stripe-simple, bytestring, mtl, text, transformers, hspec
     default-language: Haskell2010
     ghc-options:      -Wall -threaded
 
@@ -36,7 +36,6 @@ library
                      , HsOpenSSL
                      , http-streams
                      , io-streams
-                     , mtl
                      , text
                      , time
                      , transformers

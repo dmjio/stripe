@@ -9,6 +9,13 @@ module Web.Stripe.Recipient
       ---- * Update Recipient
     , updateRecipientName
     , updateRecipientTaxID
+    , updateRecipientBankAccount
+    , updateRecipientTokenID
+    , updateRecipientCard
+    , updateRecipientDefaultCard
+    , updateRecipientEmail
+    , updateRecipientDescription
+    , updateRecipientBase
       ---- * Delete Recipients
     , deleteRecipient
       -- * Types
@@ -19,7 +26,7 @@ module Web.Stripe.Recipient
     , MiddleInitial
     , RecipientType (..)
     , TaxID
-    , BankAccount
+    , BankAccount   (..)
     , TokenId
     , CardNumber
     , ExpMonth
@@ -116,7 +123,7 @@ createRecipientByCard
     -> CardNumber          -- ^ 'Card' Number
     -> ExpMonth            -- ^ Expiration Month
     -> ExpYear             -- ^ Expiration Year
-    -> CVC                 -- ^ CVC (i.e. 117)
+    -> CVC                 -- ^ 'CVC' (i.e. 117)
     -> Stripe Recipient
 createRecipientByCard
     firstName
@@ -190,7 +197,7 @@ getRecipients limit = callAPI request
         params  = getParams [ ("limit", toText <$> limit )]
 
 ------------------------------------------------------------------------------
--- | Update a 'Recipient' 
+-- | Base Request for updating a 'Recipient', useful for creating custom 'Recipient' update functions
 updateRecipientBase
     :: RecipientId         -- ^ The 'RecipientId' of the 'Recipient' to be updated
     -> Maybe FirstName     -- ^ First Name of 'Recipient'
@@ -226,12 +233,12 @@ updateRecipientBase
   where request = StripeRequest POST url params
         url     = "recipients" </> recipientId
         params  = 
-            let name = do if firstName == Nothing || lastName == Nothing
-                          then Nothing
-                          else do let Just (FirstName f) = firstName
-                                      Just (LastName l)  = lastName
-                                      middle = maybe " " (\x -> " " <> T.singleton x <> " ") middleInitial
-                                  Just $ f <> middle <> l
+            let name = if firstName == Nothing || lastName == Nothing
+                         then Nothing
+                         else do let Just (FirstName f) = firstName
+                                     Just (LastName l)  = lastName
+                                     middle = maybe " " (\x -> " " <> T.singleton x <> " ") middleInitial
+                                 Just $ f <> middle <> l
             in getParams [ 
                     ("name", name)
                   , ("tax_id", taxId)
@@ -269,27 +276,12 @@ updateRecipientName
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'BankAccount'
 --
--- > runStripe config $ updateRecipientTaxID (RecipientId "rp_4lpjaLFB5ecSks") "SampleTaxID"
---
-updateRecipientBankAccount
-    :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
-    -> BankAccount   -- ^ 'BankAccount' of the 'Recipient' to be updated
-    -> Stripe Recipient
-updateRecipientBankAccount
-    recipientId
-    bankAccount = updateRecipientBase 
-         recipientId Nothing Nothing Nothing
-         Nothing (Just bankACcount) Nothing Nothing 
-         Nothing Nothing Nothing Nothing 
-         Nothing Nothing 
-
-------------------------------------------------------------------------------
--- | Update a 'Recipient' 'BankAccount'
---
 -- > runStripe config $ updateRecipient (RecipientId "rp_4lpjaLFB5ecSks") BankAccount { 
 -- >     bankAccountCountry = Country "us"
--- >   , bankAccount 
+-- >   , bankAccountRoutingNumber = RoutingNumber "071000013" 
+-- >   , bankAccountNumber = AccountNumber "293058719045" 
 -- >  }
+--
 updateRecipientBankAccount
     :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
     -> BankAccount   -- ^ 'BankAccount' of the 'Recipient' to be updated
@@ -298,10 +290,9 @@ updateRecipientBankAccount
     recipientId
     bankAccount = updateRecipientBase 
          recipientId Nothing Nothing Nothing
-         (Just taxID) Nothing Nothing Nothing 
+         Nothing (Just bankAccount)Nothing Nothing 
          Nothing Nothing Nothing Nothing 
          Nothing Nothing 
-
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'TaxID'
@@ -320,9 +311,108 @@ updateRecipientTaxID
               Nothing Nothing Nothing Nothing 
               Nothing Nothing 
 
+------------------------------------------------------------------------------
+-- | Update a 'Recipient' 'Card' by 'TokenId'
+--
+-- > runStripe config $ updateRecipientTokenId (RecipientId "rp_4lpjaLFB5ecSks") (TokenId "tok_aksdjfh9823")
+--
+updateRecipientTokenID
+    :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
+    -> TokenId       -- ^ 'TaxID' of 'Recipient' to be updated
+    -> Stripe Recipient
+updateRecipientTokenID
+    recipientId
+    tokenId = updateRecipientBase 
+              recipientId Nothing Nothing Nothing
+              Nothing Nothing (Just tokenId) Nothing 
+              Nothing Nothing Nothing Nothing 
+              Nothing Nothing 
+
+------------------------------------------------------------------------------
+-- | Update a 'Recipient' 'Card' 
+--
+-- > runStripe config $ updateRecipientCard (RecipientId "rp_4lpjaLFB5ecSks") number month year cvc
+-- >   where
+-- >     number = CardNumber "4242424242424242"
+-- >     month  = ExpMonth 12
+-- >     year   = ExpYear 2018
+-- >     cvc    = 117
+--
+updateRecipientCard
+    :: RecipientId -- ^ The 'RecipientId' of the 'Recipient' to be updated
+    -> CardNumber  -- ^ 'CardNumber' to attach to 'Card' of 'Recipient'
+    -> ExpMonth    -- ^ Expiration Month of 'Card'
+    -> ExpYear     -- ^ Expiration Year of 'Card'
+    -> CVC         -- ^ CVC of Card
+    -> Stripe Recipient
+updateRecipientCard
+    recipientId
+    cardNumber
+    expMonth
+    expYear
+    cvc = updateRecipientBase 
+              recipientId Nothing Nothing Nothing
+              Nothing Nothing Nothing (Just cardNumber)
+              (Just expMonth) (Just expYear) (Just cvc)
+              Nothing Nothing Nothing
+
+------------------------------------------------------------------------------
+-- | Update default 'Card' of 'Recipient'
+--
+-- > runStripe config $ updateRecipientDefaultCard (RecipientId "rp_4lpjaLFB5ecSks") (CardId "card_4jQs35jE5wFOor")
+--
+updateRecipientDefaultCard
+    :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
+    -> CardId        -- ^ 'CardId' of 'Card' to be made default 
+    -> Stripe Recipient
+updateRecipientDefaultCard
+    recipientId
+    cardId = updateRecipientBase 
+              recipientId Nothing Nothing Nothing Nothing 
+                          Nothing Nothing Nothing Nothing 
+                          Nothing Nothing (Just cardId) Nothing
+                          Nothing 
+
+
+------------------------------------------------------------------------------
+-- | Update a 'Recipient' 'Email' Address
+--
+-- > runStripe config $ updateRecipientEmail (RecipientId "rp_4lpjaLFB5ecSks") (Email "name@domain.com")
+--
+updateRecipientEmail
+    :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
+    -> Email         -- ^ 'Email' of 'Recipient' to be updated
+    -> Stripe Recipient
+updateRecipientEmail
+    recipientId
+    email = updateRecipientBase 
+              recipientId Nothing Nothing Nothing Nothing 
+                          Nothing Nothing Nothing Nothing 
+                          Nothing Nothing Nothing (Just email) 
+                          Nothing 
+
+------------------------------------------------------------------------------
+-- | Update a 'Recipient' 'Description'
+--
+-- > runStripe config $ updateRecipientDescription (RecipientId "rp_4lpjaLFB5ecSks") (Email "name@domain.com")
+--
+updateRecipientDescription
+    :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
+    -> Description   -- ^ 'Description' of 'Recipient' to be updated
+    -> Stripe Recipient
+updateRecipientDescription
+    recipientId
+    description = updateRecipientBase 
+                   recipientId Nothing Nothing Nothing Nothing 
+                               Nothing Nothing Nothing Nothing 
+                               Nothing Nothing Nothing Nothing 
+                              (Just description) 
 
 ------------------------------------------------------------------------------
 -- | Delete a 'Recipient'
+--
+-- > runStripe config $ deleteRecipient (RecipientId "rp_4lpjaLFB5ecSks") 
+--
 deleteRecipient
     :: RecipientId
     -> Stripe Recipient

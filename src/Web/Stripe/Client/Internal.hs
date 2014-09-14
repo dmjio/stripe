@@ -14,28 +14,28 @@ module Web.Stripe.Client.Internal
     , module Web.Stripe.Client.Util
     ) where
 
-import           Control.Exception         
 import           Control.Applicative        ((<$>), (<*>))
+import           Control.Exception
 import           Control.Monad.IO.Class     (MonadIO (liftIO))
-import           Control.Monad.Reader       (ReaderT, ask, runReaderT)
+import           Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import           Data.Aeson                 (FromJSON, Value (Object),
                                              decodeStrict, parseJSON, (.:))
 import           Data.ByteString            (ByteString)
 import           Data.Maybe                 (fromJust, fromMaybe)
 import           Data.Monoid                (mempty, (<>))
 import           Data.Text                  (Text)
-import           Network.Http.Client        (Method (..), baselineContextSSL,
-                                             buildRequest, closeConnection, Connection,
+import           Network.Http.Client        (Connection, Method (..),
+                                             baselineContextSSL, buildRequest,
+                                             closeConnection, concatHandler,
                                              emptyBody, getStatusCode, http,
                                              inputStreamBody, openConnectionSSL,
-                                             receiveResponse, sendRequest, concatHandler,
+                                             receiveResponse, sendRequest,
                                              setAuthorizationBasic,
                                              setContentType, setHeader)
 import           OpenSSL                    (withOpenSSL)
-import           Web.Stripe.Client.Error    (StripeError (..)
-                                            , StripeErrorHTTPCode (..)
-                                            , StripeErrorType(..)
-                                            )
+import           Web.Stripe.Client.Error    (StripeError (..),
+                                             StripeErrorHTTPCode (..),
+                                             StripeErrorType (..))
 import           Web.Stripe.Client.Types
 import           Web.Stripe.Client.Util
 
@@ -71,7 +71,7 @@ sendStripeRequest
     -> IO (Either StripeError a)
 sendStripeRequest
     StripeConfig {..}
-    StripeRequest{..} = 
+    StripeRequest{..} =
         withOpenSSL $ do
           ctx <- baselineContextSSL
           result <- try (openConnectionSSL ctx "api.stripe.com" 443) :: IO (Either SomeException Connection)

@@ -9,7 +9,7 @@ module Web.Stripe.Client.Types
 
 import           Control.Applicative     ((<$>), (<*>))
 import           Control.Monad           (mzero)
-import           Control.Monad.Reader    (ReaderT)
+import           Control.Monad.Trans.Reader    (ReaderT)
 import           Data.Aeson              (FromJSON(parseJSON), (.:), Value(Object))
 import           Data.ByteString         (ByteString)
 import           Data.Text               (Text)

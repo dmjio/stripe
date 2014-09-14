@@ -1,7 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-
-
 module Web.Stripe.Types where
 
 import           Control.Applicative
@@ -295,7 +293,6 @@ instance FromJSON RecipientCard where
     parseJSON _ = mzero
 
 -- Bank Account (for recipients) --
-
 
 data BankAccount = BankAccount {
       bankAccountCountry       :: Country

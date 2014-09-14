@@ -5,6 +5,7 @@ module Test.Stripe.Card (runCardTests) where
 import Control.Monad.Reader
 
 import Test.Stripe
+import Test.Hspec
 
 import Web.Stripe.Client
 import Web.Stripe.Card

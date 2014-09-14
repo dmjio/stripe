@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 -- |
 -- Module      : Web.Stripe.Customer
 -- Copyright   : (c) David Johnson, 2014
@@ -109,6 +108,22 @@ createCustomerByToken t =
     createCustomerBase Nothing (Just t) Nothing Nothing
                        Nothing Nothing Nothing Nothing
                        Nothing Nothing Nothing Nothing
+
+------------------------------------------------------------------------------
+-- | Creates a 'Customer' with a 'Card'
+createCustomerByCard
+    :: CardNumber     -- ^ Card Number
+    -> ExpMonth       -- ^ Card Expiration Month
+    -> ExpYear        -- ^ Card Expiration Year
+    -> CVC            -- ^ Card CVC
+    -> Stripe Customer
+createCustomerByCard
+    cardNumber 
+    expMonth
+    expYear
+    cvc = createCustomerBase Nothing Nothing (Just cardNumber) (Just expMonth)
+                             (Just expYear) (Just cvc) Nothing Nothing
+                             Nothing Nothing Nothing Nothing
 
 ------------------------------------------------------------------------------
 -- | Retrieves a customer by his/her ID.
