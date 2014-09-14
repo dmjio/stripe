@@ -7,7 +7,7 @@ module Web.Stripe.Card
     , ExpMonth       (..)
     , ExpYear        (..)
     , CVC            (..)
-    , Name           (..)
+    , Name
     , AddressLine1   (..)
     , AddressLine2   (..)
     , AddressCity    (..)
@@ -88,7 +88,7 @@ createCardBase
                    , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
                    , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
                    , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
-                   , ("name", (\(Name x) -> x) <$> name)
+                   , ("name", name)
                    , ("address_city", (\(AddressCity x) -> x) <$> addressCity)
                    , ("address_country", (\(AddressCountry x) -> x) <$> addressCountry)
                    , ("address_line1", (\(AddressLine1 x) -> x) <$> addressLine1 )
@@ -194,7 +194,7 @@ updateCardBase
   where request = StripeRequest POST url params
         url     = requestType </> requestId </> "cards" </> cardId
         params  =  getParams [
-                     ("name", (\(Name x) -> x) <$> name)
+                     ("name", name)
                    , ("address_city", (\(AddressCity x) -> x) <$> addressCity)
                    , ("address_country", (\(AddressCountry x) -> x) <$> addressCountry)
                    , ("address_line1", (\(AddressLine1 x) -> x) <$> addressLine1 )

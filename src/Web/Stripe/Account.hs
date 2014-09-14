@@ -1,11 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Web.Stripe.Account
-    ( -- * Account Types
-      AccountId (..)
+    ( -- * API Calls
+      getAccountDetails
+      -- * Account Types
+    , AccountId (..)
     , Account   (..)
-      -- * API calls
-    , getAccountDetails
     ) where
 
 import           Web.Stripe.Client.Internal

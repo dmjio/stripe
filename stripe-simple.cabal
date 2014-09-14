@@ -1,7 +1,6 @@
 name:                stripe-simple
 version:             0.1.0.0
 synopsis:            Simple haskell bindings to the Stripe API
-description:         Simple haskell bindings to the Stripe API
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson
@@ -9,6 +8,11 @@ maintainer:          djohnson.m@gmail.com
 category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
+description:         
+ This package offers a simple interface to the Stripe API.
+ .
+ <<https://stripe.com/img/navigation/logo@2x.png>> 
+ .
 
 Test-Suite tests
     type:             exitcode-stdio-1.0

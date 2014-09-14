@@ -36,8 +36,8 @@ main = do
 tests :: StripeTest ()
 tests = do
   runCardTests
-  -- runAccountTests
-  -- runCustomerTests
-  -- runChargeTests
+  runAccountTests
+  runCustomerTests
+  runChargeTests
 
 

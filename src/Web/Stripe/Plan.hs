@@ -40,7 +40,7 @@ createPlan
     amount
     (Currency currency)
     interval
-    (Name name) 
+    name
     intervalCount
     trialPeriodDays
     description = callAPI request
@@ -82,8 +82,8 @@ updatePlan
   where request = StripeRequest POST url params
         url     = "plans" </> planId
         params  = getParams [
-                      ("name", (\(Name x) -> x) <$> name )
-                    , ("statement_description", description )
+                      ("name", name)
+                    , ("statement_description", description)
                   ]
 
 ------------------------------------------------------------------------------

@@ -41,7 +41,7 @@ import           Web.Stripe.Types
 createCustomerBase
     :: Maybe Integer        -- ^ Integer amount
     -> Maybe TokenId        -- ^ Either a dictionary of a card or a 'TokenId'
-    -> Maybe CardNumber     -- ^ Either a dictionary of a card or a 'TokenId'
+    -> Maybe CardNumber     -- ^ Card Number
     -> Maybe ExpMonth       -- ^ Card Expiration Month
     -> Maybe ExpYear        -- ^ Card Expiration Year
     -> Maybe CVC            -- ^ Card CVC

@@ -41,7 +41,7 @@ createInvoiceItem
                   , ("currency", Just currency)
                   , ("invoice", (\(InvoiceId x) -> x) <$> invoiceId)
                   , ("subscription", (\(SubscriptionId x) -> x) <$> subscriptionId)
-                  , ("description", (\(Description x) -> x) <$> description)
+                  , ("description", description)
                   ]
 
 getInvoiceItem

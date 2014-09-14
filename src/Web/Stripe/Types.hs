@@ -19,6 +19,9 @@ type Key   = Text
 type ID    = Text
 type Value = Text
 type URL   = Text
+type Name  = Text
+type TaxID  = Text
+type MiddleInitial = Char
 type Description   = Text
 type AccountBalance = Int
 
@@ -138,7 +141,7 @@ data Customer = Customer {
     , customerCards          :: StripeList Card
     , customerCurrency       :: Maybe Currency
     , customerDefaultCard    :: Maybe CardId
-    } | DeletedCustomer { -- ^ This is necessary because of an inconsistency in Stripe's API
+    } | DeletedCustomer {
       deletedCustomer   :: Bool
     , deletedCustomerId :: CustomerId
   } deriving (Show, Eq)
@@ -290,6 +293,15 @@ instance FromJSON RecipientCard where
              <*> o .:? "address_zip_check"
              <*> (fmap RecipientId <$> o .:? "recipient")
     parseJSON _ = mzero
+
+-- Bank Account (for recipients) --
+
+
+data BankAccount = BankAccount {
+      bankAccountCountry       :: Country
+    , bankAccountRoutingNumber :: RoutingNumber
+    , bankAccountNumber        :: AccountNumber
+} deriving Show
 
 -- Token --
 newtype TokenId =
@@ -612,7 +624,6 @@ newtype DurationInMonths = DurationInMonths Int deriving (Show, Eq)
 -- Plan --
 
 newtype PlanId          = PlanId Text deriving (Show, Eq)
-newtype Name            = Name Text deriving (Show, Eq)
 newtype Currency        = Currency Text deriving (Show, Eq)
 newtype IntervalCount   = IntervalCount Int deriving (Show, Eq)
 newtype TrialPeriodDays = TrialPeriodDays Int deriving (Show, Eq)
@@ -825,7 +836,7 @@ instance FromJSON Balance where
 
 
 -- * Recipients
-newtype RecipientId = RecipientId { recipientId :: Text } deriving (Show, Eq)
+newtype RecipientId = RecipientId Text deriving (Show, Eq)
 
 data RecipientType =
     Individual | Corporation deriving Eq
@@ -834,12 +845,43 @@ instance Show RecipientType where
     show Individual  = "individual"
     show Corporation = "corporation"
 
-data Recipient = Recipient {
+instance FromJSON RecipientType where
+   parseJSON (String "individual")  = pure Individual
+   parseJSON (String "corporation") = pure Corporation
+   parseJSON _ = mzero
 
+newtype FirstName = FirstName Text deriving (Show, Eq)
+newtype LastName = LastName Text deriving (Show, Eq)
+
+data Recipient = Recipient {
+      recipientId            :: RecipientId
+    , recipientObject        :: Text
+    , recipientCreated       :: UTCTime
+    , recipientLiveMode      :: Bool
+    , recipientType          :: RecipientType
+    , recipientDescription   :: Maybe Description
+    , recipientEmail         :: Maybe Email
+    , recipientName          :: Name
+    , recipientVerified      :: Bool
+    , recipientActiveAccount :: Maybe AccountId
+    , recipientCards         :: StripeList RecipientCard
+    , recipientDefaultCard   :: Maybe CardId
 } deriving (Show)
 
 instance FromJSON Recipient where
-   parseJSON (Object o) = undefined
+   parseJSON (Object o) =
+       Recipient <$> (RecipientId <$> o .: "id")
+                 <*> o .: "object"
+                 <*> (fromSeconds <$> o .: "created")
+                 <*> o .: "livemode"
+                 <*> o .: "type"
+                 <*> o .:? "description"
+                 <*> (fmap Email <$> o .:? "email")
+                 <*> o .: "name"
+                 <*> o .: "verified"
+                 <*> (fmap AccountId <$> o .:? "active_account")
+                 <*> o .: "cards"
+                 <*> (fmap CardId <$> o .:? "default_card")
 
 ---- Transfers
 
@@ -1002,7 +1044,7 @@ instance FromJSON Dispute where
                 <*> o .: "is_charge_refundable"
                 <*> o .: "balance_transactions"
                 <*> (fromSeconds <$> o .: "evidence_due_by")
-                <*> o .:? "evidency"
+                <*> o .:? "evidence"
 
 
 

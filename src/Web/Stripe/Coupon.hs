@@ -37,9 +37,9 @@ createCoupon
         url     = "coupons"
         params  = getParams [
                     ("id", (\(CouponId x) -> x) <$> couponId )
-                  , ("duration", Just $ toText duration )
+                  , ("duration", toText <$> Just duration )
                   , ("amount_off", (\(AmountOff x) -> toText x) <$> amountOff )
-                  , ("currency", currency >>= \(Currency x) -> Just x)
+                  , ("currency", (\(Currency x) -> x) <$> currency)
                   , ("duration_in_months", (\(DurationInMonths x) -> toText x) <$> durationInMonths )
                   , ("max_redemptions", (\(MaxRedemptions x) -> toText x) <$> maxRedemptions )
                   , ("percent_off", (\(PercentOff x) -> toText x) <$> percentOff )
