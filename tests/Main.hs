@@ -10,8 +10,10 @@ import qualified Data.ByteString.Char8      as B8
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as T
+import           Data.Either
 
 import           Web.Stripe.Client
+import           Web.Stripe.Customer
 
 import           Test.Stripe
 import           Test.Stripe.Account
@@ -21,20 +23,25 @@ import           Test.Stripe.Customer
 
 import           Test.Hspec
 
-secretKey :: ByteString
-secretKey = "sk_test_zvqdM2SSA6WwySqM6KJQrqpH"
+getConfig :: IO StripeConfig
+getConfig = do 
+  -- B8.putStrLn "Please enter your *TEST* secret key"
+  -- secretKey <- B8.getLine
+  -- B8.putStrLn secretKey
+  return $ StripeConfig secretKey "2014-09-08"
+  where
+    secretKey :: ByteString
+    secretKey = "sk_test_zvqdM2SSA6WwySqM6KJQrqpH"
 
 main :: IO ()
-main = do
-  B8.putStrLn "Please enter your *TEST* secret key"
-  secretKey <- B8.getLine
-  B8.putStrLn secretKey
-  let config = StripeConfig secretKey "2014-09-08"
+main = 
   hspec $ do
-    describe "Prelude.head" $ do
-      it "returns the first element of a list" $ do
-        head [23 ..] `shouldBe` (23 :: Int)
-  runTests config tests
+    describe "Creates Empty Customer" $ do
+      it "creates an empty customer" $ do
+        config <- getConfig
+        customer <- runStripe config createEmptyCustomer
+        customer `shouldSatisfy` isRight
+--  runTests config tests
 
 ------------------------------------------------------------------------------
 -- | Top level testing function
