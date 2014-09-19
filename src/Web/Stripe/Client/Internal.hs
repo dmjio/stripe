@@ -1,21 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-
 module Web.Stripe.Client.Internal
     ( callAPI
     , runStripe
-    , config
     , Stripe             (..)
     , StripeRequest      (..)
     , StripeError        (..)
     , StripeConfig       (..)
-    , StripeDeleteResult (..)
     , Method             (..)
     , module Web.Stripe.Client.Util
     ) where
 
 import           Control.Applicative        ((<$>), (<*>))
-import           Control.Exception
+import           Control.Exception          (SomeException, try)
 import           Control.Monad.IO.Class     (MonadIO (liftIO))
 import           Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import           Data.Aeson                 (FromJSON, Value (Object),
@@ -36,8 +33,9 @@ import           OpenSSL                    (withOpenSSL)
 import           Web.Stripe.Client.Error    (StripeError (..),
                                              StripeErrorHTTPCode (..),
                                              StripeErrorType (..))
-import           Web.Stripe.Client.Types
-import           Web.Stripe.Client.Util
+import           Web.Stripe.Client.Types    (Stripe, StripeConfig (..),
+                                             StripeRequest (..))
+import           Web.Stripe.Client.Util     (paramsToByteString, toText, fromSeconds, (</>), getParams)
 
 import qualified Data.ByteString            as S
 import qualified Data.ByteString.Lazy       as BL
@@ -46,9 +44,8 @@ import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as T
 import qualified System.IO.Streams          as Streams
 
-config :: StripeConfig
-config = StripeConfig "sk_test_zvqdM2SSA6WwySqM6KJQrqpH" "2014-08-20"
-
+------------------------------------------------------------------------------
+-- | Main entry point for beginning a `Stripe` API request
 runStripe
     :: FromJSON a
     => StripeConfig
@@ -56,6 +53,8 @@ runStripe
     -> IO (Either StripeError a)
 runStripe = flip runReaderT
 
+------------------------------------------------------------------------------
+-- | API request to be issued
 callAPI
     :: FromJSON a
     => StripeRequest
@@ -64,6 +63,8 @@ callAPI request =
     ask >>= \config ->
         liftIO $ sendStripeRequest config request
 
+------------------------------------------------------------------------------
+-- | The guts of issuing an HTTP Request to a `Stripe` API endpoint
 sendStripeRequest
     :: FromJSON a
     => StripeConfig
@@ -97,15 +98,17 @@ sendStripeRequest
       json <- receiveResponse con $
               \response inputStream ->
                   concatHandler response inputStream >>= \result -> do
---                      print result
+                      print result
+                      {- for debugging purposes -} 
                       handleStream response result
       closeConnection con
       return json
+    parseFail = error "Parse failure"
     handleStream p x =
         return $ case getStatusCode p of
-                   200 -> maybe (error "Parse failure") Right (decodeStrict x)
+                   200 -> maybe parseFail Right (decodeStrict x)
                    code | code >= 400 ->
-                     do let json = fromMaybe (error "Parse Failure") (decodeStrict x :: Maybe StripeError)
+                     do let json = fromMaybe parseFail (decodeStrict x :: Maybe StripeError)
                         Left $ case code of
                                  400 -> json { errorHTTP = Just BadRequest }
                                  401 -> json { errorHTTP = Just UnAuthorized }

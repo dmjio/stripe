@@ -1,27 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Web.Stripe.Plan 
-    ( -- * API Functions
-      ---- * Create Plan
+    ( -- * API 
       createPlan
     , createPlanBase
-      ---- * Get Plan
     , getPlan
-      ---- * Update Plan
     , updatePlanName
     , updatePlanDescription
     , updatePlanBase
-      ---- * Delete Plan
     , deletePlan
-      -- * Plan Types
+      -- * Types
     , PlanId   (..)
     , Plan     (..)
     , Interval (..)
     ) where
-
-import           Control.Applicative             ((<$>), (<*>))
-import           Data.Text                       (Text)
-import qualified Data.Text.Encoding as T
 
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
@@ -51,32 +42,30 @@ createPlanBase
         url     = "plans"
         params = getParams [
                      ("id", Just planId) 
-                   , ("amount", toText <$> Just amount) 
+                   , ("amount", toText `fmap` Just amount) 
                    , ("currency", Just currency)
-                   , ("interval", toText <$> Just interval) 
+                   , ("interval", toText `fmap` Just interval) 
                    , ("name", Just name) 
-                   , ("interval_count", (\(IntervalCount x) -> toText x) <$> intervalCount )
-                   , ("trial_period_days", (\(TrialPeriodDays x) -> toText x) <$> trialPeriodDays )
+                   , ("interval_count", (\(IntervalCount x) -> toText x) `fmap` intervalCount )
+                   , ("trial_period_days", (\(TrialPeriodDays x) -> toText x) `fmap` trialPeriodDays )
                    , ("statement_description", description )
                  ]
 
 ------------------------------------------------------------------------------
 -- | Create a `Plan`
 createPlan 
-    :: PlanId   -- ^ Unique string used to identify `Plan`
-    -> Amount   -- ^ Positive integer in cents (or 0 for a free plan) representing how much to charge on a recurring basis
-    -> Currency -- ^ `Currency` of `Plan`
-    -> Interval -- ^ Billing Frequency 
-    -> Name     -- ^ Name of `Plan` to be displayed on `Invoice`s
+    :: PlanId        -- ^ Unique string used to identify `Plan`
+    -> Amount        -- ^ Positive integer in cents (or 0 for a free plan) representing how much to charge on a recurring basis
+    -> Currency      -- ^ `Currency` of `Plan`
+    -> Interval      -- ^ Billing Frequency 
+    -> Name          -- ^ Name of `Plan` to be displayed on `Invoice`s
     -> Stripe Plan
 createPlan 
     planId
     amount
     currency
-    interval
-    name = createPlanBase planId amount 
-              currency interval name
-              Nothing Nothing Nothing
+    intervalCount
+    name = createPlanBase planId amount currency intervalCount name Nothing Nothing Nothing 
 
 ------------------------------------------------------------------------------
 -- | Create a `Plan` with a specified `IntervalCount`
@@ -86,7 +75,7 @@ createPlanIntervalCount
     -> Currency      -- ^ `Currency` of `Plan`
     -> Interval      -- ^ Billing Frequency 
     -> Name          -- ^ Name of `Plan` to be displayed on `Invoice`s
-    -> IntervalCount -- ^ Name of `Plan` to be displayed on `Invoice`s
+    -> IntervalCount -- ^ # of billins between each `Subscription` billing
     -> Stripe Plan
 createPlanIntervalCount
     planId
@@ -96,7 +85,7 @@ createPlanIntervalCount
     name
     intervalCount = createPlanBase planId amount 
                     currency interval name
-                    (Just intervalCount) Nothing Nothing
+                    (Just intervalCount) Nothing Nothing 
 
 ------------------------------------------------------------------------------
 -- | Create a `Plan` with a specified number of `TrialPeriodDays`
@@ -106,7 +95,7 @@ createPlanTrialPeriodDays
     -> Currency        -- ^ `Currency` of `Plan`
     -> Interval        -- ^ Billing Frequency 
     -> Name            -- ^ Name of `Plan` to be displayed on `Invoice`s
-    -> TrialPeriodDays -- ^ Name of `Plan` to be displayed on `Invoice`s
+    -> TrialPeriodDays -- ^ Number of Trial Period Days to be displayed on `Invoice`s
     -> Stripe Plan
 createPlanTrialPeriodDays
     planId
@@ -114,11 +103,16 @@ createPlanTrialPeriodDays
     currency
     interval
     name
-    intervalCount = createPlanBase planId amount 
-                    currency interval name
-                    (Just intervalCount) Nothing Nothing
-
-
+    trialPeriodDays = 
+        createPlanBase
+          planId
+          amount
+          currency
+          interval
+          name
+          Nothing
+          (Just trialPeriodDays) 
+          Nothing 
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Plan`

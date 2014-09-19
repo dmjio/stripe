@@ -1,53 +1,61 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Web.Stripe.ApplicationFeeRefunds
-    ( -- * Application Fee Refund Types
-      FeeId                  (..)
-    , ApplicationFee         (..)
-    , ApplicationFeeRefundId (..)
-      -- * API calls
-    , createApplicationFeeRefund
-    , retrieveApplicationFeeRefund
+    ( -- * API
+      createApplicationFeeRefund
+    , getApplicationFeeRefund
     , getApplicationFeeRefunds
+      -- * Types
+    , FeeId                  (..)
+    , RefundId               (..)
+    , ApplicationFee         (..)
+    , ApplicationFeeRefund   (..)        
+    , StripeList             (..)
+    , Amount
     ) where
 
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
-import           Control.Applicative
+import           Web.Stripe.Client.Internal (Method (POST, GET), Stripe,
+                                             StripeRequest (..), callAPI,
+                                             getParams, toText, (</>))
+import           Web.Stripe.Types           (Amount, ApplicationFee,
+                                             ApplicationFeeRefund(..), FeeId (..),
+                                             RefundId (..), StripeList)
 
--- | Create a new application refund
-createApplicationFeeRefund 
+------------------------------------------------------------------------------
+-- | Create a new 'ApplicationFeeRefund'
+createApplicationFeeRefund
     :: FeeId        -- ^ The FeeID associated with the application
     -> Maybe Amount -- ^ The Amount associated with the Fee (optional)
     -> Stripe ApplicationFeeRefund
 createApplicationFeeRefund
-    (FeeId feeId) 
+    (FeeId feeId)
     amount      = callAPI request
   where request = StripeRequest POST url params
         url     = "application_fees" </> feeId </> "refunds"
-        params  = getParams [ 
-                   ("amount", toText <$> amount) 
+        params  = getParams [
+                   ("amount", fmap toText amount)
                   ]
 
--- | Create an existing application refund
-retrieveApplicationFeeRefund 
+------------------------------------------------------------------------------
+-- | Retrieve an existing 'ApplicationFeeRefund'
+getApplicationFeeRefund
     :: FeeId
     -> RefundId
     -> Stripe ApplicationFeeRefund
-retrieveApplicationFeeRefund (FeeId feeId) (RefundId refundId)
+getApplicationFeeRefund (FeeId feeId) (RefundId refundId)
     = callAPI request
   where request = StripeRequest GET url params
         url     = "application_fees" </> feeId </> "refunds" </> refundId
         params  = []
 
--- | Get a list of all application fee refunds
-getApplicationFeeRefunds 
-    :: FeeId 
+------------------------------------------------------------------------------
+-- | Retrieve a list of all 'ApplicationFeeRefund's for a given Application 'FeeId'
+getApplicationFeeRefunds
+    :: FeeId
     -> Stripe (StripeList ApplicationFeeRefund)
-getApplicationFeeRefunds (FeeId feeId) 
+getApplicationFeeRefunds (FeeId feeId)
     = callAPI request
   where
     request = StripeRequest GET url params
-    url     = "application_fees" </> feeId </> "refunds" 
+    url     = "application_fees" </> feeId </> "refunds"
     params  = []
 

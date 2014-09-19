@@ -3,20 +3,18 @@ module Web.Stripe.Subscriptions
     ( -- * Types
       Subscription   (..)
     , SubscriptionId (..)
-      -- * API Calls
+      -- * API 
     , createSubscription
     , getSubscription
     , updateSubscription
     , deleteSubscription
     ) where
 
-
-import           Control.Applicative
-import           Data.Time
-
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
+------------------------------------------------------------------------------
+-- | Create a `Subscription` by `CustomerId` and `PlanId`
 createSubscription
     :: CustomerId
     -> PlanId
@@ -26,10 +24,10 @@ createSubscription
     (PlanId planId) = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> customerId </> "subscriptions"
-        params  = getParams [
-                   ("plan", Just planId)
-                  ]
+        params  = getParams [ ("plan", Just planId)  ]
 
+------------------------------------------------------------------------------
+-- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId`
 getSubscription 
     :: CustomerId 
     -> SubscriptionId 
@@ -41,6 +39,8 @@ getSubscription
         url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
         params  = []
 
+------------------------------------------------------------------------------
+-- | Update a `Subscription` by `CustomerId` and `SubscriptionId`
 updateSubscription 
     :: CustomerId 
     -> SubscriptionId 
@@ -52,6 +52,8 @@ updateSubscription
         url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
         params  = []
 
+------------------------------------------------------------------------------
+-- | Delete a `Subscription` by `CustomerId` and `SubscriptionId`
 deleteSubscription
     :: CustomerId
     -> SubscriptionId 

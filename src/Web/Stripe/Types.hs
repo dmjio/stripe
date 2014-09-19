@@ -8,7 +8,6 @@ import           Data.Aeson
 import           Data.Text                  (Text)
 import           Data.Time                  (UTCTime)
 import           Data.Vector
-
 import           Web.Stripe.Client.Internal
 
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
@@ -22,6 +21,18 @@ type TaxID  = Text
 type MiddleInitial = Char
 type Description   = Text
 type AccountBalance = Int
+type TrialPeriod = UTCTime
+
+data StripeDeleteResult = StripeDeleteResult {
+      deleted   :: Bool
+    , deletedId :: Text
+    } deriving (Show, Eq)
+
+instance FromJSON StripeDeleteResult where
+   parseJSON (Object o) =
+       StripeDeleteResult <$> o .: "deleted"
+                          <*> o .: "id"
+   parseJSON _ = mzero
 
 newtype Email = Email Text deriving (Show, Eq)
 
@@ -57,8 +68,8 @@ type Capture = Bool
 newtype ReceiptEmail = ReceiptEmail Text deriving (Show, Eq)
 
 data StripeList a = StripeList {
-      list       :: [a]
-    , url        :: Text
+      stripeList :: [a]
+    , stripeUrl  :: Text
     , object     :: Text
     , totalCount :: Maybe Int
     , hasMore    :: Bool
@@ -337,7 +348,7 @@ instance FromJSON Token where
 ---- == Invoice == ------
 data Invoice = Invoice {
       invoiceDate                 :: UTCTime
-    , invoiceId                   :: InvoiceId
+    , invoiceId                   :: Maybe InvoiceId
     , invoicePeriodStart          :: UTCTime
     , invoicePeriodEnd            :: UTCTime
     , invoiceLineItems            :: StripeList InvoiceLineItem
@@ -356,11 +367,11 @@ data Invoice = Invoice {
     , invoiceStartingBalance      :: Int
     , invoiceEndingBalance        :: Maybe Int
     , invoiceNextPaymentAttempt   :: UTCTime
-    , invoiceWebHooksDeliveredAt  :: UTCTime
+    , invoiceWebHooksDeliveredAt  :: Maybe UTCTime
     , invoiceCharge               :: Maybe ChargeId
     , invoiceDiscount             :: Maybe Discount
     , invoiceApplicateFee         :: Maybe FeeId
-    , invoiceSubscription         :: SubscriptionId
+    , invoiceSubscription         :: Maybe SubscriptionId
     , invoiceStatementDescription :: Maybe Text
     , invoiceDescription          :: Maybe Text
 } deriving Show
@@ -368,7 +379,7 @@ data Invoice = Invoice {
 instance FromJSON Invoice where
    parseJSON (Object o) =
        Invoice <$> (fromSeconds <$> o .: "date")
-               <*> (InvoiceId <$> o .: "id")
+               <*> (fmap InvoiceId <$> o .:? "id")
                <*> (fromSeconds <$> o .: "period_start")
                <*> (fromSeconds <$> o .: "period_end")
                <*> o .: "lines"
@@ -387,11 +398,11 @@ instance FromJSON Invoice where
                <*> o .: "starting_balance"
                <*> o .:? "ending_balance"
                <*> (fromSeconds <$> o .: "next_payment_attempt")
-               <*> (fromSeconds <$> o .: "webhooks_delivered_at")
+               <*> (fmap fromSeconds <$> o .: "webhooks_delivered_at")
                <*> (fmap ChargeId <$> o .:? "charge")
                <*> o .:? "discount"
                <*> (fmap FeeId <$> o .:? "application_fee")
-               <*> (SubscriptionId <$> o .: "subscription")
+               <*> (fmap SubscriptionId <$> o .: "subscription")
                <*> o .:? "statement_description"
                <*> o .:? "description"
    parseJSON _ = mzero
@@ -461,16 +472,14 @@ newtype InvoiceLineItemId =
     InvoiceLineItemId Text deriving (Show, Eq)
 
 data InvoiceLineItemType
-    = --InvoiceItem
-     SubscriptionItem
+    = InvoiceItemType |
+     SubscriptionItemType
       deriving (Show,Eq)
 
 instance FromJSON InvoiceLineItemType where
---   parseJSON (String "invoiceitem")  = pure InvoiceItem
-   parseJSON (String "subscription") = pure SubscriptionItem
+   parseJSON (String "invoiceitem")  = pure InvoiceItemType
+   parseJSON (String "subscription") = pure SubscriptionItemType
    parseJSON _ = mzero
-
-
 
 data InvoiceItem = InvoiceItem {
       invoiceItemObject       :: Text
@@ -945,10 +954,8 @@ instance FromJSON Transfer where
                  <*> o .:? "statement_description"
                  <*> (fmap RecipientId <$> o .:? "recipient")
 
-newtype ApplicationFeeRefundId = ApplicationFeeRefundId Text deriving (Show, Eq)
-
 data ApplicationFeeRefund = ApplicationFeeRefund {
-       applicationFeeRefundId                 :: ApplicationFeeRefundId
+       applicationFeeRefundId                 :: RefundId
      , applicationFeeRefundAmount             :: Int
      , applicationFeeRefundCurrency           :: Text
      , applicationFeeRefundCreated            :: UTCTime
@@ -959,7 +966,7 @@ data ApplicationFeeRefund = ApplicationFeeRefund {
 
 instance FromJSON ApplicationFeeRefund where
     parseJSON (Object o) = ApplicationFeeRefund
-              <$> (ApplicationFeeRefundId <$> o .: "id")
+              <$> (RefundId <$> o .: "id")
               <*> o .: "amount"
               <*> o .: "currency"
               <*> (fromSeconds <$> o .: "created")

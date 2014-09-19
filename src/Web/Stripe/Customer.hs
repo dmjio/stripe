@@ -1,22 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
--- |
--- Module      : Web.Stripe.Customer
--- Copyright   : (c) David Johnson, 2014
--- License     : BSD3
--- Maintainer  : djohnson.m@gmail.com
--- Stability   : experimental
--- Portability : POSIX
-
 module Web.Stripe.Customer
-    ( -- * Customer Types
-      Customer   (..) 
-    , CustomerId (..)
-    , StripeList (..)
-      -- * API Calls
-      ---- * Create customer 
-    , createEmptyCustomer
+    ( -- * API
+      ---- * Create customer
+      createEmptyCustomer
     , createCustomerByEmail
     , createCustomerByToken
+    , createCustomerByCard
     , createCustomerBase
       ---- * Update customer
     , updateCustomerBase
@@ -27,18 +16,43 @@ module Web.Stripe.Customer
       ---- * Get customer(s)
     , getCustomer
     , getCustomers
+      -- * Types
+    , Customer           (..)
+    , CustomerId         (..)
+    , CardId             (..)
+    , StripeList         (..)
+    , TokenId            (..)
+    , CardNumber         (..)
+    , ExpMonth           (..)
+    , ExpYear            (..)
+    , CVC                (..)
+    , CouponId           (..)
+    , Email              (..)
+    , PlanId             (..)
+    , Quantity           (..)
+    , StripeDeleteResult (..)
+    , Description
+    , AccountBalance
+    , TrialPeriod
+    , Limit
     ) where
 
-import           Control.Applicative
-import           Data.Time
-
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
+import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
+                                             StripeRequest (..), callAPI,
+                                             getParams, toText, (</>))
+import           Web.Stripe.Types           (AccountBalance, CVC (..),
+                                             CardNumber (..), CouponId (..),
+                                             Customer (..), CustomerId (..), CardId(..),
+                                             Description, Email (..), StripeDeleteResult(..),
+                                             ExpMonth (..), ExpYear (..), Limit,
+                                             PlanId (..), Quantity (..),
+                                             StripeList (..), TokenId (..),
+                                             TrialPeriod)
 
 ------------------------------------------------------------------------------
 -- | The base request for customer creation
 createCustomerBase
-    :: Maybe Integer        -- ^ Integer amount
+    :: Maybe AccountBalance -- ^ Integer amount corresponding to AccountBalance
     -> Maybe TokenId        -- ^ Either a dictionary of a card or a 'TokenId'
     -> Maybe CardNumber     -- ^ Card Number
     -> Maybe ExpMonth       -- ^ Card Expiration Month
@@ -49,7 +63,7 @@ createCustomerBase
     -> Maybe Email          -- ^ Email address of customer
     -> Maybe PlanId         -- ^ Identifier of plan to subscribe customer to
     -> Maybe Quantity       -- ^ The quantity you'd like to apply to the subscription you're creating
-    -> Maybe UTCTime        -- ^ TimeStamp representing the trial period the customer will get
+    -> Maybe TrialPeriod    -- ^ TimeStamp representing the trial period the customer will get
     -> Stripe Customer
 createCustomerBase
     accountBalance
@@ -66,18 +80,18 @@ createCustomerBase
     trialEnd = callAPI request
   where request = StripeRequest POST "customers" params
         params  = getParams [
-                     ("account_balance", toText <$> accountBalance)
-                   , ("card", (\(TokenId x) -> x) <$> cardId)
-                   , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
-                   , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
-                   , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
-                   , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
-                   , ("coupon", (\(CouponId x) -> x) <$> couponId)
+                     ("account_balance", toText `fmap` accountBalance)
+                   , ("card", (\(TokenId x) -> x) `fmap` cardId)
+                   , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
+                   , ("card[exp_month]", (\(ExpMonth x) -> toText x) `fmap` expMonth)
+                   , ("card[exp_year]", (\(ExpYear x) -> toText x) `fmap` expYear)
+                   , ("card[cvc]", (\(CVC x) -> x) `fmap` cvc)
+                   , ("coupon", (\(CouponId x) -> x) `fmap` couponId)
                    , ("description", description)
-                   , ("email", (\(Email x) -> x) <$> email)
-                   , ("plan", (\(PlanId x) -> x) <$> planId)
-                   , ("quantity",  (\(Quantity x) -> toText x) <$> quantity)
-                   , ("trial_end", toText <$> trialEnd)
+                   , ("email", (\(Email x) -> x) `fmap` email)
+                   , ("plan", (\(PlanId x) -> x) `fmap` planId)
+                   , ("quantity",  (\(Quantity x) -> toText x) `fmap` quantity)
+                   , ("trial_end", toText `fmap` trialEnd)
                 ]
 
 ------------------------------------------------------------------------------
@@ -118,12 +132,92 @@ createCustomerByCard
     -> CVC            -- ^ Card CVC
     -> Stripe Customer
 createCustomerByCard
-    cardNumber 
+    cardNumber
     expMonth
     expYear
     cvc = createCustomerBase Nothing Nothing (Just cardNumber) (Just expMonth)
                              (Just expYear) (Just cvc) Nothing Nothing
                              Nothing Nothing Nothing Nothing
+
+------------------------------------------------------------------------------
+-- | Updates a customer
+updateCustomerBase
+    :: CustomerId           -- ^ `CustomerId` associated with the `Customer` to update
+    -> Maybe AccountBalance -- ^ Integer amount corresponding to AccountBalance
+    -> Maybe TokenId        -- ^ Either a dictionary of a card or a tokenId
+    -> Maybe CardNumber     -- ^ Either a dictionary of a card or a tokenId
+    -> Maybe ExpMonth       -- ^ `Card` Expiration Month
+    -> Maybe ExpYear        -- ^ `Card` Expiration Year
+    -> Maybe CVC            -- ^ `Card` CVC
+    -> Maybe CouponId       -- ^ Discount on all recurring charges
+    -> Maybe CardId         -- ^ `CardId` to set as default for customer
+    -> Maybe Description    -- ^ Arbitrary string to attach to a customer object
+    -> Maybe Email          -- ^ Email address of customer
+    -> Stripe Customer
+updateCustomerBase
+    (CustomerId cid)
+    accountBalance
+    cardId
+    cardNumber
+    expMonth
+    expYear
+    cvc
+    couponId
+    defaultCardId
+    description
+    email       = callAPI request
+  where request = StripeRequest POST url params
+        url     = "customers" </> cid
+        params  = getParams [
+                    ("account_balance", toText `fmap` accountBalance)
+                  , ("card", (\(TokenId x) -> x) `fmap` cardId)
+                  , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
+                  , ("card[exp_month]", (\(ExpMonth x) -> toText x) `fmap` expMonth)
+                  , ("card[exp_year]", (\(ExpYear x) -> toText x) `fmap` expYear)
+                  , ("card[cvc]", (\(CVC x) -> x) `fmap` cvc)
+                  , ("coupon", (\(CouponId x) -> x) `fmap` couponId)
+                  , ("default_card", (\(CardId x) -> x) `fmap` defaultCardId)
+                  , ("description", description)
+                  , ("email", (\(Email x) -> x) `fmap` email)
+                  ]
+
+------------------------------------------------------------------------------
+-- | Update Customer Account Balance
+updateCustomerAccountBalance
+    :: CustomerId      -- ^ `CustomerId` associated with the `Customer` to update
+    -> AccountBalance  -- ^ `AccountBalance` associated
+    -> Stripe Customer
+updateCustomerAccountBalance
+    customerId
+    accountBalance
+        = updateCustomerBase customerId (Just accountBalance)
+            Nothing Nothing Nothing
+            Nothing Nothing Nothing
+            Nothing Nothing Nothing
+
+------------------------------------------------------------------------------
+-- | Update Customer Account Balance
+updateCustomerDefaultCard
+    :: CustomerId -- ^ `CustomerId` associated with the `Customer` to update
+    -> CardId     -- ^ 'CardId' to become default card
+    -> Stripe Customer
+updateCustomerDefaultCard
+    customerId
+    defaultCard
+        = updateCustomerBase customerId Nothing
+            Nothing Nothing Nothing
+            Nothing Nothing Nothing
+            (Just defaultCard) Nothing Nothing
+
+------------------------------------------------------------------------------
+-- | Deletes the specified customer
+deleteCustomer
+    :: CustomerId
+    -> Stripe StripeDeleteResult
+deleteCustomer (CustomerId cid) = callAPI request
+  where request = StripeRequest DELETE url params
+        url     = "customers" </> cid
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Retrieves a customer by his/her ID.
@@ -144,86 +238,5 @@ getCustomers limit
     = callAPI request
   where request = StripeRequest GET url params
         url     = "customers"
-        params  = getParams [ ("limit", toText <$> limit )]
-
-------------------------------------------------------------------------------
--- | Updates a customer
-updateCustomerBase
-    :: CustomerId
-    -> Maybe AccountBalance -- ^ Integer amount
-    -> Maybe TokenId        -- ^ Either a dictionary of a card or a tokenId
-    -> Maybe CardNumber     -- ^ Either a dictionary of a card or a tokenId
-    -> Maybe ExpMonth       -- ^ Card Expiration Month
-    -> Maybe ExpYear        -- ^ Card Expiration Year
-    -> Maybe CVC            -- ^ Card CVC
-    -> Maybe CouponId       -- ^ Discount on all recurring charges
-    -> Maybe CardId         -- ^ CardID to set as default for customer
-    -> Maybe Description    -- ^ Arbitrary string to attach to a customer object
-    -> Maybe Email          -- ^ Email address of customer
-    -> Stripe Customer
-updateCustomerBase
-    (CustomerId cid)
-    accountBalance
-    cardId
-    cardNumber
-    expMonth
-    expYear
-    cvc
-    couponId
-    defaultCardId
-    description
-    email       = callAPI request
-  where request = StripeRequest POST url params
-        url     = "customers" </> cid
-        params  = getParams [ 
-                    ("account_balance", toText <$> accountBalance) 
-                  , ("card", (\(TokenId x) -> x) <$> cardId)
-                  , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
-                  , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
-                  , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
-                  , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
-                  , ("coupon", (\(CouponId x) -> x) <$> couponId)
-                  , ("default_card", (\(CardId x) -> x) <$> defaultCardId)
-                  , ("description", description)
-                  , ("email", (\(Email x) -> x) <$> email)
-                  ]
-
-------------------------------------------------------------------------------
--- | Update Customer Account Balance
-updateCustomerAccountBalance
-    :: CustomerId
-    -> AccountBalance
-    -> Stripe Customer
-updateCustomerAccountBalance
-    customerId
-    accountBalance 
-        = updateCustomerBase customerId (Just accountBalance)
-            Nothing Nothing Nothing
-            Nothing Nothing Nothing
-            Nothing Nothing Nothing
-
-------------------------------------------------------------------------------
--- | Update Customer Account Balance
-updateCustomerDefaultCard
-    :: CustomerId
-    -> CardId -- ^ 'CardId' to become default card 
-    -> Stripe Customer
-updateCustomerDefaultCard
-    customerId
-    defaultCard
-        = updateCustomerBase customerId Nothing
-            Nothing Nothing Nothing
-            Nothing Nothing Nothing
-            (Just defaultCard) Nothing Nothing
-
-
-------------------------------------------------------------------------------
--- | Deletes the specified customer
-deleteCustomer
-    :: CustomerId
-    -> Stripe StripeDeleteResult
-deleteCustomer (CustomerId cid) = callAPI request
-  where request = StripeRequest DELETE url params
-        url     = "customers" </> cid
-        params  = []
+        params  = getParams [ ("limit", toText `fmap` limit )]
 

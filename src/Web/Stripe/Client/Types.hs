@@ -1,45 +1,36 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Web.Stripe.Client.Types
-  ( Stripe
+  ( -- * Types
+    Stripe
   , StripeRequest (..)
-  , StripeConfig (..)
-  , StripeDeleteResult (..)
+  , StripeConfig  (..)
   ) where
 
-import           Control.Applicative     ((<$>), (<*>))
-import           Control.Monad           (mzero)
-import           Control.Monad.Trans.Reader    (ReaderT)
-import           Data.Aeson              (FromJSON(parseJSON), (.:), Value(Object))
-import           Data.ByteString         (ByteString)
-import           Data.Text               (Text)
-import           Network.Http.Client     (Method)
-import           Web.Stripe.Client.Error (StripeError)
+import           Control.Monad.Trans.Reader (ReaderT)
+import           Data.ByteString            (ByteString)
+import           Data.Text                  (Text)
+import           Network.Http.Client        (Method)
+import           Web.Stripe.Client.Error    (StripeError)
 
--- Base Type we use for Stripe
+------------------------------------------------------------------------------
+-- | Base Type we use for Stripe
 type Stripe a = ReaderT StripeConfig IO (Either StripeError a)
 
--- HTTP Params type
+------------------------------------------------------------------------------
+-- | HTTP Params type
 type Params = [(ByteString, ByteString)]
 
+------------------------------------------------------------------------------
+-- | Stripe Request holding `Method`, URL and `Params` for a Request
 data StripeRequest = StripeRequest
     { method :: Method
     , url    :: Text
     , params :: Params
-    } deriving (Show)
+    } deriving Show
 
+------------------------------------------------------------------------------
+-- | Information for Stripe secret key and API Version
 data StripeConfig = StripeConfig
     { secretKey  :: ByteString
     , apiVersion :: ByteString
-    } deriving (Show)
-
-data StripeDeleteResult = StripeDeleteResult {
-      deleted   :: Bool
-    , deletedId :: Text
-    } deriving (Show, Eq)
-
-instance FromJSON StripeDeleteResult where
-   parseJSON (Object o) =
-       StripeDeleteResult <$> o .: "deleted"
-                          <*> o .: "id"
-   parseJSON _ = mzero
+    } deriving Show

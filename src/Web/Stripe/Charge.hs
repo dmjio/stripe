@@ -1,13 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Charge 
-    ( -- * Types
-      Charge   (..)
-    , ChargeId (..)  
-    , Currency (..)  
-    , StripeList (..)  
-      -- * API calls
+module Web.Stripe.Charge
+    ( -- * API
       ---- * Create Charges
-    , chargeCustomer
+      chargeCustomer
     , createCharge
     , chargeCardByToken
       ---- * Get Charge(s)
@@ -18,101 +13,120 @@ module Web.Stripe.Charge
     , updateCharge
       ---- * Capture Charge
     , captureCharge
+      -- * Types
+    , Charge       (..)
+    , TokenId      (..)
+    , ChargeId     (..)
+    , CustomerId   (..)
+    , Currency     (..)
+    , CardNumber   (..)
+    , CVC          (..)
+    , ExpMonth     (..)
+    , ExpYear      (..)
+    , Description  (..)
+    , StripeList   (..)
+    , ReceiptEmail (..)
+    , StatementDescription
+    , Amount
+    , Capture
     ) where
 
-import           Control.Applicative
-import           Data.Bool
-import           Data.Monoid
-import           Data.Text                       (Text)
-import qualified Data.Text.Encoding              as T
-import           Network.Http.Client
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
+import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
+                                             StripeRequest (..), callAPI,
+                                             getParams, toText, (</>))
+import           Web.Stripe.Types           (Amount, CVC (..), Capture,
+                                             CardNumber (..), Charge (..),
+                                             ChargeId (..), Currency (..),
+                                             CustomerId (..), Description (..),
+                                             ExpMonth (..), ExpYear (..),
+                                             ReceiptEmail (..),
+                                             StatementDescription,
+                                             StripeList (..), TokenId (..))
 
 ------------------------------------------------------------------------------
 -- | Charge 'Customer''s by 'CustomerId'
 chargeCustomer
     :: CustomerId   -- ^ The ID of the customer to be charged
     -> Currency     -- ^ Required, 3-letter ISO Code
-    -> Amount       -- ^ Required, Integer value of 100 represents $1 
+    -> Amount       -- ^ Required, Integer value of 100 represents $1
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
-chargeCustomer customerId currency amount description = 
-    createCharge amount currency description (Just customerId) 
+chargeCustomer customerId currency amount description =
+    createCharge amount currency description (Just customerId)
     Nothing Nothing Nothing False
-    Nothing Nothing Nothing Nothing 
+    Nothing Nothing Nothing Nothing
 
 ------------------------------------------------------------------------------
 -- | Charge a card by a 'Token'
 chargeCardByToken
     :: TokenId    -- ^ The Token representative of a credit card
     -> Currency   -- ^ Required, 3-letter ISO Code
-    -> Amount     -- ^ Required, Integer value of 100 represents $1 
+    -> Amount     -- ^ Required, Integer value of 100 represents $1
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
-chargeCardByToken tokenId currency amount description = 
-    createCharge amount currency description Nothing (Just tokenId) 
+chargeCardByToken tokenId currency amount description =
+    createCharge amount currency description Nothing (Just tokenId)
     Nothing Nothing True Nothing Nothing Nothing Nothing
 
 ------------------------------------------------------------------------------
 -- | Charge a card by 'CardNumber'
-chargeCard 
+chargeCard
     :: CardNumber        -- ^ Required, Credit Card Number
     -> ExpMonth          -- ^ Required, Expiration Month (i.e. 09)
     -> ExpYear           -- ^ Required, Expiration Year (i.e. 2018)
     -> CVC               -- ^ Required, CVC Number (i.e. 000)
     -> Currency          -- ^ Required, 3-letter ISO Code
-    -> Amount            -- ^ Required, Integer value of 100 represents $1 
+    -> Amount            -- ^ Required, Integer value of 100 represents $1
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
-chargeCard cardNumber expMonth expYear cvc currency amount description = 
+chargeCard cardNumber expMonth expYear cvc currency amount description =
     createCharge amount currency description
     Nothing Nothing Nothing Nothing True
-    (Just cardNumber) (Just expMonth) 
+    (Just cardNumber) (Just expMonth)
     (Just expYear) (Just cvc)
- 
+
 ------------------------------------------------------------------------------
 -- | Base method for creating a 'Charge'
 createCharge
-    :: Amount             -- ^ Required, Integer value of 100 represents $1 
+    :: Amount             -- ^ Required, Integer value of 100 represents $1
     -> Currency           -- ^ Required, 3-letter ISO Code
     -> Maybe Description  -- ^ Optional, default is nullo
     -> Maybe CustomerId   -- ^ Optional, either CustomerId or TokenId has to be specified
     -> Maybe TokenId      -- ^ Optional, either CustomerId or TokenId has to be specified
     -> Maybe StatementDescription -- ^ Optional, Arbitrary string to include on CC statements
     -> Maybe ReceiptEmail -- ^ Optional, Arbitrary string to include on CC statements
-    -> Capture            -- ^ Optional, default is True 
+    -> Capture            -- ^ Optional, default is True
     -> Maybe CardNumber
-    -> Maybe ExpMonth 
-    -> Maybe ExpYear 
-    -> Maybe CVC 
+    -> Maybe ExpMonth
+    -> Maybe ExpYear
+    -> Maybe CVC
     -> Stripe Charge
 createCharge
     amount
     (Currency currency)
-    description 
+    description
     customerId
     tokenId
     statementDescription
     receiptEmail
-    capture 
+    capture
     cardNumber
     expMonth
     expYear
     cvc = callAPI request
   where request = StripeRequest POST url params
         url     = "charges"
-        params  = getParams [ 
-                     ("amount", toText <$> Just amount)
-                   , ("customer", (\(CustomerId cid) -> cid) <$> customerId)
+        params  = getParams [
+                     ("amount", toText `fmap` Just amount)
+                   , ("customer", (\(CustomerId cid) -> cid) `fmap` customerId)
                    , ("currency", Just currency)
                    , ("description", description)
-                   , ("receipt_email", (\(ReceiptEmail email) -> email) <$> receiptEmail)
-                   , ("capture", bool "false" "true" <$> Just capture)
-                   , ("card[number]", (\(CardNumber c) -> toText c) <$> cardNumber)
-                   , ("card[exp_month]", (\(ExpMonth m) -> toText m) <$> expMonth)
-                   , ("card[exp_year]", (\(ExpYear y) -> toText y) <$> expYear)
-                   , ("card[cvc]", (\(CVC cvc) -> toText cvc) <$> cvc)
+                   , ("receipt_email", (\(ReceiptEmail email) -> email) `fmap` receiptEmail)
+                   , ("capture", (\x -> if x then "true" else "false") `fmap` Just capture)
+                   , ("card[number]", (\(CardNumber c) -> toText c) `fmap` cardNumber)
+                   , ("card[exp_month]", (\(ExpMonth m) -> toText m) `fmap` expMonth)
+                   , ("card[exp_year]", (\(ExpYear y) -> toText y) `fmap` expYear)
+                   , ("card[cvc]", (\(CVC cvc) -> toText cvc) `fmap` cvc)
                   ]
 
 ------------------------------------------------------------------------------
@@ -138,11 +152,11 @@ getCharges = callAPI request
 getCustomerCharges
     :: CustomerId
     -> Stripe (StripeList Charge)
-getCustomerCharges 
+getCustomerCharges
     (CustomerId customerId) = callAPI request
   where request = StripeRequest GET url params
         url     = "charges"
-        params  = getParams [ 
+        params  = getParams [
                    ("customer", Just customerId )
                   ]
 
@@ -153,7 +167,7 @@ updateCharge
     :: ChargeId    -- ^ The Charge to update
     -> Description -- ^ The Charge Description to update
     -> Stripe Charge
-updateCharge 
+updateCharge
     (ChargeId chargeId)
     description = callAPI request
   where request = StripeRequest POST url params
@@ -169,13 +183,13 @@ captureCharge
     -> Maybe Amount       -- ^ If Nothing the entire charge will be captured, otherwise the remaining will be refunded
     -> Maybe ReceiptEmail -- ^ Email address to send this charge's receipt to
     -> Stripe Charge
-captureCharge 
+captureCharge
     (ChargeId chargeId)
     amount
     receiptEmail = callAPI request
   where request  = StripeRequest POST url params
-        url      = "charges" </> chargeId </> "capture" 
+        url      = "charges" </> chargeId </> "capture"
         params   = getParams [
-                     ("amount", toText <$> amount)
-                   , ("receipt_email", (\(ReceiptEmail email) -> email) <$> receiptEmail)
+                     ("amount", toText `fmap` amount)
+                   , ("receipt_email", (\(ReceiptEmail email) -> email) `fmap` receiptEmail)
                    ]

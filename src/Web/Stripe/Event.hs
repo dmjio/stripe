@@ -1,19 +1,22 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Web.Stripe.Event
-    ( -- * Event Types
-      EventId (..)
-    , Event   (..)
-      -- * API calls
-    , getEvent
+    ( -- * API
+      getEvent
     , getEvents
+      -- * Types
+    , EventId    (..)
+    , Event      (..)
+    , StripeList (..)
     ) where
 
-import           Control.Applicative             ((<$>), (<*>))
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
+import           Web.Stripe.Client.Internal (Method (GET), Stripe, Stripe,
+                                             StripeRequest (..), callAPI, (</>))
+import           Web.Stripe.Types           (Event (..), EventId (..),
+                                             StripeList (..))
 
-getEvent 
+------------------------------------------------------------------------------
+-- | `Event` to retrieve by `EventId`
+getEvent
     :: EventId -- ^ The ID of the Event to retrieve
     -> Stripe Event
 getEvent (EventId eventId) = callAPI request
@@ -21,6 +24,8 @@ getEvent (EventId eventId) = callAPI request
         url     = "events" </> eventId
         params  = []
 
+------------------------------------------------------------------------------
+-- | `StripeList` of `Event`s to retrieve
 getEvents :: Stripe (StripeList Event)
 getEvents = callAPI request
   where request = StripeRequest GET url params

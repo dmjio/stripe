@@ -1,12 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Recipient 
-    ( -- * API Functions
-      ---- * Create Recipient
+    ( -- * API 
       createRecipient
-      ---- * Get Recipient(s)
     , getRecipient
     , getRecipients
-      ---- * Update Recipient
     , updateRecipientName
     , updateRecipientTaxID
     , updateRecipientBankAccount
@@ -16,7 +13,6 @@ module Web.Stripe.Recipient
     , updateRecipientEmail
     , updateRecipientDescription
     , updateRecipientBase
-      ---- * Delete Recipients
     , deleteRecipient
       -- * Types
     , Recipient     (..)

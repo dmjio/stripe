@@ -16,12 +16,16 @@ import qualified Data.Text.Encoding    as T
 import           Data.Time.Clock       (UTCTime)
 import           Data.Time.Clock.POSIX (posixSecondsToUTCTime,
                                         utcTimeToPOSIXSeconds)
+------------------------------------------------------------------------------
+-- | Conversion from a `Show` constrained type to `Text`
 toText 
     :: Show a 
     => a
     -> Text
 toText = T.pack . show
 
+------------------------------------------------------------------------------
+-- | Conversion of a key value pair to a query parameterized string
 paramsToByteString
     :: (Monoid m, IsString m)
     => [(m, m)]
@@ -31,6 +35,9 @@ paramsToByteString ((x,y) : []) = x <> "=" <> y
 paramsToByteString ((x,y) : xs) = 
     mconcat [ x, "=", y, "&" ] <> paramsToByteString xs
 
+------------------------------------------------------------------------------
+-- | Forward slash interspersion on `Monoid` and `IsString`
+-- constrained types
 (</>) 
     :: (Monoid m, IsString m)
     => m
@@ -38,6 +45,8 @@ paramsToByteString ((x,y) : xs) =
     -> m
 m1 </> m2 = m1 <> "/" <> m2
 
+------------------------------------------------------------------------------
+-- | Convert an `Integer` to a `UTCTime`
 fromSeconds
     :: Integer
     -> UTCTime

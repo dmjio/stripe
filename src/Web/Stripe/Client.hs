@@ -1,9 +1,10 @@
 module Web.Stripe.Client
-    ( runStripe
+    ( -- * Function to run a `Stripe` action
+      runStripe
+      -- * Base type for `Stripe` API
     , Stripe
-    , StripeRequest      (..)
+      -- * Encapsulates `Stripe` secret key and API version information
     , StripeConfig       (..)
-    , StripeDeleteResult (..)
     ) where
 
 import Web.Stripe.Client.Internal

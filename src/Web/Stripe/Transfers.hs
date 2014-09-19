@@ -1,20 +1,31 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Transfers 
-    ( -- * Types
-      Transfer   (..) 
-    , TransferId (..) 
-      -- * API Calls
-    , createTransfer
+module Web.Stripe.Transfers
+    ( -- * API 
+      createTransfer
     , getTransfer
     , getTransfers
     , updateTransfer
     , cancelTransfer
+      -- * Types
+    , Transfer    (..)
+    , TransferId  (..)
+    , RecipientId (..)
+    , StripeList  (..)
+    , Amount
+    , Currency
+    , Limit
     ) where
 
-import           Control.Applicative
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
+import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
+                                             StripeRequest (..), callAPI,
+                                             getParams, toText, (</>))
+import           Web.Stripe.Types           (Amount, Currency, Currency (..),
+                                             Limit, RecipientId (..),
+                                             StripeList (..), Transfer (..),
+                                             TransferId (..))
 
+------------------------------------------------------------------------------
+-- | Create a `Transfer`
 createTransfer
     :: RecipientId
     -> Amount
@@ -26,31 +37,37 @@ createTransfer
     (Currency currency) = callAPI request
   where request = StripeRequest POST url params
         url     = "transfers"
-        params  = getParams [ 
-                   ("amount", toText <$> Just amount)
+        params  = getParams [
+                   ("amount", toText `fmap` Just amount)
                  , ("currency",  Just currency)
                  , ("recipient", Just recipientId)
                  ]
 
+------------------------------------------------------------------------------
+-- | Retrieve a `Transfer`
 getTransfer
-    :: TransferId
+    :: TransferId -- ^ `TransferId` associated with the `Transfer` to retrieve
     -> Stripe Transfer
 getTransfer (TransferId transferId) = callAPI request
   where request = StripeRequest GET url params
         url     = "transfers" </> transferId
         params  = []
 
+------------------------------------------------------------------------------
+-- | Retrieve StripeList of `Transfers`
 getTransfers
-    :: Limit
-    -> Stripe Transfer
-getTransfers 
+    :: Maybe Limit
+    -> Stripe (StripeList Transfer)
+getTransfers
     limit = callAPI request
   where request = StripeRequest GET url params
         url     = "transfers"
-        params  = getParams [ 
-                   ("limit", toText <$> Just limit) 
+        params  = getParams [
+                   ("limit", fmap toText limit)
                   ]
 
+------------------------------------------------------------------------------
+-- | Update a `Transfer`
 updateTransfer
     :: TransferId
     -> Stripe Transfer
@@ -59,6 +76,8 @@ updateTransfer (TransferId transferId) = callAPI request
         url     = "transfers" </> transferId
         params  = []
 
+------------------------------------------------------------------------------
+-- | Cancel a `Transfer`
 cancelTransfer
     :: TransferId
     -> Stripe Transfer

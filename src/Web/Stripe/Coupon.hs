@@ -1,19 +1,37 @@
 {-# LANGUAGE OverloadedStrings #-}
-
-module Web.Stripe.Coupon 
-    ( -- * Coupon Types
-      Coupon   (..)
-    , CouponId (..)
-     -- * API calls
-    , createCoupon
+module Web.Stripe.Coupon
+    ( -- * API
+      createCoupon
     , getCoupon
+    , getCoupons
     , deleteCoupon
+      -- * Types
+    , Duration
+    , AmountOff          (..)
+    , CouponId           (..)
+    , Coupon             (..)
+    , Currency           (..)
+    , DurationInMonths   (..)
+    , MaxRedemptions     (..)
+    , PercentOff         (..)
+    , RedeemBy           (..)
+    , StripeList         (..)
+    , StripeDeleteResult (..)
     ) where
 
-import           Control.Applicative
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
+import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
+                                             StripeRequest (..), callAPI,
+                                             getParams, toText, (</>))
+import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
+                                             CouponId (..), Currency (..),
+                                             Duration, DurationInMonths (..),
+                                             Limit, MaxRedemptions (..),
+                                             PercentOff (..), RedeemBy (..),
+                                             StripeDeleteResult (..),
+                                             StripeList (..))
 
+------------------------------------------------------------------------------
+-- | 'Coupon' creation function
 createCoupon
   :: Maybe CouponId
   -> Duration
@@ -24,7 +42,7 @@ createCoupon
   -> Maybe PercentOff
   -> Maybe RedeemBy
   -> Stripe Coupon
-createCoupon 
+createCoupon
     couponId
     duration
     amountOff
@@ -36,16 +54,18 @@ createCoupon
   where request = StripeRequest POST url params
         url     = "coupons"
         params  = getParams [
-                    ("id", (\(CouponId x) -> x) <$> couponId )
-                  , ("duration", toText <$> Just duration )
-                  , ("amount_off", (\(AmountOff x) -> toText x) <$> amountOff )
-                  , ("currency", (\(Currency x) -> x) <$> currency)
-                  , ("duration_in_months", (\(DurationInMonths x) -> toText x) <$> durationInMonths )
-                  , ("max_redemptions", (\(MaxRedemptions x) -> toText x) <$> maxRedemptions )
-                  , ("percent_off", (\(PercentOff x) -> toText x) <$> percentOff )
-                  , ("redeem_by", (\(RedeemBy x) -> toText x) <$> redeemBy )
+                    ("id", (\(CouponId x) -> x) `fmap` couponId )
+                  , ("duration", toText `fmap` Just duration )
+                  , ("amount_off", (\(AmountOff x) -> toText x) `fmap` amountOff )
+                  , ("currency", (\(Currency x) -> x) `fmap` currency)
+                  , ("duration_in_months", (\(DurationInMonths x) -> toText x) `fmap` durationInMonths )
+                  , ("max_redemptions", (\(MaxRedemptions x) -> toText x) `fmap` maxRedemptions )
+                  , ("percent_off", (\(PercentOff x) -> toText x) `fmap` percentOff )
+                  , ("redeem_by", (\(RedeemBy x) -> toText x) `fmap` redeemBy )
                  ]
 
+------------------------------------------------------------------------------
+-- | Retrieve a 'Coupon' by 'CouponId'
 getCoupon
     :: CouponId
     -> Stripe Coupon
@@ -55,10 +75,23 @@ getCoupon
         url     = "coupons" </> couponId
         params  = []
 
-deleteCoupon 
+------------------------------------------------------------------------------
+-- | Retrieve a list of 'Coupon's
+getCoupons
+    :: Maybe Limit
+    -> Stripe (StripeList Coupon)
+getCoupons
+     limit = callAPI request
+  where request = StripeRequest POST url params
+        url     = "coupons"
+        params  = getParams [ ("limit", fmap toText limit) ]
+
+------------------------------------------------------------------------------
+-- | Delete a 'Coupon" by 'CouponId'
+deleteCoupon
     :: CouponId
     -> Stripe StripeDeleteResult
-deleteCoupon 
+deleteCoupon
     (CouponId couponId) = callAPI request
   where request = StripeRequest DELETE url params
         url     = "coupons" </> couponId

@@ -1,23 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Refunds 
-    ( -- * Refund Types
-      Refund (..)
-    , RefundId (..)
-      -- * API Functions
-    , createRefund
+    ( -- * API 
+      createRefund
     , getRefund
     , getRefunds
     , updateRefund
+      -- * Types
+    , Refund     (..)
+    , RefundId   (..)
+    , ChargeId   (..)
+    , StripeList (..)
     ) where
-
-import           Control.Applicative
-import           Data.Time
 
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
 -- | <http://api.stripe.com/docs/api#refunds Refunds>
 
+------------------------------------------------------------------------------
+-- | `Refund` a `Charge`
 createRefund
     :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be refunded
     -> Stripe Refund
@@ -27,6 +28,8 @@ createRefund
         url     = "charges" </> chargeId </> "refunds"
         params  = []
 
+------------------------------------------------------------------------------
+-- | Retrieve a `Refund` by `ChargeId` and `RefundId`
 getRefund
     :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be retrieved
     -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
@@ -38,6 +41,8 @@ getRefund
          url     = "charges" </> chargeId </> "refunds" </> refId
          params  = []
 
+------------------------------------------------------------------------------
+-- | Update a `Refund` by `ChargeId` and `RefundId`
 updateRefund
     :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be updated
     -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
@@ -49,6 +54,8 @@ updateRefund
         url     = "charges" </> chargeId </> "refunds" </> refId
         params  = []
 
+------------------------------------------------------------------------------
+-- | Retrieve a lot of Refunds by `ChargeId`
 getRefunds
     :: ChargeId  -- ^ 'ChargeId' associated with the 'Charge' to be updated
     -> Stripe (StripeList Refund)

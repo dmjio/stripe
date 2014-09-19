@@ -1,41 +1,55 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Token
-   ( -- * Types
-     TokenId (..)
-     -- * API Functions
-   , createCardToken
+   ( -- * API
+     createCardToken
    , createBankAccountToken
    , getToken
+     -- * Types
+   , CardNumber    (..)
+   , ExpMonth      (..)
+   , ExpYear       (..)
+   , CVC           (..)
+   , Token         (..)
+   , TokenId       (..)
+   , Country       (..)
+   , RoutingNumber (..)
+   , AccountNumber (..)
    ) where
 
-import           Control.Applicative
+import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
+                                             StripeRequest (..), callAPI,
+                                             getParams, toText, (</>))
+import           Web.Stripe.Types           (Account, AccountNumber (..),
+                                             CVC (..), CardNumber (..),
+                                             Country (..), ExpMonth (..),
+                                             ExpYear (..), RoutingNumber (..),
+                                             Token (..), TokenId (..))
 
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
-
+------------------------------------------------------------------------------
+-- | Create a `Token` by specifiy Credit `Card` information
 createCardToken
     :: CardNumber -- ^ Credit Card Number
     -> ExpMonth   -- ^ Credit Card Expiration Month
     -> ExpYear    -- ^ Credit Card Expiration Year
     -> CVC        -- ^ Credit Card CVC
-    -- -> Maybe Name         -- ^ Name on Credit Card
-    -- -> Maybe AddressLine1 -- ^ Name on Credit Card
     -> Stripe Token
 createCardToken
       (CardNumber number)
       (ExpMonth month)
       (ExpYear year)
-      (CVC cvc) 
+      (CVC cvc)
           = callAPI request
   where request = StripeRequest POST url params
         url     = "tokens"
         params  = getParams [
                     ("card[number]", Just number)
-                  , ("card[exp_month]", toText <$> Just month)
-                  , ("card[exp_year]", toText <$> Just year)
+                  , ("card[exp_month]", toText `fmap` Just month)
+                  , ("card[exp_year]", toText `fmap` Just year)
                   , ("card[cvc]", Just cvc)
                   ]
 
+------------------------------------------------------------------------------
+-- | Create a `Token` for a specific BankAccount
 createBankAccountToken
     :: Country        -- ^ Country of the TokenId to retrieve
     -> RoutingNumber  -- ^ Bank Account routing number
@@ -54,6 +68,8 @@ createBankAccountToken
                   , ("bank_account[account_number]", Just accountNumber)
                   ]
 
+------------------------------------------------------------------------------
+-- | Retrieve a `Token` by `TokenId`
 getToken
     :: TokenId -- ^ The ID of the TokenId to retrieve
     -> Stripe Token
