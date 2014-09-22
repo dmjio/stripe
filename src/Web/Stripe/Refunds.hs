@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Refunds 
-    ( -- * API 
+module Web.Stripe.Refunds
+    ( -- * API
       createRefund
     , getRefund
     , getRefunds
@@ -12,8 +12,11 @@ module Web.Stripe.Refunds
     , StripeList (..)
     ) where
 
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
+import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
+                                             StripeRequest (..), callAPI,
+                                             getParams, (</>))
+import           Web.Stripe.Types           (ChargeId (..), Refund (..),
+                                             RefundId (..), StripeList (..))
 
 -- | <http://api.stripe.com/docs/api#refunds Refunds>
 
@@ -23,7 +26,7 @@ createRefund
     :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be refunded
     -> Stripe Refund
 createRefund
-    (ChargeId chargeId) = callAPI request 
+    (ChargeId chargeId) = callAPI request
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "refunds"
         params  = []
@@ -36,7 +39,7 @@ getRefund
     -> Stripe Refund
 getRefund
     (ChargeId chargeId)
-    (RefundId refId) = callAPI request 
+    (RefundId refId) = callAPI request
    where request = StripeRequest GET url params
          url     = "charges" </> chargeId </> "refunds" </> refId
          params  = []
@@ -49,7 +52,7 @@ updateRefund
     -> Stripe Refund
 updateRefund
    (ChargeId chargeId)
-   (RefundId refId) = callAPI request 
+   (RefundId refId) = callAPI request
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "refunds" </> refId
         params  = []
@@ -59,7 +62,7 @@ updateRefund
 getRefunds
     :: ChargeId  -- ^ 'ChargeId' associated with the 'Charge' to be updated
     -> Stripe (StripeList Refund)
-getRefunds (ChargeId chargeId) = callAPI request 
+getRefunds (ChargeId chargeId) = callAPI request
   where request = StripeRequest GET url params
         url     = "charges" </> chargeId </> "refunds"
         params  = []

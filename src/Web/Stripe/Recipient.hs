@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Recipient 
-    ( -- * API 
+module Web.Stripe.Recipient
+    ( -- * API
       createRecipient
     , getRecipient
     , getRecipients
@@ -33,13 +33,24 @@ module Web.Stripe.Recipient
     , Limit
     ) where
 
-import           Control.Applicative
-import           Data.Time
-import           Data.Monoid ((<>), mempty)
-import qualified Data.Text as T
+import           Data.Monoid                (mempty, (<>))
+import qualified Data.Text                  as T
 
 import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
+import           Web.Stripe.Types           (AccountNumber (..),
+                                             BankAccount (..), CVC, CVC (..),
+                                             CardId (..), CardNumber,
+                                             CardNumber (..), Country (..),
+                                             Description, Email, Email (..),
+                                             ExpMonth, ExpMonth (..), ExpYear,
+                                             ExpYear (..), FirstName (..),
+                                             LastName (..), Limit,
+                                             MiddleInitial, Recipient (..),
+                                             RecipientId (..),
+                                             RecipientType (..),
+                                             RoutingNumber (..),
+                                             StripeList (..), TaxID, TokenId,
+                                             TokenId (..))
 
 ------------------------------------------------------------------------------
 -- | Base Request for issues create 'Recipient' requests
@@ -63,7 +74,7 @@ createRecipientBase
     (LastName lastName)
     middleInitial
     recipientType
-    taxId 
+    taxId
     bankAccount
     tokenId
     cardNumber
@@ -75,22 +86,22 @@ createRecipientBase
         = callAPI request
   where request = StripeRequest POST url params
         url     = "recipients"
-        params  = 
-            let name   = firstName <> middle <> lastName 
+        params  =
+            let name   = firstName <> middle <> lastName
                 middle = maybe " " (\x -> " " <> T.singleton x <> " ") middleInitial
-            in getParams [ 
+            in getParams [
                     ("name", Just name)
-                  , ("type", toText <$> Just recipientType)
+                  , ("type", toText `fmap` Just recipientType)
                   , ("tax_id", taxId)
-                  , ("bank_account[country]", ((\(BankAccount { bankAccountCountry = Country x }) -> x) <$> bankAccount))
-                  , ("bank_account[routing_number]",  ((\(BankAccount { bankAccountRoutingNumber = RoutingNumber x }) -> x) <$> bankAccount))
-                  , ("bank_account[account_number]",  ((\(BankAccount { bankAccountNumber = AccountNumber x }) -> x) <$> bankAccount))
-                  , ("card", (\(TokenId x) -> x) <$> tokenId)
-                  , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
-                  , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
-                  , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
-                  , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
-                  , ("email", (\(Email x) -> x) <$> email)
+                  , ("bank_account[country]", ((\(BankAccount { bankAccountCountry = Country x }) -> x) `fmap` bankAccount))
+                  , ("bank_account[routing_number]",  ((\(BankAccount { bankAccountRoutingNumber = RoutingNumber x }) -> x) `fmap` bankAccount))
+                  , ("bank_account[account_number]",  ((\(BankAccount { bankAccountNumber = AccountNumber x }) -> x) `fmap` bankAccount))
+                  , ("card", (\(TokenId x) -> x) `fmap` tokenId)
+                  , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
+                  , ("card[exp_month]", (\(ExpMonth x) -> toText x) `fmap` expMonth)
+                  , ("card[exp_year]", (\(ExpYear x) -> toText x) `fmap` expYear)
+                  , ("card[cvc]", (\(CVC x) -> x) `fmap` cvc)
+                  , ("email", (\(Email x) -> x) `fmap` email)
                   , ("description", description)
                   ]
 ------------------------------------------------------------------------------
@@ -101,12 +112,12 @@ createRecipient
     -> Maybe MiddleInitial -- ^ Middle Initial of 'Recipient'
     -> RecipientType       -- ^ 'Individual' or 'Corporation'
     -> Stripe Recipient
-createRecipient 
+createRecipient
     firstName
     lastName
     middleInitial
     recipientType
-    = createRecipientBase firstName lastName middleInitial recipientType 
+    = createRecipientBase firstName lastName middleInitial recipientType
       Nothing Nothing Nothing Nothing Nothing
       Nothing Nothing Nothing Nothing
 ------------------------------------------------------------------------------
@@ -130,7 +141,7 @@ createRecipientByCard
     expMonth
     expYear
     cvc
-    = createRecipientBase firstName lastName middleInitial recipientType 
+    = createRecipientBase firstName lastName middleInitial recipientType
       Nothing Nothing Nothing (Just cardNumber) (Just expMonth)
       (Just expYear) (Just cvc) Nothing Nothing
 
@@ -149,7 +160,7 @@ createRecipientByToken
     middleInitial
     recipientType
     tokenId
-    = createRecipientBase firstName lastName middleInitial recipientType 
+    = createRecipientBase firstName lastName middleInitial recipientType
       Nothing Nothing (Just tokenId) Nothing Nothing
       Nothing Nothing Nothing Nothing
 
@@ -168,15 +179,15 @@ createRecipientByBank
     middleInitial
     recipientType
     bankAccount
-    = createRecipientBase firstName lastName middleInitial recipientType 
+    = createRecipientBase firstName lastName middleInitial recipientType
       Nothing (Just bankAccount) Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 ------------------------------------------------------------------------------
--- | Retrieve a 'Recipient' 
+-- | Retrieve a 'Recipient'
 getRecipient
     :: RecipientId -- ^ The 'RecipientId' of the 'Recipient' to be retrieved
     -> Stripe Recipient
-getRecipient 
+getRecipient
     (RecipientId recipientId) = callAPI request
   where request =  StripeRequest GET url params
         url     = "recipients" </> recipientId
@@ -190,7 +201,7 @@ getRecipients
 getRecipients limit = callAPI request
   where request =  StripeRequest GET url params
         url     = "recipients"
-        params  = getParams [ ("limit", toText <$> limit )]
+        params  = getParams [ ("limit", toText `fmap` limit )]
 
 ------------------------------------------------------------------------------
 -- | Base Request for updating a 'Recipient', useful for creating custom 'Recipient' update functions
@@ -215,7 +226,7 @@ updateRecipientBase
     firstName
     lastName
     middleInitial
-    taxId 
+    taxId
     bankAccount
     tokenId
     cardNumber
@@ -228,26 +239,26 @@ updateRecipientBase
         = callAPI request
   where request = StripeRequest POST url params
         url     = "recipients" </> recipientId
-        params  = 
+        params  =
             let name = if firstName == Nothing || lastName == Nothing
                          then Nothing
                          else do let Just (FirstName f) = firstName
                                      Just (LastName l)  = lastName
                                      middle = maybe " " (\x -> " " <> T.singleton x <> " ") middleInitial
                                  Just $ f <> middle <> l
-            in getParams [ 
+            in getParams [
                     ("name", name)
                   , ("tax_id", taxId)
-                  , ("bank_account[country]", ((\(BankAccount { bankAccountCountry = Country x }) -> x) <$> bankAccount))
-                  , ("bank_account[routing_number]",  ((\(BankAccount { bankAccountRoutingNumber = RoutingNumber x }) -> x) <$> bankAccount))
-                  , ("bank_account[account_number]",  ((\(BankAccount { bankAccountNumber = AccountNumber x }) -> x) <$> bankAccount))
-                  , ("card", (\(TokenId x) -> x) <$> tokenId)
-                  , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
-                  , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
-                  , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
-                  , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
-                  , ("default_card", (\(CardId x) -> x) <$> cardId)
-                  , ("email", (\(Email x) -> x) <$> email)
+                  , ("bank_account[country]", ((\(BankAccount { bankAccountCountry = Country x }) -> x) `fmap` bankAccount))
+                  , ("bank_account[routing_number]",  ((\(BankAccount { bankAccountRoutingNumber = RoutingNumber x }) -> x) `fmap` bankAccount))
+                  , ("bank_account[account_number]",  ((\(BankAccount { bankAccountNumber = AccountNumber x }) -> x) `fmap` bankAccount))
+                  , ("card", (\(TokenId x) -> x) `fmap` tokenId)
+                  , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
+                  , ("card[exp_month]", (\(ExpMonth x) -> toText x) `fmap` expMonth)
+                  , ("card[exp_year]", (\(ExpYear x) -> toText x) `fmap` expYear)
+                  , ("card[cvc]", (\(CVC x) -> x) `fmap` cvc)
+                  , ("default_card", (\(CardId x) -> x) `fmap` cardId)
+                  , ("email", (\(Email x) -> x) `fmap` email)
                   , ("description", description)
                   ]
 
@@ -263,19 +274,19 @@ updateRecipientName
     recipientId
     firstName
     lastName
-    middleInitial = updateRecipientBase 
+    middleInitial = updateRecipientBase
                      recipientId (Just firstName) (Just lastName) (Just middleInitial)
-                     Nothing Nothing Nothing Nothing 
-                     Nothing Nothing Nothing Nothing 
-                     Nothing Nothing 
+                     Nothing Nothing Nothing Nothing
+                     Nothing Nothing Nothing Nothing
+                     Nothing Nothing
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'BankAccount'
 --
--- > runStripe config $ updateRecipient (RecipientId "rp_4lpjaLFB5ecSks") BankAccount { 
+-- > runStripe config $ updateRecipient (RecipientId "rp_4lpjaLFB5ecSks") BankAccount {
 -- >     bankAccountCountry = Country "us"
--- >   , bankAccountRoutingNumber = RoutingNumber "071000013" 
--- >   , bankAccountNumber = AccountNumber "293058719045" 
+-- >   , bankAccountRoutingNumber = RoutingNumber "071000013"
+-- >   , bankAccountNumber = AccountNumber "293058719045"
 -- >  }
 --
 updateRecipientBankAccount
@@ -284,11 +295,11 @@ updateRecipientBankAccount
     -> Stripe Recipient
 updateRecipientBankAccount
     recipientId
-    bankAccount = updateRecipientBase 
+    bankAccount = updateRecipientBase
          recipientId Nothing Nothing Nothing
-         Nothing (Just bankAccount)Nothing Nothing 
-         Nothing Nothing Nothing Nothing 
-         Nothing Nothing 
+         Nothing (Just bankAccount)Nothing Nothing
+         Nothing Nothing Nothing Nothing
+         Nothing Nothing
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'TaxID'
@@ -301,11 +312,11 @@ updateRecipientTaxID
     -> Stripe Recipient
 updateRecipientTaxID
     recipientId
-    taxID = updateRecipientBase 
+    taxID = updateRecipientBase
               recipientId Nothing Nothing Nothing
-              (Just taxID) Nothing Nothing Nothing 
-              Nothing Nothing Nothing Nothing 
-              Nothing Nothing 
+              (Just taxID) Nothing Nothing Nothing
+              Nothing Nothing Nothing Nothing
+              Nothing Nothing
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Card' by 'TokenId'
@@ -318,14 +329,14 @@ updateRecipientTokenID
     -> Stripe Recipient
 updateRecipientTokenID
     recipientId
-    tokenId = updateRecipientBase 
+    tokenId = updateRecipientBase
               recipientId Nothing Nothing Nothing
-              Nothing Nothing (Just tokenId) Nothing 
-              Nothing Nothing Nothing Nothing 
-              Nothing Nothing 
+              Nothing Nothing (Just tokenId) Nothing
+              Nothing Nothing Nothing Nothing
+              Nothing Nothing
 
 ------------------------------------------------------------------------------
--- | Update a 'Recipient' 'Card' 
+-- | Update a 'Recipient' 'Card'
 --
 -- > runStripe config $ updateRecipientCard (RecipientId "rp_4lpjaLFB5ecSks") number month year cvc
 -- >   where
@@ -346,7 +357,7 @@ updateRecipientCard
     cardNumber
     expMonth
     expYear
-    cvc = updateRecipientBase 
+    cvc = updateRecipientBase
               recipientId Nothing Nothing Nothing
               Nothing Nothing Nothing (Just cardNumber)
               (Just expMonth) (Just expYear) (Just cvc)
@@ -359,15 +370,15 @@ updateRecipientCard
 --
 updateRecipientDefaultCard
     :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
-    -> CardId        -- ^ 'CardId' of 'Card' to be made default 
+    -> CardId        -- ^ 'CardId' of 'Card' to be made default
     -> Stripe Recipient
 updateRecipientDefaultCard
     recipientId
-    cardId = updateRecipientBase 
-              recipientId Nothing Nothing Nothing Nothing 
-                          Nothing Nothing Nothing Nothing 
+    cardId = updateRecipientBase
+              recipientId Nothing Nothing Nothing Nothing
+                          Nothing Nothing Nothing Nothing
                           Nothing Nothing (Just cardId) Nothing
-                          Nothing 
+                          Nothing
 
 
 ------------------------------------------------------------------------------
@@ -381,11 +392,11 @@ updateRecipientEmail
     -> Stripe Recipient
 updateRecipientEmail
     recipientId
-    email = updateRecipientBase 
-              recipientId Nothing Nothing Nothing Nothing 
-                          Nothing Nothing Nothing Nothing 
-                          Nothing Nothing Nothing (Just email) 
-                          Nothing 
+    email = updateRecipientBase
+              recipientId Nothing Nothing Nothing Nothing
+                          Nothing Nothing Nothing Nothing
+                          Nothing Nothing Nothing (Just email)
+                          Nothing
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Description'
@@ -398,16 +409,16 @@ updateRecipientDescription
     -> Stripe Recipient
 updateRecipientDescription
     recipientId
-    description = updateRecipientBase 
-                   recipientId Nothing Nothing Nothing Nothing 
-                               Nothing Nothing Nothing Nothing 
-                               Nothing Nothing Nothing Nothing 
-                              (Just description) 
+    description = updateRecipientBase
+                   recipientId Nothing Nothing Nothing Nothing
+                               Nothing Nothing Nothing Nothing
+                               Nothing Nothing Nothing Nothing
+                              (Just description)
 
 ------------------------------------------------------------------------------
 -- | Delete a 'Recipient'
 --
--- > runStripe config $ deleteRecipient (RecipientId "rp_4lpjaLFB5ecSks") 
+-- > runStripe config $ deleteRecipient (RecipientId "rp_4lpjaLFB5ecSks")
 --
 deleteRecipient
     :: RecipientId

@@ -137,7 +137,7 @@ getCharge
 getCharge (ChargeId charge) = callAPI request
   where request = StripeRequest GET url params
         url     = "charges" </> charge
-        params  = []
+        params  = [ ("expand[]", "customer")]
 
 ------------------------------------------------------------------------------
 -- | Retrieve all 'Charge's

@@ -1,17 +1,23 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Subscriptions
     ( -- * Types
-      Subscription   (..)
+      CustomerId     (..)
+    , PlanId         (..)
+    , Subscription   (..)
     , SubscriptionId (..)
-      -- * API 
+      -- * API
     , createSubscription
     , getSubscription
     , updateSubscription
     , deleteSubscription
     ) where
 
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
+import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
+                                             StripeRequest (..), callAPI,
+                                             getParams, (</>))
+import           Web.Stripe.Types           (CustomerId (..), PlanId (..),
+                                             Subscription (..),
+                                             SubscriptionId (..))
 
 ------------------------------------------------------------------------------
 -- | Create a `Subscription` by `CustomerId` and `PlanId`
@@ -20,7 +26,7 @@ createSubscription
     -> PlanId
     -> Stripe Subscription
 createSubscription
-    (CustomerId customerId) 
+    (CustomerId customerId)
     (PlanId planId) = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> customerId </> "subscriptions"
@@ -28,12 +34,12 @@ createSubscription
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId`
-getSubscription 
-    :: CustomerId 
-    -> SubscriptionId 
+getSubscription
+    :: CustomerId
+    -> SubscriptionId
     -> Stripe Subscription
-getSubscription 
-    (CustomerId customerId) 
+getSubscription
+    (CustomerId customerId)
     (SubscriptionId subscriptionId) = callAPI request
   where request = StripeRequest GET url params
         url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
@@ -41,13 +47,13 @@ getSubscription
 
 ------------------------------------------------------------------------------
 -- | Update a `Subscription` by `CustomerId` and `SubscriptionId`
-updateSubscription 
-    :: CustomerId 
-    -> SubscriptionId 
+updateSubscription
+    :: CustomerId
+    -> SubscriptionId
     -> Stripe Subscription
 updateSubscription
     (CustomerId customerId)
-    (SubscriptionId subscriptionId) = callAPI request 
+    (SubscriptionId subscriptionId) = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
         params  = []
@@ -56,11 +62,11 @@ updateSubscription
 -- | Delete a `Subscription` by `CustomerId` and `SubscriptionId`
 deleteSubscription
     :: CustomerId
-    -> SubscriptionId 
+    -> SubscriptionId
     -> Stripe Subscription
 deleteSubscription
     (CustomerId customerId)
-    (SubscriptionId subscriptionId) = callAPI request 
+    (SubscriptionId subscriptionId) = callAPI request
   where request = StripeRequest DELETE url params
         url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
         params  = []
