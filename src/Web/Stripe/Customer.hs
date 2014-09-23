@@ -64,6 +64,7 @@ createCustomerBase
     -> Maybe PlanId         -- ^ Identifier of plan to subscribe customer to
     -> Maybe Quantity       -- ^ The quantity you'd like to apply to the subscription you're creating
     -> Maybe TrialPeriod    -- ^ TimeStamp representing the trial period the customer will get
+       
     -> Stripe Customer
 createCustomerBase
     accountBalance
@@ -232,11 +233,13 @@ getCustomer (CustomerId cid) = callAPI request
 ------------------------------------------------------------------------------
 -- | Retrieve up to 100 customers at a time
 getCustomers
-    :: Maybe Limit
+    :: Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
     -> Stripe (StripeList Customer)
 getCustomers limit
     = callAPI request
   where request = StripeRequest GET url params
         url     = "customers"
-        params  = getParams [ ("limit", toText `fmap` limit )]
+        params  = getParams [ ("limit", toText `fmap` limit )
+--                            , ("ending_before", Just "cus_4mMbPC2wI4ioaN")
+                            ]
 

@@ -210,6 +210,16 @@ data Brand = Visa
            | Unknown
              deriving (Show, Eq)
 
+instance FromJSON Brand where
+   parseJSON (String "American Express") = pure AMEX
+   parseJSON (String "MasterCard") = pure MasterCard
+   parseJSON (String "Discover") = pure Discover
+   parseJSON (String "JCB") = pure JCB
+   parseJSON (String "Visa") = pure Visa
+   parseJSON (String "DinersClub") = pure DinersClub
+   parseJSON _ = mzero
+
+
 data Card = Card {
       cardId                :: CardId
     , cardLastFour          :: Text
@@ -254,18 +264,6 @@ data RecipientCard = RecipientCard {
     , recipientCardRecipientId       :: Maybe RecipientId
 } deriving (Show, Eq)
 
-instance FromJSON Brand where
-    parseJSON (String result) =
-        return $ case result of
-                   "American Express" -> AMEX
-                   "MasterCard" -> MasterCard
-                   "Discover" -> Discover
-                   "JCB" -> JCB
-                   "Visa" -> Visa
-                   "DinersClub" -> DinersClub
-                   otherwise -> Unknown
-    parseJSON _ = mzero
-
 instance FromJSON Card where
     parseJSON (Object o) =
         Card <$> (CardId <$> o .: "id")
@@ -287,6 +285,7 @@ instance FromJSON Card where
              <*> o .:? "address_line1_check"
              <*> o .:? "address_zip_check"
              <*> (fmap CustomerId <$> o .:? "customer")
+    parseJSON _ = mzero
 
 instance FromJSON RecipientCard where
     parseJSON (Object o) =
@@ -383,7 +382,7 @@ data Invoice = Invoice {
     , invoiceSubscription         :: Maybe SubscriptionId
     , invoiceStatementDescription :: Maybe Text
     , invoiceDescription          :: Maybe Text
-} deriving Show
+} deriving (Show, Eq)
 
 instance FromJSON Invoice where
    parseJSON (Object o) =
@@ -517,6 +516,7 @@ instance FromJSON InvoiceItem where
                    <*> o .: "description"
                    <*> o .:? "invoice"
                    <*> o .:? "subscription"
+   parseJSON _ = mzero
 
 ---- == Invoice Item == ------
 data InvoiceLineItem = InvoiceLineItem {
@@ -531,7 +531,7 @@ data InvoiceLineItem = InvoiceLineItem {
     , invoiceLineItemQuantity    :: Maybe Int
     , invoiceLineItemPlan        :: Maybe Plan
     , invoiceLineItemDescription :: Maybe Text
-  } deriving Show
+  } deriving (Show, Eq)
 
 newtype Quantity = Quantity Int deriving (Show, Eq)
 
@@ -561,11 +561,21 @@ instance FromJSON InvoiceLineItem where
                        <*> o .:? "description"
    parseJSON _ = mzero
 
-newtype InvoiceId = InvoiceId Text deriving (Show, Eq)
+data InvoiceId = InvoiceId Text 
+               | ExpandedInvoice Invoice 
+                 deriving (Show, Eq)
+    
+instance FromJSON InvoiceId where
+   parseJSON (String x)   = pure $ InvoiceId x
+   parseJSON o@(Object _) = ExpandedInvoice <$> parseJSON o
+   parseJSON _ = mzero
+
+
 -- Invoice Item --
-newtype InvoiceItemId = InvoiceItemId Text deriving (Eq, Show)
-
-
+data InvoiceItemId 
+    = InvoiceItemId Text
+    | ExpandedInvoiceItem Invoice
+      deriving (Eq, Show)
 
 --- Discount --
 
@@ -597,7 +607,7 @@ instance FromJSON Duration where
        | x == "forever"   = pure Forever
        | x == "once"      = pure Once
        | x == "repeating" = pure Repeating
-       | otherwise        = mzero
+   parseJSON _ = mzero
 
 data Coupon = Coupon {
       couponId               :: Text
@@ -628,6 +638,7 @@ instance FromJSON Coupon where
                <*> o .:? "times_redeemed"
                <*> o .:? "duration_in_months"
                <*> o .: "valid"
+   parseJSON _ = mzero
 
 newtype CouponId = CouponId Text deriving (Show, Eq)
 newtype AmountOff = AmountOff Int deriving (Show, Eq)
@@ -647,19 +658,26 @@ type Amount = Int
 
 data Interval = Week | Month | Year deriving (Eq)
 
+instance FromJSON Interval where
+   parseJSON (String "week") = pure Week
+   parseJSON (String "month") = pure Month
+   parseJSON (String "year") = pure Year
+   parseJSON _ = mzero
+
 instance Show Interval where
     show Week  = "week"
     show Month = "month"
     show Year  = "year"
 
 data Plan = Plan {
-      planId              :: PlanId
-    , planAmount          :: Int
-    , planInterval        :: Interval
-    , planCreated         :: UTCTime
-    , planCurrency        :: Text
-    , planLiveMode        :: Bool
+      planInterval        :: Interval
     , planName            :: Text
+    , planCreated         :: UTCTime
+    , planAmount          :: Int
+    , planCurrency        :: Text
+    , planId              :: PlanId
+    , planObject          :: Text
+    , planLiveMode        :: Bool
     , planIntervalCount   :: Maybe Int -- optional, max of 1 year intervals allowed, default 1
     , planTrialPeriodDays :: Maybe Int
     , planMetaData        :: Maybe Object
@@ -668,23 +686,19 @@ data Plan = Plan {
 
 instance FromJSON Plan where
    parseJSON (Object o) =
-       do planId <- PlanId <$> o .: "id"
-          planAmount <- o .: "amount"
-          result <- o .: "interval"
-          let planInterval =
-                  case String result of
-                    "month" -> Month
-                    "week" -> Week
-                    "year" -> Year
-          planCreated <- fromSeconds <$> o .: "created"
-          planCurrency <- o .: "currency"
-          planLiveMode <- o .: "livemode"
-          planName <- o .: "name"
-          planIntervalCount <- o .:? "interval_count"
-          planTrialPeriodDays <- o .:? "trial_period_days"
-          planMetaData <- o .:? "meta_data"
-          planDescription <- o .:? "statement_description"
-          return Plan {..}
+        Plan <$> o .: "interval"
+             <*> o .: "name"
+             <*> (fromSeconds <$> o .: "created")
+             <*> o .: "amount"
+             <*> o .: "currency"
+             <*> (PlanId <$> o .: "id")
+             <*> o .: "object"
+             <*> o .: "livemode"
+             <*> o .:? "interval_count"
+             <*> o .:? "trial_period_days"
+             <*> o .:? "meta_data"
+             <*> o .:? "statement_description"
+   parseJSON _ = mzero
 
 
 --- Account ---
@@ -719,6 +733,7 @@ instance FromJSON Account where
                <*> o .:  "default_currency"
                <*> o .:  "country"
                <*> o .:  "object"
+   parseJSON _ = mzero
 
 -- Application Fee --
 data ApplicationFee = ApplicationFee {
@@ -754,6 +769,7 @@ instance FromJSON ApplicationFee where
                       <*> (AccountId <$> o .: "account")
                       <*> (ApplicationId <$> o .: "application")
                       <*> (ChargeId <$> o .: "charge")
+   parseJSON _ = mzero
 
 
 
@@ -775,6 +791,7 @@ instance FromJSON Event where
              <*> (fromSeconds <$> o .: "created")
              <*> o .: "livemode"
              <*> o .: "type"
+   parseJSON _ = mzero
 
 -- Balance --
 data BalanceAmount = BalanceAmount {
@@ -844,10 +861,13 @@ instance FromJSON BalanceAmount where
    parseJSON (Object o) =
        BalanceAmount <$> o .: "amount"
                      <*> o .: "currency"
+   parseJSON _ = mzero
+
 instance FromJSON Balance where
    parseJSON (Object o) =
        Balance <$> o .: "pending"
                <*> o .: "available"
+   parseJSON _ = mzero
 
 
 -- * Recipients
@@ -897,6 +917,7 @@ instance FromJSON Recipient where
                  <*> (fmap AccountId <$> o .:? "active_account")
                  <*> o .: "cards"
                  <*> (fmap CardId <$> o .:? "default_card")
+   parseJSON _ = mzero
 
 ---- Transfers
 

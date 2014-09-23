@@ -27,6 +27,7 @@ data StripeErrorType =
         | APIError
         | CardError
         | ConnectionFailure
+        | ParseFailure
         | UnknownErrorType 
           deriving Show
 

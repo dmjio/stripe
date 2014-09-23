@@ -4,10 +4,12 @@ module Web.Stripe.Client.Util
     , paramsToByteString
     , toText
     , getParams
+    , toBytestring
     , (</>)
     ) where
 
 import           Data.ByteString       (ByteString)
+import qualified Data.ByteString.Char8 as B8
 import           Data.Monoid           (Monoid, (<>), mempty, mconcat)
 import           Data.String           (IsString)
 import           Data.Text             (Text)
@@ -56,3 +58,8 @@ getParams
     :: [(ByteString, Maybe Text)]
     -> [(ByteString, ByteString)]
 getParams xs = [ (x, T.encodeUtf8 y) | (x, Just y) <- xs ]
+
+------------------------------------------------------------------------------
+-- | Convert APITVersion to a ByteString
+toBytestring :: Show a => a -> ByteString
+toBytestring = B8.pack . show

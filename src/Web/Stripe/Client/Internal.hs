@@ -3,7 +3,7 @@
 module Web.Stripe.Client.Internal
     ( callAPI
     , runStripe
-    , Stripe             (..)
+    , Stripe
     , StripeRequest      (..)
     , StripeError        (..)
     , StripeConfig       (..)
@@ -34,8 +34,9 @@ import           Web.Stripe.Client.Error    (StripeError (..),
                                              StripeErrorHTTPCode (..),
                                              StripeErrorType (..))
 import           Web.Stripe.Client.Types    (Stripe, StripeConfig (..),
-                                             StripeRequest (..))
-import           Web.Stripe.Client.Util     (paramsToByteString, toText, fromSeconds, (</>), getParams)
+                                             StripeRequest (..), APIVersion(..))
+import           Web.Stripe.Client.Util     (fromSeconds, getParams, toBytestring,
+                                             paramsToByteString, toText, (</>))
 
 import qualified Data.ByteString            as S
 import qualified Data.ByteString.Lazy       as BL
@@ -92,30 +93,37 @@ sendStripeRequest
           http method $ "/v1/" <> reqURL
           setAuthorizationBasic secretKey mempty
           setContentType "application/x-www-form-urlencoded"
-          setHeader "Stripe-Version" apiVersion
+          setHeader "Stripe-Version" (toBytestring V20140908)
       body <- Streams.fromByteString reqBody
       sendRequest con req $ inputStreamBody body
       json <- receiveResponse con $
               \response inputStream ->
                   concatHandler response inputStream >>= \result -> do
                       print result
-                      {- for debugging purposes -} 
+                      {- for debugging purposes -}
                       handleStream response result
       closeConnection con
       return json
-    parseFail = error "Parse failure"
+    parseFail = Left $ StripeError ParseFailure "could not parse response" Nothing Nothing Nothing  
+    unknownCode = Left $ StripeError UnknownErrorType mempty Nothing Nothing Nothing  
     handleStream p x =
-        return $ case getStatusCode p of
-                   200 -> maybe parseFail Right (decodeStrict x)
-                   code | code >= 400 ->
-                     do let json = fromMaybe parseFail (decodeStrict x :: Maybe StripeError)
-                        Left $ case code of
-                                 400 -> json { errorHTTP = Just BadRequest }
-                                 401 -> json { errorHTTP = Just UnAuthorized }
-                                 402 -> json { errorHTTP = Just RequestFailed }
-                                 404 -> json { errorHTTP = Just NotFound }
-                                 500 -> json { errorHTTP = Just StripeServerError }
-                                 502 -> json { errorHTTP = Just StripeServerError }
-                                 503 -> json { errorHTTP = Just StripeServerError }
-                                 504 -> json { errorHTTP = Just StripeServerError }
-                                 _   -> json { errorHTTP = Just UnknownHTTPCode }
+        return $ 
+          case getStatusCode p of
+            200 -> case decodeStrict x of
+                     Nothing -> parseFail
+                     Just json -> Right json
+            code | code >= 400 -> 
+                    case decodeStrict x :: Maybe StripeError of
+                      Nothing -> parseFail 
+                      Just json ->
+                          Left $ case code of
+                             400 -> json { errorHTTP = Just BadRequest }
+                             401 -> json { errorHTTP = Just UnAuthorized }
+                             402 -> json { errorHTTP = Just RequestFailed }
+                             404 -> json { errorHTTP = Just NotFound }
+                             500 -> json { errorHTTP = Just StripeServerError }
+                             502 -> json { errorHTTP = Just StripeServerError }
+                             503 -> json { errorHTTP = Just StripeServerError }
+                             504 -> json { errorHTTP = Just StripeServerError }
+                             _   -> json { errorHTTP = Just UnknownHTTPCode }
+            _ -> unknownCode
