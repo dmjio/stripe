@@ -8,7 +8,7 @@ module Web.Stripe.Account
 
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
                                              StripeRequest (..), callAPI)
-import           Web.Stripe.Types           (Account)
+import           Web.Stripe.Types           (Account(..))
 
 ------------------------------------------------------------------------------
 -- | Retrieve the object that represents your Stripe account

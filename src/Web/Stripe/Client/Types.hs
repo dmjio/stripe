@@ -24,18 +24,18 @@ type Params = [(ByteString, ByteString)]
 ------------------------------------------------------------------------------
 -- | Stripe Request holding `Method`, URL and `Params` for a Request
 data StripeRequest = StripeRequest
-    { method :: Method -- ^ Method of StripeRequest (i.e. `GET`, `PUT`, `POST`, `PUT`)
-    , url    :: Text   -- ^ Method of StripeRequest (i.e. `GET`, `PUT`, `POST`, `PUT`)
-    , params :: Params
+    { method      :: Method -- ^ Method of StripeRequest (i.e. `GET`, `PUT`, `POST`, `PUT`)
+    , endpoint    :: Text   -- ^ Endpoint of StripeRequest
+    , queryParams :: Params -- ^ Query Parameters of StripeRequest
     } deriving Show
 
 ------------------------------------------------------------------------------
 -- | Information for Stripe secret key and API Version
 data StripeConfig = StripeConfig
-    { secretKey  :: ByteString
+    { secretKey :: ByteString
     } deriving Show
 
-data APIVersion = 
+data APIVersion =
     V20140908 -- ^ Stripe API Version for this package release
     deriving Eq
 

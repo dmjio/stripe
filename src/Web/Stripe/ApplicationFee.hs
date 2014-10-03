@@ -11,8 +11,8 @@ module Web.Stripe.ApplicationFee
 
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
                                              StripeRequest (..), callAPI, (</>))
-import           Web.Stripe.Types           (ApplicationFee, FeeId (..),
-                                             StripeList)
+import           Web.Stripe.Types           (ApplicationFee(..), FeeId (..),
+                                             StripeList(..))
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee' retrieval
@@ -20,9 +20,9 @@ getApplicationFee
     :: FeeId -- ^ The FeeID associated with the application
     -> Stripe ApplicationFee
 getApplicationFee
-    (FeeId feeId) = callAPI request
+    (FeeId feeid) = callAPI request
   where request = StripeRequest GET url params
-        url     = "application_fees" </> feeId
+        url     = "application_fees" </> feeid
         params  = []
 
 ------------------------------------------------------------------------------

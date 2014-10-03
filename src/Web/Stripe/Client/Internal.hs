@@ -83,12 +83,12 @@ sendStripeRequest
   where
     handleConnection con = do
       let reqBody | method == GET = mempty
-                  | otherwise     = paramsToByteString params
-          reqURL  | method == GET = S.concat [ T.encodeUtf8 url
+                  | otherwise     = paramsToByteString queryParams
+          reqURL  | method == GET = S.concat [ T.encodeUtf8 endpoint
                                              , "?"
-                                             , paramsToByteString params
+                                             , paramsToByteString queryParams
                                              ]
-                  | otherwise = T.encodeUtf8 url
+                  | otherwise = T.encodeUtf8 endpoint
       req <- buildRequest $ do
           http method $ "/v1/" <> reqURL
           setAuthorizationBasic secretKey mempty
