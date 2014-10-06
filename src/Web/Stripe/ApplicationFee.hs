@@ -10,9 +10,10 @@ module Web.Stripe.ApplicationFee
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
-                                             StripeRequest (..), callAPI, (</>))
-import           Web.Stripe.Types           (ApplicationFee(..), FeeId (..),
-                                             StripeList(..))
+                                             StripeRequest (..), callAPI, (</>), getParams, toText)
+
+import           Web.Stripe.Types           (ApplicationFee (..), FeeId (..),
+                                             StripeList (..), Limit, StartingAfter, EndingBefore)
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee' retrieval
@@ -27,10 +28,21 @@ getApplicationFee
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee's retrieval
-getApplicationFees :: Stripe (StripeList ApplicationFee)
-getApplicationFees = callAPI request
+getApplicationFees
+    :: Maybe Limit         -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter FeeId -- ^ Paginate starting after the following `FeeId`
+    -> EndingBefore FeeId  -- ^ Paginate ending before the following `FeeId`
+    -> Stripe (StripeList ApplicationFee)
+getApplicationFees
+    limit
+    startingAfter
+    endingBefore  = callAPI request
   where request = StripeRequest GET url params
         url     = "application_fees"
-        params  = []
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(FeeId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(FeeId x) -> x) `fmap` endingBefore)
+          ]
 
 

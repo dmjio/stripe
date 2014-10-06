@@ -25,8 +25,10 @@ import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
 import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
                                              CouponId (..), Currency (..),
                                              Duration, DurationInMonths (..),
-                                             Limit, MaxRedemptions (..),
+                                             EndingBefore, Limit,
+                                             MaxRedemptions (..),
                                              PercentOff (..), RedeemBy (..),
+                                             StartingAfter,
                                              StripeDeleteResult (..),
                                              StripeList (..))
 
@@ -78,13 +80,23 @@ getCoupon
 ------------------------------------------------------------------------------
 -- | Retrieve a list of 'Coupon's
 getCoupons
-    :: Maybe Limit
+    :: Maybe Limit            -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter CouponId -- ^ Paginate starting after the following `CouponId`
+    -> EndingBefore CouponId  -- ^ Paginate ending before the following `CouponId`
     -> Stripe (StripeList Coupon)
 getCoupons
-     limit = callAPI request
+     limit
+     startingAfter
+     endingBefore
+  = callAPI request
   where request = StripeRequest POST url params
         url     = "coupons"
-        params  = getParams [ ("limit", fmap toText limit) ]
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(CouponId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(CouponId x) -> x) `fmap` endingBefore)
+          ]
+
 
 ------------------------------------------------------------------------------
 -- | Delete a 'Coupon" by 'CouponId'

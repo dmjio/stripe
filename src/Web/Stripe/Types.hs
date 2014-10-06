@@ -12,6 +12,11 @@ import           Web.Stripe.Client.Internal
 
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
+type StartingAfter a = Maybe a
+type EndingBefore a = Maybe a
+
+
+
 type Key   = Text
 type ID    = Text
 type Value = Text
@@ -113,18 +118,18 @@ instance FromJSON a => FromJSON (StripeList a) where
 
 --- Refund ---
 data Refund = Refund {
-      refundId                 :: Text
+      refundId                 :: RefundId
     , refundAmount             :: Int
     , refundCurrency           :: Text
     , refundCreated            :: UTCTime
     , refundObject             :: Text
     , refundCharge             :: ChargeId
     , refundBalanceTransaction :: TransactionId
-    } deriving (Show, Eq)
+    } deriving Show
 
 instance FromJSON Refund where
    parseJSON (Object o) =
-        Refund <$> o .: "id"
+        Refund <$> (RefundId <$> o .: "id")
                <*> o .: "amount"
                <*> o .: "currency"
                <*> (fromSeconds <$> o .: "created")
@@ -197,9 +202,7 @@ newtype AddressLine1   = AddressLine1 Text deriving (Show, Eq)
 newtype AddressLine2   = AddressLine2 Text deriving (Show, Eq)
 newtype AddressState   = AddressState Text deriving (Show, Eq)
 newtype AddressZip     = AddressZip Text deriving (Show, Eq)
-newtype EndingBefore   = EndingBefore Text deriving (Show, Eq)
-newtype StartingAfter  = StartingAfter Text deriving (Show, Eq)
-type Limit             = Int
+type Limit             = Maybe Int
 
 data Brand = Visa
            | AMEX
@@ -846,7 +849,15 @@ data FeeDetails = FeeDetails {
     , feeApplication     :: Maybe Text
 } deriving (Show)
 
-newtype TransactionId = TransactionId Text deriving (Show, Eq)
+data TransactionId = TransactionId Text |
+                     ExpandedTransaction BalanceTransaction
+                   deriving Show
+
+instance FromJSON TransactionId where
+    parseJSON (String x)   = pure (TransactionId x)
+    parseJSON v@(Object _) = ExpandedTransaction <$> parseJSON v
+    parseJSON _            = mzero
+
 
 instance FromJSON FeeDetails where
    parseJSON (Object o) =
@@ -991,7 +1002,7 @@ data ApplicationFeeRefund = ApplicationFeeRefund {
      , applicationFeeRefundCurrency           :: Text
      , applicationFeeRefundCreated            :: UTCTime
      , applicationFeeRefundObject             :: Text
-     , applicationFeeRefundBalanceTransaction :: Maybe Text
+     , applicationFeeRefundBalanceTransaction :: Maybe TransactionId
      , applicationFeeRefundFee                :: FeeId
      } deriving Show
 
@@ -1002,7 +1013,7 @@ instance FromJSON ApplicationFeeRefund where
               <*> o .: "currency"
               <*> (fromSeconds <$> o .: "created")
               <*> o .: "object"
-              <*> o .:? "balance_transaction"
+              <*> (fmap TransactionId <$> o .:? "balance_transaction")
               <*> (FeeId <$> o .: "fee")
     parseJSON _ = mzero
 

@@ -4,6 +4,7 @@ module Web.Stripe.Plan
       createPlan
     , createPlanBase
     , getPlan
+    , getPlans
     , updatePlanName
     , updatePlanDescription
     , updatePlanBase
@@ -124,6 +125,25 @@ getPlan
   where request = StripeRequest GET url params
         url     = "plans" </> planId
         params  = []
+
+------------------------------------------------------------------------------
+-- | Retrieve a `Plan`
+getPlans
+    :: Limit                -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter PlanId -- ^ Paginate starting after the following `CustomerID`
+    -> EndingBefore PlanId  -- ^ Paginate ending before the following `CustomerID`
+    -> Stripe Plan
+getPlans
+    limit
+    startingAfter
+    endingBefore = callAPI request
+  where request = StripeRequest GET url params
+        url     = "plans"
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(PlanId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(PlanId x) -> x) `fmap` endingBefore)
+          ]
 
 ------------------------------------------------------------------------------
 -- | Base Request for updating a `Plan`, useful for creating customer `Plan` update functions

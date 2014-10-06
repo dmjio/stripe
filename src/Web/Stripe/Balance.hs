@@ -15,8 +15,9 @@ module Web.Stripe.Balance
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
                                              StripeRequest (..), callAPI,
                                              getParams, toText, (</>))
-import           Web.Stripe.Types           (Balance, BalanceTransaction, Limit,
-                                             StripeList, TransactionId (..))
+import           Web.Stripe.Types           (Balance(..), BalanceTransaction,
+                                             EndingBefore, Limit, StartingAfter,
+                                             StripeList(..), TransactionId (..))
 
 ------------------------------------------------------------------------------
 -- | Retrieve the current 'Balance' for your Stripe account
@@ -32,21 +33,27 @@ getBalanceTransaction
     :: TransactionId
     -> Stripe BalanceTransaction
 getBalanceTransaction
-    (TransactionId transactionId) = callAPI request
+    (TransactionId transactionid) = callAPI request
   where request = StripeRequest GET url params
-        url     = "balance" </> "history" </> transactionId
+        url     = "balance" </> "history" </> transactionid
         params  = []
 
 ------------------------------------------------------------------------------
 -- | Retrieve the history of 'BalanceTransaction's
 getBalanceTransactionHistory
-    :: Maybe Limit
+    :: Limit                       -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter TransactionId -- ^ Paginate starting after the following `TransactionId`
+    -> EndingBefore TransactionId  -- ^ Paginate ending before the following `TransactionId`
     -> Stripe (StripeList BalanceTransaction)
 getBalanceTransactionHistory
-    limit = callAPI request
+    limit
+    startingAfter
+    endingBefore = callAPI request
   where request = StripeRequest GET url params
         url     = "balance" </> "history"
         params  = getParams [
-                   ("limit", fmap toText limit)
-                  ]
+             ("limit", toText `fmap` limit )
+           , ("starting_after", (\(TransactionId x) -> x) `fmap` startingAfter)
+           , ("ending_before", (\(TransactionId x) -> x) `fmap` endingBefore)
+           ]
 

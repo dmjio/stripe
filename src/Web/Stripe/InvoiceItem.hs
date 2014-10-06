@@ -3,6 +3,7 @@ module Web.Stripe.InvoiceItem
     ( -- * API 
       createInvoiceItem
     , getInvoiceItem
+    , getInvoiceItems
     , updateInvoiceItem
     , deleteInvoiceItem
       -- * Types
@@ -23,7 +24,7 @@ import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
 import           Web.Stripe.Types           (Amount, Currency (..),
                                              CustomerId (..), Description (..),
                                              InvoiceId (..), InvoiceItem (..),
-                                             InvoiceItemId (..),
+                                             InvoiceItemId (..), Limit, StartingAfter, EndingBefore,
                                              StripeDeleteResult (..),
                                              SubscriptionId (..))
 
@@ -55,6 +56,28 @@ createInvoiceItem
                   , ("subscription", (\(SubscriptionId x) -> x) `fmap` subscriptionId)
                   , ("description", description)
                   ]
+
+------------------------------------------------------------------------------
+-- | Retrieve an `InvoiceItem` by `InvoiceItemId`
+getInvoiceItems
+    :: InvoiceItemId               -- ^ `InvoiceItemId` of `InvoiceItem` to retrieve
+    -> Limit                       -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter InvoiceItemId -- ^ Paginate starting after the following `InvoiceItemId`
+    -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `InvoiceItemId`
+    -> Stripe InvoiceItem
+getInvoiceItems
+    (InvoiceItemId itemId)
+    limit
+    startingAfter
+    endingBefore = callAPI request
+  where request = StripeRequest GET url params
+        url     = "invoiceitems" </> itemId
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(InvoiceItemId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(InvoiceItemId x) -> x) `fmap` endingBefore)
+          ]
+
 ------------------------------------------------------------------------------
 -- | Retrieve an `InvoiceItem` by `InvoiceItemId`
 getInvoiceItem

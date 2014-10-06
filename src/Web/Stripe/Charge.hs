@@ -40,7 +40,8 @@ import           Web.Stripe.Types           (Amount, CVC (..), Capture,
                                              CustomerId (..), Description (..),
                                              ExpMonth (..), ExpYear (..),
                                              ReceiptEmail (..),
-                                             StatementDescription,
+                                             StatementDescription, Limit,
+                                             StartingAfter, EndingBefore,
                                              StripeList (..), TokenId (..))
 
 ------------------------------------------------------------------------------
@@ -141,25 +142,44 @@ getCharge (ChargeId charge) = callAPI request
 
 ------------------------------------------------------------------------------
 -- | Retrieve all 'Charge's
-getCharges :: Stripe (StripeList Charge)
-getCharges = callAPI request
+getCharges
+    :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter ChargeId   -- ^ Paginate starting after the following CustomerID
+    -> EndingBefore ChargeId    -- ^ Paginate ending before the following CustomerID
+    -> Stripe (StripeList Charge)
+getCharges 
+    limit
+    startingAfter
+    endingBefore = callAPI request
   where request = StripeRequest GET url params
         url     = "charges"
-        params  = []
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(ChargeId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(ChargeId x) -> x) `fmap` endingBefore)
+          ]
 
 ------------------------------------------------------------------------------
 -- | Retrieve all 'Charge's for a specified 'Customer'
 getCustomerCharges
     :: CustomerId
+    -> Limit                    -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter ChargeId   -- ^ Paginate starting after the following CustomerID
+    -> EndingBefore ChargeId    -- ^ Paginate ending before the following CustomerID
     -> Stripe (StripeList Charge)
 getCustomerCharges
-    (CustomerId customerId) = callAPI request
+    (CustomerId customerId)
+    limit
+    startingAfter
+    endingBefore = callAPI request
   where request = StripeRequest GET url params
         url     = "charges"
         params  = getParams [
-                   ("customer", Just customerId )
-                  ]
-
+            ("customer", Just customerId )
+          , ("limit", toText `fmap` limit )
+          , ("starting_after", (\(ChargeId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(ChargeId x) -> x) `fmap` endingBefore)
+          ]
 
 ------------------------------------------------------------------------------
 -- | A 'Charge' to be updated

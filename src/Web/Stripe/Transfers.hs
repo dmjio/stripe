@@ -21,7 +21,7 @@ import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              getParams, toText, (</>))
 import           Web.Stripe.Types           (Amount, Currency, Currency (..),
                                              Limit, RecipientId (..),
-                                             StripeList (..), Transfer (..),
+                                             StripeList (..), Transfer (..), StartingAfter, EndingBefore,
                                              TransferId (..))
 
 ------------------------------------------------------------------------------
@@ -56,15 +56,21 @@ getTransfer (TransferId transferId) = callAPI request
 ------------------------------------------------------------------------------
 -- | Retrieve StripeList of `Transfers`
 getTransfers
-    :: Maybe Limit
+    :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter TransferId -- ^ Paginate starting after the following `TransferId`
+    -> EndingBefore TransferId  -- ^ Paginate ending before the following `TransferId`
     -> Stripe (StripeList Transfer)
 getTransfers
-    limit = callAPI request
+    limit
+    startingAfter
+    endingBefore = callAPI request
   where request = StripeRequest GET url params
         url     = "transfers"
         params  = getParams [
-                   ("limit", fmap toText limit)
-                  ]
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(TransferId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(TransferId x) -> x) `fmap` endingBefore)
+          ]
 
 ------------------------------------------------------------------------------
 -- | Update a `Transfer`

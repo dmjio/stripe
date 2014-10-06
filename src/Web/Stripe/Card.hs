@@ -277,18 +277,31 @@ getCardsBase
     :: FromJSON a
     => URL  -- ^ The type of the request to support (`Recipient` or `Customer`)
     -> ID   -- ^ `CustomerId` or `RecipientId` of the `Card` to retrieve
+    -> Maybe Limit          -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter CardId -- ^ Paginate starting after the following `CardId`
+    -> EndingBefore CardId  -- ^ Paginate ending before the following `CardId`
     -> Stripe (StripeList a)
 getCardsBase
     requestType
-    requestId = callAPI request
+    requestId
+    limit
+    startingAfter
+    endingBefore = callAPI request
   where request = StripeRequest GET url params
         url     = requestType </> requestId </> "cards"
-        params  = []
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(CardId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(CardId x) -> x) `fmap` endingBefore)
+          ]
 
 ------------------------------------------------------------------------------
 -- | Retrieve all cards associated with a `Customer`
 getCustomerCards
     :: CustomerId   -- ^ The `CustomerId` associated with the cards
+    -> Maybe Limit          -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter CardId -- ^ Paginate starting after the following `CardId`
+    -> EndingBefore CardId  -- ^ Paginate ending before the following `CardId`
     -> Stripe (StripeList Card)
 getCustomerCards
     (CustomerId customerId) = getCardsBase "customers" customerId
@@ -297,6 +310,9 @@ getCustomerCards
 -- | Retrieve all cards associated with a `Recipient`
 getRecipientCards
     :: RecipientId   -- ^ The `RecipientId` associated with the cards
+    -> Maybe Limit          -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter CardId -- ^ Paginate starting after the following `CardId`
+    -> EndingBefore CardId  -- ^ Paginate ending before the following `CardId`
     -> Stripe (StripeList RecipientCard)
 getRecipientCards
     (RecipientId recipientId) = getCardsBase "recipients" recipientId

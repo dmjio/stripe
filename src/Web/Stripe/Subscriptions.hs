@@ -8,15 +8,16 @@ module Web.Stripe.Subscriptions
       -- * API
     , createSubscription
     , getSubscription
+    , getSubscriptions
     , updateSubscription
     , deleteSubscription
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
-                                             StripeRequest (..), callAPI,
+                                             StripeRequest (..), callAPI, toText,
                                              getParams, (</>))
 import           Web.Stripe.Types           (CustomerId (..), PlanId (..),
-                                             Subscription (..),
+                                             Subscription (..), Limit, StartingAfter, EndingBefore,
                                              SubscriptionId (..))
 
 ------------------------------------------------------------------------------
@@ -44,6 +45,28 @@ getSubscription
   where request = StripeRequest GET url params
         url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
         params  = []
+
+------------------------------------------------------------------------------
+-- | Retrieve active `Subscription`s
+getSubscriptions
+    :: CustomerId
+    -> Limit                        -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter SubscriptionId -- ^ Paginate starting after the following `CustomerId`
+    -> EndingBefore SubscriptionId  -- ^ Paginate ending before the following `CustomerId`
+    -> Stripe Subscription
+getSubscriptions
+    (CustomerId customerId)
+    limit
+    startingAfter
+    endingBefore
+     = callAPI request
+  where request = StripeRequest GET url params
+        url     = "customers" </> customerId </> "subscriptions"
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(SubscriptionId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(SubscriptionId x) -> x) `fmap` endingBefore)
+          ]
 
 ------------------------------------------------------------------------------
 -- | Update a `Subscription` by `CustomerId` and `SubscriptionId`

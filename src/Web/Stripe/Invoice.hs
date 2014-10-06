@@ -43,30 +43,43 @@ getInvoice
 ------------------------------------------------------------------------------
 -- | Retrieve an `Invoice` by `InvoiceId`
 getInvoiceLineItems
-    :: InvoiceId   -- ^ Get an `Invoice` by `InvoiceId`
-    -> Maybe Limit -- ^ The `Limit` on how many `InvoiceLineItems` to return
+    :: InvoiceId                       -- ^ Get an `Invoice` by `InvoiceId`
+    -> Limit                           -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter InvoiceLineItemId -- ^ Paginate starting after the following `InvoiceLineItemId`
+    -> EndingBefore InvoiceLineItemId  -- ^ Paginate ending before the following `InvoiceLineItemId`
     -> Stripe (StripeList InvoiceLineItem)
 getInvoiceLineItems
     (InvoiceId invoiceId)
-    limit = callAPI request
+    limit
+    startingAfter
+    endingBefore = callAPI request
   where request = StripeRequest GET url params
         url     = "invoices" </> invoiceId </> "lines"
-        params  = getParams [ 
-                   ("limit", fmap toText limit) 
-                  ]
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(InvoiceLineItemId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(InvoiceLineItemId x) -> x) `fmap` endingBefore)
+          ]
+
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `StripeList` of `Invoice`s
 getInvoices
-    :: Maybe Limit -- ^ The `Limit` on the amount of `Invoice`s to return
+    :: Maybe Limit                 -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter InvoiceItemId -- ^ Paginate starting after the following `Customer`
+    -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `CustomerID`
     -> Stripe (StripeList Invoice)
 getInvoices
-    limit = callAPI request
+    limit
+    startingAfter
+    endingBefore = callAPI request
   where request = StripeRequest GET url params
         url     = "invoices"
         params  = getParams [
-                   ("limit", toText `fmap` limit)
-                  ]
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(InvoiceItemId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(InvoiceItemId x) -> x) `fmap` endingBefore)
+          ]
 
 ------------------------------------------------------------------------------
 -- | Pay `Invoice` by `InvoiceId`

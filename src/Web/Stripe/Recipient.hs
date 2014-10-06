@@ -48,7 +48,7 @@ import           Web.Stripe.Types           (AccountNumber (..),
                                              MiddleInitial, Recipient (..),
                                              RecipientId (..),
                                              RecipientType (..),
-                                             RoutingNumber (..),
+                                             RoutingNumber (..), EndingBefore, StartingAfter,
                                              StripeList (..), TaxID, TokenId,
                                              TokenId (..))
 
@@ -196,12 +196,21 @@ getRecipient
 ------------------------------------------------------------------------------
 -- | Retrieve multiple 'Recipient's
 getRecipients
-    :: Maybe Limit
+    :: Limit                     -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter RecipientId -- ^ Paginate starting after the following `RecipientId`
+    -> EndingBefore RecipientId  -- ^ Paginate ending before the following `RecipientId`
     -> Stripe (StripeList Recipient)
-getRecipients limit = callAPI request
+getRecipients
+  limit
+  startingAfter
+  endingBefore  = callAPI request
   where request =  StripeRequest GET url params
         url     = "recipients"
-        params  = getParams [ ("limit", toText `fmap` limit )]
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(RecipientId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(RecipientId x) -> x) `fmap` endingBefore)
+          ]
 
 ------------------------------------------------------------------------------
 -- | Base Request for updating a 'Recipient', useful for creating custom 'Recipient' update functions

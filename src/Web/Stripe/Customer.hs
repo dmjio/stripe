@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
+
 module Web.Stripe.Customer
     ( -- * API
       ---- * Create customer
@@ -41,11 +43,14 @@ import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
                                              StripeRequest (..), callAPI,
                                              getParams, toText, (</>))
 import           Web.Stripe.Types           (AccountBalance, CVC (..),
-                                             CardNumber (..), CouponId (..),
-                                             Customer (..), CustomerId (..), CardId(..),
-                                             Description, Email (..), StripeDeleteResult(..),
+                                             CardId (..), CardNumber (..),
+                                             CouponId (..), Customer (..),
+                                             CustomerId (..), Description,
+                                             Email (..), EndingBefore,
                                              ExpMonth (..), ExpYear (..), Limit,
                                              PlanId (..), Quantity (..),
+                                             StartingAfter,
+                                             StripeDeleteResult (..),
                                              StripeList (..), TokenId (..),
                                              TrialPeriod)
 
@@ -64,7 +69,6 @@ createCustomerBase
     -> Maybe PlanId         -- ^ Identifier of plan to subscribe customer to
     -> Maybe Quantity       -- ^ The quantity you'd like to apply to the subscription you're creating
     -> Maybe TrialPeriod    -- ^ TimeStamp representing the trial period the customer will get
-       
     -> Stripe Customer
 createCustomerBase
     accountBalance
@@ -156,7 +160,7 @@ updateCustomerBase
     -> Maybe Email          -- ^ Email address of customer
     -> Stripe Customer
 updateCustomerBase
-    (CustomerId cid)
+    (CustomerId customerid)
     accountBalance
     cardId
     cardNumber
@@ -168,7 +172,7 @@ updateCustomerBase
     description
     email       = callAPI request
   where request = StripeRequest POST url params
-        url     = "customers" </> cid
+        url     = "customers" </> customerid
         params  = getParams [
                     ("account_balance", toText `fmap` accountBalance)
                   , ("card", (\(TokenId x) -> x) `fmap` cardId)
@@ -189,9 +193,9 @@ updateCustomerAccountBalance
     -> AccountBalance  -- ^ `AccountBalance` associated
     -> Stripe Customer
 updateCustomerAccountBalance
-    customerId
-    accountBalance
-        = updateCustomerBase customerId (Just accountBalance)
+    customerid
+    accountbalance
+        = updateCustomerBase customerid (Just accountbalance)
             Nothing Nothing Nothing
             Nothing Nothing Nothing
             Nothing Nothing Nothing
@@ -233,13 +237,20 @@ getCustomer (CustomerId cid) = callAPI request
 ------------------------------------------------------------------------------
 -- | Retrieve up to 100 customers at a time
 getCustomers
-    :: Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
+    :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter CustomerId -- ^ Paginate starting after the following `CustomerId`
+    -> EndingBefore CustomerId  -- ^ Paginate ending before the following `CustomerId`
     -> Stripe (StripeList Customer)
-getCustomers limit
+getCustomers
+    limit
+    startingAfter
+    endingBefore
     = callAPI request
   where request = StripeRequest GET url params
         url     = "customers"
-        params  = getParams [ ("limit", toText `fmap` limit )
---                            , ("ending_before", Just "cus_4mMbPC2wI4ioaN")
-                            ]
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(CustomerId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(CustomerId x) -> x) `fmap` endingBefore)
+          ]
 
