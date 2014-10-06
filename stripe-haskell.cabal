@@ -1,6 +1,6 @@
-name:                stripe-simple
+name:                stripe-haskell
 version:             0.1.0.0
-synopsis:            Simple haskell bindings to the Stripe API
+synopsis:            Soon-to-be official Haskell support for Stripe
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson
@@ -19,14 +19,14 @@ Test-Suite tests
     main-is:          tests/Main.hs
     build-depends:    base, stripe-simple, bytestring, mtl, text, transformers, hspec
     default-language: Haskell2010
-    ghc-options:      -Wall -threaded
+    ghc-options:      -Wall 
 
 Benchmark benchmarks
     type:             exitcode-stdio-1.0
     main-is:          benchmarks/Main.hs
     build-depends:    base, stripe-simple, criterion
     default-language: Haskell2010
-    ghc-options:      -Wall -threaded
+    ghc-options:      -Wall 
 
 library 
   hs-source-dirs:      src
@@ -68,8 +68,8 @@ library
                        Web.Stripe.Subscriptions
                        Web.Stripe.Token
                        Web.Stripe.Transfers
-  ghc-options:        -Wall -threaded
+  ghc-options:        -Wall
 
 source-repository head
   type:     git
-  location: git://github.com/dmjio/stripe-simple.git
+  location: git://github.com/dmjio/stripe-haskell.git
