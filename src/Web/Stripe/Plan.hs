@@ -29,6 +29,7 @@ createPlanBase
     -> Maybe IntervalCount   -- ^ Number of intervals between each `Subscription` billing, default 1
     -> Maybe TrialPeriodDays -- ^ Integer number of days a trial will have
     -> Maybe Description     -- ^ An arbitrary string to be displayed on `Customer` credit card statements
+    -> MetaData              -- ^ MetaData for the Plan
     -> Stripe Plan
 createPlanBase
     (PlanId planId)
@@ -38,10 +39,11 @@ createPlanBase
     name
     intervalCount
     trialPeriodDays
-    description = callAPI request
+    description 
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "plans"
-        params = getParams [
+        params  = toMetaData metadata ++ getParams [
                      ("id", Just planId) 
                    , ("amount", toText `fmap` Just amount) 
                    , ("currency", Just currency)
@@ -60,6 +62,7 @@ createPlan
     -> Currency      -- ^ `Currency` of `Plan`
     -> Interval      -- ^ Billing Frequency 
     -> Name          -- ^ Name of `Plan` to be displayed on `Invoice`s
+    -> MetaData      -- ^ MetaData for the Plan
     -> Stripe Plan
 createPlan 
     planId
@@ -86,7 +89,7 @@ createPlanIntervalCount
     name
     intervalCount = createPlanBase planId amount 
                     currency interval name
-                    (Just intervalCount) Nothing Nothing 
+                    (Just intervalCount) Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Create a `Plan` with a specified number of `TrialPeriodDays`
@@ -114,6 +117,7 @@ createPlanTrialPeriodDays
           Nothing
           (Just trialPeriodDays) 
           Nothing 
+          []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Plan`
@@ -151,14 +155,16 @@ updatePlanBase
     :: PlanId            -- ^ The ID of the `Plan` to update
     -> Maybe Name        -- ^ The `Name` of the `Plan` to update
     -> Maybe Description -- ^ The `Description` of the `Plan` to update
+    -> MetaData          -- ^ The `MetaData` for the `Plan`
     -> Stripe Plan
 updatePlanBase
     (PlanId planId)
     name
-    description = callAPI request 
+    description 
+    metadata    = callAPI request 
   where request = StripeRequest POST url params
         url     = "plans" </> planId
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                       ("name", name)
                     , ("statement_description", description)
                   ]

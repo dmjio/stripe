@@ -4,6 +4,7 @@ module Web.Stripe.Coupon
       createCoupon
     , getCoupon
     , getCoupons
+    , updateCoupon
     , deleteCoupon
       -- * Types
     , Duration
@@ -20,12 +21,12 @@ module Web.Stripe.Coupon
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
-                                             StripeRequest (..), callAPI,
+                                             StripeRequest (..), callAPI, toMetaData,
                                              getParams, toText, (</>))
 import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
                                              CouponId (..), Currency (..),
                                              Duration, DurationInMonths (..),
-                                             EndingBefore, Limit,
+                                             EndingBefore, Limit, MetaData,
                                              MaxRedemptions (..),
                                              PercentOff (..), RedeemBy (..),
                                              StartingAfter,
@@ -43,6 +44,7 @@ createCoupon
   -> Maybe MaxRedemptions
   -> Maybe PercentOff
   -> Maybe RedeemBy
+  -> MetaData
   -> Stripe Coupon
 createCoupon
     couponId
@@ -52,10 +54,11 @@ createCoupon
     durationInMonths
     maxRedemptions
     percentOff
-    redeemBy = callAPI request
+    redeemBy
+    metadata   = callAPI request
   where request = StripeRequest POST url params
         url     = "coupons"
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                     ("id", (\(CouponId x) -> x) `fmap` couponId )
                   , ("duration", toText `fmap` Just duration )
                   , ("amount_off", (\(AmountOff x) -> toText x) `fmap` amountOff )
@@ -97,6 +100,16 @@ getCoupons
           , ("ending_before", (\(CouponId x) -> x) `fmap` endingBefore)
           ]
 
+------------------------------------------------------------------------------
+-- | Update a 'Coupon'
+updateCoupon
+    :: MetaData -- ^ The `MetaData` for the `Coupon`
+    -> Stripe (StripeList Coupon)
+updateCoupon
+     metadata   = callAPI request
+  where request = StripeRequest POST url params
+        url     = "coupons"
+        params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
 -- | Delete a 'Coupon" by 'CouponId'

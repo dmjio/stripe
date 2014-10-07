@@ -33,15 +33,17 @@ module Web.Stripe.Charge
 
 import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, toText, (</>))
+                                             getParams, toMetaData, toText,
+                                             (</>))
+
 import           Web.Stripe.Types           (Amount, CVC (..), Capture,
                                              CardNumber (..), Charge (..),
                                              ChargeId (..), Currency (..),
                                              CustomerId (..), Description (..),
-                                             ExpMonth (..), ExpYear (..),
-                                             ReceiptEmail (..),
-                                             StatementDescription, Limit,
-                                             StartingAfter, EndingBefore,
+                                             EndingBefore, ExpMonth (..),
+                                             ExpYear (..), Limit, MetaData,
+                                             ReceiptEmail (..), StartingAfter,
+                                             StatementDescription,
                                              StripeList (..), TokenId (..))
 
 ------------------------------------------------------------------------------
@@ -55,7 +57,7 @@ chargeCustomer
 chargeCustomer customerId currency amount description =
     createCharge amount currency description (Just customerId)
     Nothing Nothing Nothing False
-    Nothing Nothing Nothing Nothing
+    Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Charge a card by a 'Token'
@@ -67,7 +69,7 @@ chargeCardByToken
     -> Stripe Charge
 chargeCardByToken tokenId currency amount description =
     createCharge amount currency description Nothing (Just tokenId)
-    Nothing Nothing True Nothing Nothing Nothing Nothing
+    Nothing Nothing True Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Charge a card by 'CardNumber'
@@ -84,7 +86,7 @@ chargeCard cardNumber expMonth expYear cvc currency amount description =
     createCharge amount currency description
     Nothing Nothing Nothing Nothing True
     (Just cardNumber) (Just expMonth)
-    (Just expYear) (Just cvc)
+    (Just expYear) (Just cvc) []
 
 ------------------------------------------------------------------------------
 -- | Base method for creating a 'Charge'
@@ -101,6 +103,7 @@ createCharge
     -> Maybe ExpMonth
     -> Maybe ExpYear
     -> Maybe CVC
+    -> MetaData
     -> Stripe Charge
 createCharge
     amount
@@ -114,10 +117,11 @@ createCharge
     cardNumber
     expMonth
     expYear
-    cvc = callAPI request
+    cvc
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "charges"
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                      ("amount", toText `fmap` Just amount)
                    , ("customer", (\(CustomerId cid) -> cid) `fmap` customerId)
                    , ("currency", Just currency)
@@ -147,7 +151,7 @@ getCharges
     -> StartingAfter ChargeId   -- ^ Paginate starting after the following CustomerID
     -> EndingBefore ChargeId    -- ^ Paginate ending before the following CustomerID
     -> Stripe (StripeList Charge)
-getCharges 
+getCharges
     limit
     startingAfter
     endingBefore = callAPI request
@@ -184,15 +188,17 @@ getCustomerCharges
 ------------------------------------------------------------------------------
 -- | A 'Charge' to be updated
 updateCharge
-    :: ChargeId    -- ^ The Charge to update
-    -> Description -- ^ The Charge Description to update
+    :: ChargeId    -- ^ The `Charge` to update
+    -> Description -- ^ The `Charge` Description to update
+    -> MetaData    -- ^ The `Charge` Description to update
     -> Stripe Charge
 updateCharge
     (ChargeId chargeId)
-    description = callAPI request
+    description
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                    ("description", Just description)
                   ]
 

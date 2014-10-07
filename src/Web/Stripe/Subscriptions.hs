@@ -14,24 +14,26 @@ module Web.Stripe.Subscriptions
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
-                                             StripeRequest (..), callAPI, toText,
+                                             StripeRequest (..), callAPI, toText, toMetaData,
                                              getParams, (</>))
 import           Web.Stripe.Types           (CustomerId (..), PlanId (..),
                                              Subscription (..), Limit, StartingAfter, EndingBefore,
-                                             SubscriptionId (..))
+                                             SubscriptionId (..), MetaData)
 
 ------------------------------------------------------------------------------
 -- | Create a `Subscription` by `CustomerId` and `PlanId`
 createSubscription
     :: CustomerId
     -> PlanId
+    -> MetaData
     -> Stripe Subscription
 createSubscription
     (CustomerId customerId)
-    (PlanId planId) = callAPI request
+    (PlanId planId) 
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> customerId </> "subscriptions"
-        params  = getParams [ ("plan", Just planId)  ]
+        params  = toMetaData metadata ++ getParams [ ("plan", Just planId)  ]
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId`
@@ -73,13 +75,15 @@ getSubscriptions
 updateSubscription
     :: CustomerId
     -> SubscriptionId
+    -> MetaData
     -> Stripe Subscription
 updateSubscription
     (CustomerId customerId)
-    (SubscriptionId subscriptionId) = callAPI request
+    (SubscriptionId subscriptionId)
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
-        params  = []
+        params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
 -- | Delete a `Subscription` by `CustomerId` and `SubscriptionId`

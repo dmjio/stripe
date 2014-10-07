@@ -47,27 +47,28 @@ import           Web.Stripe.Types           (AccountNumber (..),
                                              LastName (..), Limit,
                                              MiddleInitial, Recipient (..),
                                              RecipientId (..),
-                                             RecipientType (..),
+                                             RecipientType (..), 
                                              RoutingNumber (..), EndingBefore, StartingAfter,
                                              StripeList (..), TaxID, TokenId,
-                                             TokenId (..))
+                                             TokenId (..), MetaData)
 
 ------------------------------------------------------------------------------
--- | Base Request for issues create 'Recipient' requests
+-- | Base Request for issues create `Recipient` requests
 createRecipientBase
-    :: FirstName           -- ^ First Name of 'Recipient'
-    -> LastName            -- ^ Last Name of 'Recipient'
-    -> Maybe MiddleInitial -- ^ Middle Initial of 'Recipient'
-    -> RecipientType       -- ^ 'Individual' or 'Corporation'
-    -> Maybe TaxID         -- ^ SSN for 'Individual', EIN for 'Corporation'
-    -> Maybe BankAccount   -- ^ 'BankAccount' to attach to 'Recipient'
-    -> Maybe TokenId       -- ^ 'TokenId' of 'Card' to attach to a 'Recipient'
-    -> Maybe CardNumber    -- ^ 'CardNumber' to attach to 'Card' of 'Recipient'
-    -> Maybe ExpMonth      -- ^ Expiration Month of 'Card'
-    -> Maybe ExpYear       -- ^ Expiration Year of 'Card'
+    :: FirstName           -- ^ First Name of `Recipient`
+    -> LastName            -- ^ Last Name of `Recipient`
+    -> Maybe MiddleInitial -- ^ Middle Initial of `Recipient`
+    -> RecipientType       -- ^ `Individual` or `Corporation`
+    -> Maybe TaxID         -- ^ SSN for `Individual`, EIN for `Corporation`
+    -> Maybe BankAccount   -- ^ `BankAccount` to attach to `Recipient`
+    -> Maybe TokenId       -- ^ `TokenId` of `Card` to attach to a `Recipient`
+    -> Maybe CardNumber    -- ^ `CardNumber` to attach to `Card` of `Recipient`
+    -> Maybe ExpMonth      -- ^ Expiration Month of `Card`
+    -> Maybe ExpYear       -- ^ Expiration Year of `Card`
     -> Maybe CVC           -- ^ CVC of Card
-    -> Maybe Email         -- ^ Create 'Email' with 'Recipient'
-    -> Maybe Description   -- ^ Create 'Description' with 'Recipient'
+    -> Maybe Email         -- ^ Create `Email` with `Recipient`
+    -> Maybe Description   -- ^ Create `Description` with `Recipient`
+    -> MetaData            -- ^ The `MetaData` associated with the `Recipient`
     -> Stripe Recipient
 createRecipientBase
     (FirstName firstName)
@@ -83,13 +84,13 @@ createRecipientBase
     cvc
     email
     description
-        = callAPI request
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "recipients"
         params  =
             let name   = firstName <> middle <> lastName
                 middle = maybe " " (\x -> " " <> T.singleton x <> " ") middleInitial
-            in getParams [
+            in toMetaData metadata ++ getParams [
                     ("name", Just name)
                   , ("type", toText `fmap` Just recipientType)
                   , ("tax_id", taxId)
@@ -119,7 +120,7 @@ createRecipient
     recipientType
     = createRecipientBase firstName lastName middleInitial recipientType
       Nothing Nothing Nothing Nothing Nothing
-      Nothing Nothing Nothing Nothing
+      Nothing Nothing Nothing Nothing []
 ------------------------------------------------------------------------------
 -- | Create a 'Recipient' with an attached 'Card'
 createRecipientByCard
@@ -143,7 +144,7 @@ createRecipientByCard
     cvc
     = createRecipientBase firstName lastName middleInitial recipientType
       Nothing Nothing Nothing (Just cardNumber) (Just expMonth)
-      (Just expYear) (Just cvc) Nothing Nothing
+      (Just expYear) (Just cvc) Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Create a 'Recipient' by specifying a 'TokenId'
@@ -162,7 +163,7 @@ createRecipientByToken
     tokenId
     = createRecipientBase firstName lastName middleInitial recipientType
       Nothing Nothing (Just tokenId) Nothing Nothing
-      Nothing Nothing Nothing Nothing
+      Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Create a 'Recipient' with a 'BankAccount'
@@ -180,7 +181,7 @@ createRecipientByBank
     recipientType
     bankAccount
     = createRecipientBase firstName lastName middleInitial recipientType
-      Nothing (Just bankAccount) Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+      Nothing (Just bankAccount) Nothing Nothing Nothing Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a 'Recipient'
@@ -229,6 +230,7 @@ updateRecipientBase
     -> Maybe CardId        -- ^ The Default 'Card' for this 'Recipient' to use
     -> Maybe Email         -- ^ Create 'Email' with 'Recipient'
     -> Maybe Description   -- ^ Create 'Description' with 'Recipient'
+    -> MetaData            -- ^ The `MetaData` associated with the `Recipient`
     -> Stripe Recipient
 updateRecipientBase
     (RecipientId recipientId)
@@ -245,7 +247,7 @@ updateRecipientBase
     cardId
     email
     description
-        = callAPI request
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "recipients" </> recipientId
         params  =
@@ -287,7 +289,7 @@ updateRecipientName
                      recipientId (Just firstName) (Just lastName) (Just middleInitial)
                      Nothing Nothing Nothing Nothing
                      Nothing Nothing Nothing Nothing
-                     Nothing Nothing
+                     Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'BankAccount'
@@ -308,7 +310,7 @@ updateRecipientBankAccount
          recipientId Nothing Nothing Nothing
          Nothing (Just bankAccount)Nothing Nothing
          Nothing Nothing Nothing Nothing
-         Nothing Nothing
+         Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'TaxID'
@@ -325,7 +327,7 @@ updateRecipientTaxID
               recipientId Nothing Nothing Nothing
               (Just taxID) Nothing Nothing Nothing
               Nothing Nothing Nothing Nothing
-              Nothing Nothing
+              Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Card' by 'TokenId'
@@ -342,7 +344,7 @@ updateRecipientTokenID
               recipientId Nothing Nothing Nothing
               Nothing Nothing (Just tokenId) Nothing
               Nothing Nothing Nothing Nothing
-              Nothing Nothing
+              Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Card'
@@ -370,7 +372,7 @@ updateRecipientCard
               recipientId Nothing Nothing Nothing
               Nothing Nothing Nothing (Just cardNumber)
               (Just expMonth) (Just expYear) (Just cvc)
-              Nothing Nothing Nothing
+              Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update default 'Card' of 'Recipient'
@@ -387,7 +389,7 @@ updateRecipientDefaultCard
               recipientId Nothing Nothing Nothing Nothing
                           Nothing Nothing Nothing Nothing
                           Nothing Nothing (Just cardId) Nothing
-                          Nothing
+                          Nothing []
 
 
 ------------------------------------------------------------------------------
@@ -405,7 +407,7 @@ updateRecipientEmail
               recipientId Nothing Nothing Nothing Nothing
                           Nothing Nothing Nothing Nothing
                           Nothing Nothing Nothing (Just email)
-                          Nothing
+                          Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Description'
@@ -422,7 +424,24 @@ updateRecipientDescription
                    recipientId Nothing Nothing Nothing Nothing
                                Nothing Nothing Nothing Nothing
                                Nothing Nothing Nothing Nothing
-                              (Just description)
+                              (Just description) []
+
+------------------------------------------------------------------------------
+-- | Update a `Recipient` `MetaData`
+--
+-- > runStripe config $ updateRecipientMetaData (RecipientId "rp_4lpjaLFB5ecSks") [("key", "value")]
+--
+updateRecipientMetaData
+    :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
+    -> MetaData      -- ^ The `MetaData` associated with the `Recipient`
+    -> Stripe Recipient
+updateRecipientMetaData
+    recipientid
+    metadata = updateRecipientBase
+               recipientid Nothing Nothing Nothing Nothing
+               Nothing Nothing Nothing Nothing
+               Nothing Nothing Nothing Nothing
+               Nothing metadata
 
 ------------------------------------------------------------------------------
 -- | Delete a 'Recipient'

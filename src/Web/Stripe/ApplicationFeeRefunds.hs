@@ -4,6 +4,7 @@ module Web.Stripe.ApplicationFeeRefunds
       createApplicationFeeRefund
     , getApplicationFeeRefund
     , getApplicationFeeRefunds
+    , updateApplicationFeeRefund
       -- * Types
     , FeeId                  (..)
     , RefundId               (..)
@@ -14,10 +15,10 @@ module Web.Stripe.ApplicationFeeRefunds
     ) where
 
 import           Web.Stripe.Client.Internal (Method (POST, GET), Stripe,
-                                             StripeRequest (..), callAPI,
+                                             StripeRequest (..), callAPI,toMetaData, 
                                              getParams, toText, (</>))
 import           Web.Stripe.Types           (Amount, ApplicationFee (..),
-                                             ApplicationFeeRefund (..),
+                                             ApplicationFeeRefund (..),  MetaData,
                                              EndingBefore, FeeId (..), Limit,
                                              RefundId (..), StartingAfter,
                                              StripeList (..))
@@ -27,13 +28,15 @@ import           Web.Stripe.Types           (Amount, ApplicationFee (..),
 createApplicationFeeRefund
     :: FeeId        -- ^ The FeeID associated with the application
     -> Maybe Amount -- ^ The Amount associated with the Fee (optional)
+    -> MetaData     -- ^ The MetaData associated with the Fee (optional)
     -> Stripe ApplicationFeeRefund
 createApplicationFeeRefund
     (FeeId feeid)
-    amount      = callAPI request
+    amount
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "application_fees" </> feeid </> "refunds"
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                    ("amount", fmap toText amount)
                   ]
 
@@ -70,4 +73,20 @@ getApplicationFeeRefunds (FeeId feeid)
       , ("starting_after", (\(FeeId x) -> x) `fmap` startingAfter)
       , ("ending_before", (\(FeeId x) -> x) `fmap` endingBefore)
       ]
+
+------------------------------------------------------------------------------
+-- | Update an `ApplicationFeeRefund` for a given Application `FeeId` and `RefundId`
+updateApplicationFeeRefund
+    :: RefundId -- ^ The `RefundId` associated with the application
+    -> FeeId    -- ^ The `FeeID` associated with the application
+    -> MetaData -- ^ The `MetaData` associated with the Fee (optional)
+    -> Stripe (StripeList ApplicationFeeRefund)
+updateApplicationFeeRefund
+    (RefundId refundid)
+    (FeeId feeid)
+    metadata = callAPI request
+  where
+    request = StripeRequest GET url params
+    url     = "application_fees" </> feeid </> "refunds"
+    params  = toMetaData metadata
 

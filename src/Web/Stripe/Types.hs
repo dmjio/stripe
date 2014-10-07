@@ -5,17 +5,16 @@ module Web.Stripe.Types where
 import           Control.Applicative
 import           Control.Monad
 import           Data.Aeson
+import           Data.ByteString            (ByteString)
+import qualified Data.ByteString            as B
 import           Data.Text                  (Text)
 import           Data.Time                  (UTCTime)
-import           Data.Vector
 import           Web.Stripe.Client.Internal
 
 newtype ChargeId = ChargeId Text deriving (Show, Eq)
 
 type StartingAfter a = Maybe a
 type EndingBefore a = Maybe a
-
-
 
 type Key   = Text
 type ID    = Text
@@ -27,6 +26,8 @@ type MiddleInitial = Char
 type Description   = Text
 type AccountBalance = Int
 type TrialPeriod = UTCTime
+
+type MetaData = [ (Text,Text) ]
 
 data StripeDeleteResult = StripeDeleteResult {
       deleted   :: Bool
@@ -53,7 +54,7 @@ data Charge = Charge {
     , chargeCreditCard           :: Card
     , chargeCaptured             :: Bool
     , chargeRefunds              :: StripeList Refund
-    , chargeBalanceTransaction   :: TransactionId
+    , chargeBalanceTransaction   :: Maybe TransactionId
     , chargeFailureMessage       :: Maybe Text
     , chargeFailureCode          :: Maybe Text
     , chargeAmountRefunded       :: Int
@@ -61,8 +62,10 @@ data Charge = Charge {
     , chargeInvoice              :: Maybe InvoiceId
     , chargeDescription          :: Maybe Text
     , chargeDispute              :: Maybe Text
+    , chargeMetaData             :: Object
     , chargeStatementDescription :: Maybe Text
     , chargeReceiptEmail         :: Maybe Text
+    , chargeReceiptNumber        :: Maybe Text
     } deriving Show
 
 instance FromJSON Charge where
@@ -78,7 +81,7 @@ instance FromJSON Charge where
                <*> o .: "card"
                <*> o .: "captured"
                <*> o .: "refunds"
-               <*> (TransactionId <$> o .: "balance_transaction")
+               <*> (fmap TransactionId <$> o .:? "balance_transaction")
                <*> o .:? "failure_message"
                <*> o .:? "failure_code"
                <*> o .: "amount_refunded"
@@ -86,8 +89,10 @@ instance FromJSON Charge where
                <*> (fmap InvoiceId <$> o .:? "invoice")
                <*> o .:? "description"
                <*> o .:? "dispute"
+               <*> o .: "metadata"
                <*> o .:? "statement_description"
                <*> o .:? "receipt_email"
+               <*> o .:? "receipt_number"
     parseJSON _ = mzero
 
 
@@ -125,6 +130,7 @@ data Refund = Refund {
     , refundObject             :: Text
     , refundCharge             :: ChargeId
     , refundBalanceTransaction :: TransactionId
+    , refundMetaData           :: Object
     } deriving Show
 
 instance FromJSON Refund where
@@ -136,13 +142,14 @@ instance FromJSON Refund where
                <*> o .: "object"
                <*> (ChargeId <$> o .: "charge")
                <*> (TransactionId <$> o .: "balance_transaction")
+               <*> o .: "metadata"
    parseJSON _ = mzero
 
 newtype RefundId = RefundId Text deriving (Show)
 
 -- Customer --
 -- newtype CustomerId = CustomerId Text deriving (Show,Eq)
-data CustomerId = CustomerId Text | ExpandedCustomer Customer 
+data CustomerId = CustomerId Text | ExpandedCustomer Customer
                 deriving (Show, Eq)
 
 instance FromJSON CustomerId where
@@ -164,6 +171,7 @@ data Customer = Customer {
     , customerCards          :: StripeList Card
     , customerCurrency       :: Maybe Currency
     , customerDefaultCard    :: Maybe CardId
+    , customerMetaData       :: Object
     } | DeletedCustomer {
       deletedCustomer   :: Bool
     , deletedCustomerId :: CustomerId
@@ -185,6 +193,7 @@ instance FromJSON Customer where
            <*> o .: "cards"
            <*> (fmap Currency <$> o .:? "currency")
            <*> (fmap CardId <$> o .:? "default_card")
+           <*> o .: "metadata"
            <|> DeletedCustomer
            <$> o .: "deleted"
            <*> (CustomerId <$> o .: "id")
@@ -385,6 +394,7 @@ data Invoice = Invoice {
     , invoiceSubscription         :: Maybe SubscriptionId
     , invoiceStatementDescription :: Maybe Text
     , invoiceDescription          :: Maybe Text
+    , invoiceMetaData             :: Object
 } deriving (Show, Eq)
 
 instance FromJSON Invoice where
@@ -416,6 +426,7 @@ instance FromJSON Invoice where
                <*> (fmap SubscriptionId <$> o .: "subscription")
                <*> o .:? "statement_description"
                <*> o .:? "description"
+               <*> o .: "metadata"
    parseJSON _ = mzero
 
 --- Subscriptions ---
@@ -504,6 +515,7 @@ data InvoiceItem = InvoiceItem {
     , invoiceItemDescription  :: Text
     , invoiceItemInvoice      :: Maybe Invoice
     , invoiceItemSubscription :: Maybe Subscription
+    , invoiceItemMetaData     :: Object
     } deriving Show
 
 instance FromJSON InvoiceItem where
@@ -519,6 +531,7 @@ instance FromJSON InvoiceItem where
                    <*> o .: "description"
                    <*> o .:? "invoice"
                    <*> o .:? "subscription"
+                   <*> o .: "metadata"
    parseJSON _ = mzero
 
 ---- == Invoice Item == ------
@@ -534,6 +547,7 @@ data InvoiceLineItem = InvoiceLineItem {
     , invoiceLineItemQuantity    :: Maybe Int
     , invoiceLineItemPlan        :: Maybe Plan
     , invoiceLineItemDescription :: Maybe Text
+    , invoiceLineItemMetaData    :: Object
   } deriving (Show, Eq)
 
 newtype Quantity = Quantity Int deriving (Show, Eq)
@@ -562,12 +576,13 @@ instance FromJSON InvoiceLineItem where
                        <*> o .:? "quantity"
                        <*> o .:? "plan"
                        <*> o .:? "description"
+                       <*> o .: "metadata"
    parseJSON _ = mzero
 
-data InvoiceId = InvoiceId Text 
-               | ExpandedInvoice Invoice 
+data InvoiceId = InvoiceId Text
+               | ExpandedInvoice Invoice
                  deriving (Show, Eq)
-    
+
 instance FromJSON InvoiceId where
    parseJSON (String x)   = pure $ InvoiceId x
    parseJSON o@(Object _) = ExpandedInvoice <$> parseJSON o
@@ -575,7 +590,7 @@ instance FromJSON InvoiceId where
 
 
 -- Invoice Item --
-data InvoiceItemId 
+data InvoiceItemId
     = InvoiceItemId Text
     | ExpandedInvoiceItem Invoice
       deriving (Eq, Show)
@@ -625,6 +640,7 @@ data Coupon = Coupon {
     , couponTimesRedeemed    :: Maybe Int
     , couponDurationInMonths :: Maybe Int
     , couponValid            :: Bool
+    , couponMetaData         :: Object
     } deriving (Show, Eq)
 
 instance FromJSON Coupon where
@@ -641,6 +657,7 @@ instance FromJSON Coupon where
                <*> o .:? "times_redeemed"
                <*> o .:? "duration_in_months"
                <*> o .: "valid"
+               <*> o .: "metadata"
    parseJSON _ = mzero
 
 newtype CouponId = CouponId Text deriving (Show, Eq)
@@ -683,7 +700,7 @@ data Plan = Plan {
     , planLiveMode        :: Bool
     , planIntervalCount   :: Maybe Int -- optional, max of 1 year intervals allowed, default 1
     , planTrialPeriodDays :: Maybe Int
-    , planMetaData        :: Maybe Object
+    , planMetaData        :: Object
     , planDescription     :: Maybe Text
 } deriving (Show, Eq)
 
@@ -699,7 +716,7 @@ instance FromJSON Plan where
              <*> o .: "livemode"
              <*> o .:? "interval_count"
              <*> o .:? "trial_period_days"
-             <*> o .:? "meta_data"
+             <*> o .: "meta_data"
              <*> o .:? "statement_description"
    parseJSON _ = mzero
 
@@ -753,6 +770,7 @@ data ApplicationFee = ApplicationFee {
     , applicationFeeAccountId          :: AccountId
     , applicationFeeApplicationId      :: ApplicationId
     , applicationFeeChargeId           :: ChargeId
+    , applicationFeeMetaData           :: Object
 } deriving (Show)
 
 newtype ApplicationId = ApplicationId Text deriving (Show)
@@ -772,6 +790,7 @@ instance FromJSON ApplicationFee where
                       <*> (AccountId <$> o .: "account")
                       <*> (ApplicationId <$> o .: "application")
                       <*> (ChargeId <$> o .: "charge")
+                      <*> o .: "metadata"
    parseJSON _ = mzero
 
 
@@ -970,6 +989,7 @@ data Transfer = Transfer {
     , transferFailureCode          :: Maybe Text
     , transferStatementDescription :: Maybe Text
     , transferRecipient            :: Maybe RecipientId
+    , transferMetaData             :: Object
 } deriving (Show)
 
 newtype RoutingNumber = RoutingNumber Text deriving (Show, Eq)
@@ -994,6 +1014,7 @@ instance FromJSON Transfer where
                  <*> o .:? "failure_code"
                  <*> o .:? "statement_description"
                  <*> (fmap RecipientId <$> o .:? "recipient")
+                 <*> o .: "metadata"
     parseJSON _ = mzero
 
 data ApplicationFeeRefund = ApplicationFeeRefund {
@@ -1004,6 +1025,7 @@ data ApplicationFeeRefund = ApplicationFeeRefund {
      , applicationFeeRefundObject             :: Text
      , applicationFeeRefundBalanceTransaction :: Maybe TransactionId
      , applicationFeeRefundFee                :: FeeId
+     , applicationFeeRefundMetaData           :: Object
      } deriving Show
 
 instance FromJSON ApplicationFeeRefund where
@@ -1015,6 +1037,7 @@ instance FromJSON ApplicationFeeRefund where
               <*> o .: "object"
               <*> (fmap TransactionId <$> o .:? "balance_transaction")
               <*> (FeeId <$> o .: "fee")
+              <*> o .: "metadata"
     parseJSON _ = mzero
 
 
@@ -1074,6 +1097,7 @@ data Dispute = Dispute {
     , disputeBalanceTransactions :: [Text]
     , disputeEvidenceDueBy       :: UTCTime
     , disputeEvidence            :: Maybe Text
+    , disputeMetaData            :: Object
     } deriving (Show)
 
 newtype Evidence = Evidence Text deriving (Show, Eq)
@@ -1092,6 +1116,7 @@ instance FromJSON Dispute where
                 <*> o .: "balance_transactions"
                 <*> (fromSeconds <$> o .: "evidence_due_by")
                 <*> o .:? "evidence"
+                <*> o .: "metadata"
     parseJSON _ = mzero
 
 

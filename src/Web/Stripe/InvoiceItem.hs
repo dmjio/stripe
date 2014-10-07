@@ -19,14 +19,14 @@ module Web.Stripe.InvoiceItem
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
-                                             StripeRequest (..), callAPI,
+                                             StripeRequest (..), callAPI, toMetaData,
                                              getParams, toText, (</>))
 import           Web.Stripe.Types           (Amount, Currency (..),
                                              CustomerId (..), Description (..),
                                              InvoiceId (..), InvoiceItem (..),
                                              InvoiceItemId (..), Limit, StartingAfter, EndingBefore,
                                              StripeDeleteResult (..),
-                                             SubscriptionId (..))
+                                             SubscriptionId (..), MetaData)
 
 ------------------------------------------------------------------------------
 -- | Create an invoice for a Customer
@@ -37,6 +37,7 @@ createInvoiceItem
     -> Maybe InvoiceId       -- ^ `InvoiceId` to use for `InvoiceItem`
     -> Maybe SubscriptionId  -- ^ `SubscriptionId` to use for `InvoiceItem`
     -> Maybe Description     -- ^ `Description` to use for `InvoiceItem`
+    -> MetaData              -- ^ `MetaData` to use for `InvoiceItem`
     -> Stripe InvoiceItem
 createInvoiceItem
     (CustomerId customerId)
@@ -45,10 +46,10 @@ createInvoiceItem
     invoiceId
     subscriptionId
     description
-        = callAPI request
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "invoiceitems"
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                     ("customer", Just customerId)
                   , ("amount", toText `fmap` Just amount)
                   , ("currency", Just currency)
@@ -93,12 +94,14 @@ getInvoiceItem
 -- | Update an `InvoiceItem` by `InvoiceItemId`
 updateInvoiceItem
     :: InvoiceItemId  -- ^ `InvoiceItemId` of `InvoiceItem` to update
+    -> MetaData       -- ^ `MetaData` of `InvoiceItem` to update
     -> Stripe InvoiceItem
 updateInvoiceItem
-    (InvoiceItemId itemId) = callAPI request
+    (InvoiceItemId itemId)
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "invoiceitems" </> itemId
-        params  = []
+        params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
 -- | Delete an `InvoiceItem` by `InvoiceItemId`

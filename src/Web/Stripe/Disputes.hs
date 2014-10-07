@@ -13,24 +13,25 @@ module Web.Stripe.Disputes
 
 import           Web.Stripe.Client.Internal (Method (POST), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, (</>))
+                                             getParams, (</>), toMetaData)
 import           Web.Stripe.Types           (ChargeId (..), Dispute (..),
                                              DisputeReason (..),
-                                             DisputeStatus (..), Evidence (..))
+                                             DisputeStatus (..),
+                                             Evidence (..), MetaData)
 
 ------------------------------------------------------------------------------
 -- | `Dispute` to be updated
 updateDispute
     :: ChargeId        -- ^ The ID of the Charge being disputed
     -> Maybe Evidence  -- ^ Text-only evidence of the dispute
+    -> MetaData        -- ^ `MetaData` associated with `Dispute`
     -> Stripe Dispute
 updateDispute
     (ChargeId chargeId)
-    evidence
-    = callAPI request
+    evidence    = callAPI request
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "dispute"
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                    ("evidence", (\(Evidence x) -> x) `fmap` evidence)
                   ]
 ------------------------------------------------------------------------------

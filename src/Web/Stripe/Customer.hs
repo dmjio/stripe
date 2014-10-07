@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-
 module Web.Stripe.Customer
     ( -- * API
       ---- * Create customer
@@ -40,7 +39,7 @@ module Web.Stripe.Customer
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
-                                             StripeRequest (..), callAPI,
+                                             StripeRequest (..), callAPI, toMetaData,
                                              getParams, toText, (</>))
 import           Web.Stripe.Types           (AccountBalance, CVC (..),
                                              CardId (..), CardNumber (..),
@@ -48,7 +47,7 @@ import           Web.Stripe.Types           (AccountBalance, CVC (..),
                                              CustomerId (..), Description,
                                              Email (..), EndingBefore,
                                              ExpMonth (..), ExpYear (..), Limit,
-                                             PlanId (..), Quantity (..),
+                                             PlanId (..), Quantity (..), MetaData,
                                              StartingAfter,
                                              StripeDeleteResult (..),
                                              StripeList (..), TokenId (..),
@@ -69,6 +68,7 @@ createCustomerBase
     -> Maybe PlanId         -- ^ Identifier of plan to subscribe customer to
     -> Maybe Quantity       -- ^ The quantity you'd like to apply to the subscription you're creating
     -> Maybe TrialPeriod    -- ^ TimeStamp representing the trial period the customer will get
+    -> MetaData             -- ^ MetaData associated with the customer being created
     -> Stripe Customer
 createCustomerBase
     accountBalance
@@ -82,9 +82,10 @@ createCustomerBase
     email
     planId
     quantity
-    trialEnd = callAPI request
+    trialEnd
+    metadata    = callAPI request
   where request = StripeRequest POST "customers" params
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                      ("account_balance", toText `fmap` accountBalance)
                    , ("card", (\(TokenId x) -> x) `fmap` cardId)
                    , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
@@ -107,7 +108,7 @@ createCustomerByEmail
 createCustomerByEmail e =
     createCustomerBase Nothing Nothing Nothing Nothing
                        Nothing Nothing Nothing Nothing
-                      (Just e) Nothing Nothing Nothing
+                      (Just e) Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Creates a blank customer
@@ -116,7 +117,7 @@ createEmptyCustomer
 createEmptyCustomer =
     createCustomerBase Nothing Nothing Nothing Nothing
                        Nothing Nothing Nothing Nothing
-                       Nothing Nothing Nothing Nothing
+                       Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Creates a customer by a Token created from stripe.js or the stripe API.
@@ -126,7 +127,7 @@ createCustomerByToken
 createCustomerByToken t =
     createCustomerBase Nothing (Just t) Nothing Nothing
                        Nothing Nothing Nothing Nothing
-                       Nothing Nothing Nothing Nothing
+                       Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Creates a 'Customer' with a 'Card'
@@ -142,7 +143,7 @@ createCustomerByCard
     expYear
     cvc = createCustomerBase Nothing Nothing (Just cardNumber) (Just expMonth)
                              (Just expYear) (Just cvc) Nothing Nothing
-                             Nothing Nothing Nothing Nothing
+                             Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Updates a customer
@@ -158,6 +159,7 @@ updateCustomerBase
     -> Maybe CardId         -- ^ `CardId` to set as default for customer
     -> Maybe Description    -- ^ Arbitrary string to attach to a customer object
     -> Maybe Email          -- ^ Email address of customer
+    -> MetaData             -- ^ MetaData associated with the customer being created
     -> Stripe Customer
 updateCustomerBase
     (CustomerId customerid)
@@ -170,10 +172,11 @@ updateCustomerBase
     couponId
     defaultCardId
     description
-    email       = callAPI request
+    email
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> customerid
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                     ("account_balance", toText `fmap` accountBalance)
                   , ("card", (\(TokenId x) -> x) `fmap` cardId)
                   , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
@@ -198,7 +201,7 @@ updateCustomerAccountBalance
         = updateCustomerBase customerid (Just accountbalance)
             Nothing Nothing Nothing
             Nothing Nothing Nothing
-            Nothing Nothing Nothing
+            Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update Customer Account Balance
@@ -212,7 +215,7 @@ updateCustomerDefaultCard
         = updateCustomerBase customerId Nothing
             Nothing Nothing Nothing
             Nothing Nothing Nothing
-            (Just defaultCard) Nothing Nothing
+            (Just defaultCard) Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Deletes the specified customer

@@ -6,6 +6,7 @@ module Web.Stripe.Client.Util
     , getParams
     , toBytestring
     , (</>)
+    , toMetaData
     ) where
 
 import           Data.ByteString       (ByteString)
@@ -63,3 +64,11 @@ getParams xs = [ (x, T.encodeUtf8 y) | (x, Just y) <- xs ]
 -- | Convert APITVersion to a ByteString
 toBytestring :: Show a => a -> ByteString
 toBytestring = B8.pack . show
+
+------------------------------------------------------------------------------
+-- | To MetaData
+toMetaData :: [(Text, Text)] -> [(ByteString, ByteString)]
+toMetaData = map toKV
+  where
+    toKV (k,v) = ("metadata[" <> T.encodeUtf8 k <> "]",  T.encodeUtf8 v)
+

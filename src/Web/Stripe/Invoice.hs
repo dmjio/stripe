@@ -20,12 +20,14 @@ import           Web.Stripe.Types
 -- | The `Invoice` to be created for a `Customer`
 createInvoice
     :: CustomerId -- ^ `CustomerId` of `Customer` to `Invoice`
+    -> MetaData   -- ^ `MetaData` of `Customer` to `Invoice`
     -> Stripe Invoice
 createInvoice
-    (CustomerId customerId) = callAPI request
+    (CustomerId customerId)
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "invoices"
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                    ("customer", Just customerId)
                   ]
 
@@ -96,12 +98,14 @@ payInvoice
 -- | Update `Invoice` by `InvoiceId`
 updateInvoice
     :: InvoiceId -- ^ The `InvoiceId` of the `Invoice` to update
+    -> MetaData   -- ^ `MetaData` of `Customer` to `Invoice`
     -> Stripe Invoice
 updateInvoice
-    (InvoiceId invoiceId) = callAPI request
+    (InvoiceId invoiceId)
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "invoices" </> invoiceId
-        params  = []
+        params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
 -- | Retrieve an upcoming `Invoice` for a `Customer` by `CustomerId`

@@ -47,8 +47,6 @@ import           Data.Aeson                 (FromJSON)
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
 
--- | <https://stripe.com/docs/api#cards Cards>
-
 ------------------------------------------------------------------------------
 -- | Base request function for `Card` creation, good for making custom create `Card` functions
 createCardBase
@@ -67,6 +65,7 @@ createCardBase
   -> Maybe AddressLine2   -- ^ Address Line 2 associated with `Card`
   -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
   -> Maybe AddressZip     -- ^ Address Zip associated with `Card`
+  -> MetaData             -- ^ MetaData for `Card`
   -> Stripe a
 createCardBase
     requestType
@@ -82,10 +81,11 @@ createCardBase
     addressLine1
     addressLine2
     addressState
-    addressZip  = callAPI request
+    addressZip
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = requestType </> requestId </> "cards"
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                      ("card", (\(TokenId x) -> x) <$> tokenId)
                    , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
                    , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
@@ -112,7 +112,7 @@ createCustomerCardByToken
               Nothing Nothing Nothing
               Nothing Nothing Nothing
               Nothing Nothing Nothing
-              Nothing Nothing
+              Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Create a `Recipient` card using a `Token`
@@ -126,7 +126,7 @@ createRecipientCardByToken
               Nothing Nothing Nothing
               Nothing Nothing Nothing
               Nothing Nothing Nothing
-              Nothing Nothing
+              Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Create a `Customer` card by `CardNumber`
@@ -146,7 +146,7 @@ createCustomerCard
               (Just cardNumber) (Just expMonth) (Just expYear)
               (Just cvc) Nothing Nothing
               Nothing Nothing Nothing
-              Nothing Nothing
+              Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Create a `Recipient` `Card` by `CardNumber`
@@ -166,7 +166,7 @@ createRecipientCard
               (Just cardNumber) (Just expMonth) (Just expYear)
               (Just cvc) Nothing Nothing
               Nothing Nothing Nothing
-              Nothing Nothing
+              Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a `Card`, any fields not specified will remain the same
@@ -182,6 +182,7 @@ updateCardBase
     -> Maybe AddressLine2   -- ^ Address Line 2 associated with `Card`
     -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
     -> Maybe AddressZip     -- ^ Address Zip associated with `Card`
+    -> MetaData             -- ^ MetaData for `Card`
     -> Stripe a
 updateCardBase
     requestType
@@ -193,10 +194,11 @@ updateCardBase
     addressLine1
     addressLine2
     addressState
-    addressZip  = callAPI request
+    addressZip 
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = requestType </> requestId </> "cards" </> cardId
-        params  =  getParams [
+        params  = toMetaData metadata ++ getParams [
                      ("name", name)
                    , ("address_city", (\(AddressCity x) -> x) <$> addressCity)
                    , ("address_country", (\(AddressCountry x) -> x) <$> addressCountry)
@@ -218,9 +220,10 @@ updateCustomerCard
     -> Maybe AddressLine2   -- ^ Address Line 2 associated with `Card`
     -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
     -> Maybe AddressZip     -- ^ Address Zip associated with `Card`
+    -> MetaData             -- ^ MetaData for `Card`
     -> Stripe Card
 updateCustomerCard
-    (CustomerId customerId)  = updateCardBase "customers" customerId
+    (CustomerId customerId)  = updateCardBase "customers" customerId 
 
 ------------------------------------------------------------------------------
 -- | Update a `Recipient` `Card`
@@ -234,9 +237,10 @@ updateRecipientCard
     -> Maybe AddressLine2   -- ^ Address Line 2 associated with `Card`
     -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
     -> Maybe AddressZip     -- ^ Address Zip associated with `Card`
+    -> MetaData             -- ^ MetaData for `Card`
     -> Stripe Card
 updateRecipientCard
-    (RecipientId recipientId)  = updateCardBase "recipients" recipientId
+    (RecipientId recipientId)  = updateCardBase "recipients" recipientId 
 
 ------------------------------------------------------------------------------
 -- | Base Request for retrieving cards from either a `Customer` or `Recipient`

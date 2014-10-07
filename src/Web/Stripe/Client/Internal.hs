@@ -35,7 +35,7 @@ import           Web.Stripe.Client.Error    (StripeError (..),
                                              StripeErrorType (..))
 import           Web.Stripe.Client.Types    (Stripe, StripeConfig (..),
                                              StripeRequest (..), APIVersion(..))
-import           Web.Stripe.Client.Util     (fromSeconds, getParams, toBytestring,
+import           Web.Stripe.Client.Util     (fromSeconds, getParams, toBytestring, toMetaData,
                                              paramsToByteString, toText, (</>))
 
 import qualified Data.ByteString            as S

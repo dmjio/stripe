@@ -18,11 +18,11 @@ module Web.Stripe.Transfers
 
 import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, toText, (</>))
+                                             getParams, toText, (</>), toMetaData)
 import           Web.Stripe.Types           (Amount, Currency, Currency (..),
                                              Limit, RecipientId (..),
                                              StripeList (..), Transfer (..), StartingAfter, EndingBefore,
-                                             TransferId (..))
+                                             TransferId (..), MetaData)
 
 ------------------------------------------------------------------------------
 -- | Create a `Transfer`
@@ -30,14 +30,16 @@ createTransfer
     :: RecipientId
     -> Amount
     -> Currency
+    -> MetaData
     -> Stripe Transfer
 createTransfer
     (RecipientId recipientId)
     amount
-    (Currency currency) = callAPI request
+    (Currency currency)
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "transfers"
-        params  = getParams [
+        params  = toMetaData metadata ++ getParams [
                    ("amount", toText `fmap` Just amount)
                  , ("currency",  Just currency)
                  , ("recipient", Just recipientId)
@@ -76,11 +78,14 @@ getTransfers
 -- | Update a `Transfer`
 updateTransfer
     :: TransferId
+    -> MetaData
     -> Stripe Transfer
-updateTransfer (TransferId transferId) = callAPI request
+updateTransfer
+    (TransferId transferId)
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "transfers" </> transferId
-        params  = []
+        params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
 -- | Cancel a `Transfer`

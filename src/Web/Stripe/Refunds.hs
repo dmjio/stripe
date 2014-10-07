@@ -13,24 +13,24 @@ module Web.Stripe.Refunds
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
-                                             StripeRequest (..), callAPI, toText,
+                                             StripeRequest (..), callAPI, toText, toMetaData,
                                              getParams, (</>))
 import           Web.Stripe.Types           (ChargeId (..), EndingBefore, Limit,
-                                             Refund (..), RefundId (..),
+                                             Refund (..), RefundId (..), MetaData,
                                              StartingAfter, StripeList (..))
-
--- | <http://api.stripe.com/docs/api#refunds Refunds>
 
 ------------------------------------------------------------------------------
 -- | `Refund` a `Charge`
 createRefund
     :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be refunded
+    -> MetaData -- ^ `MetaData` associated with a `Refund`
     -> Stripe Refund
 createRefund
-    (ChargeId chargeId) = callAPI request
+    (ChargeId chargeId)
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "refunds"
-        params  = []
+        params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Refund` by `ChargeId` and `RefundId`
@@ -50,13 +50,15 @@ getRefund
 updateRefund
     :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be updated
     -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
+    -> MetaData -- ^ `MetaData` associated with a `Refund`
     -> Stripe Refund
 updateRefund
    (ChargeId chargeId)
-   (RefundId refId) = callAPI request
+   (RefundId refId) 
+   metadata     = callAPI request
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "refunds" </> refId
-        params  = []
+        params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
 -- | Retrieve a lot of Refunds by `ChargeId`
