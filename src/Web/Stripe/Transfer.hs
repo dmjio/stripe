@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Transfers
+module Web.Stripe.Transfer
     ( -- * API 
       createTransfer
     , getTransfer

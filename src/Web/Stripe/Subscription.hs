@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Subscriptions
+module Web.Stripe.Subscription
     ( -- * Types
       CustomerId     (..)
     , PlanId         (..)

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Refunds
+module Web.Stripe.Refund
     ( -- * API
       createRefund
     , getRefund

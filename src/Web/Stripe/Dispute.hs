@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.Disputes
+module Web.Stripe.Dispute
     ( -- * API
       updateDispute
     , closeDispute
@@ -28,7 +28,8 @@ updateDispute
     -> Stripe Dispute
 updateDispute
     (ChargeId chargeId)
-    evidence    = callAPI request
+    evidence
+    metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "charges" </> chargeId </> "dispute"
         params  = toMetaData metadata ++ getParams [

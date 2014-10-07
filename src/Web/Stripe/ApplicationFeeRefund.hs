@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Web.Stripe.ApplicationFeeRefunds
+module Web.Stripe.ApplicationFeeRefund
     ( -- * API
       createApplicationFeeRefund
     , getApplicationFeeRefund
