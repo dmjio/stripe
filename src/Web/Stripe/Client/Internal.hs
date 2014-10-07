@@ -11,16 +11,16 @@ module Web.Stripe.Client.Internal
     , module Web.Stripe.Client.Util
     ) where
 
-import           Control.Applicative        ((<$>), (<*>))
+
 import           Control.Exception          (SomeException, try)
 import           Control.Monad.IO.Class     (MonadIO (liftIO))
 import           Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import           Data.Aeson                 (FromJSON, Value (Object),
                                              decodeStrict, parseJSON, (.:))
-import           Data.ByteString            (ByteString)
-import           Data.Maybe                 (fromJust, fromMaybe)
+
+
 import           Data.Monoid                (mempty, (<>))
-import           Data.Text                  (Text)
+
 import           Network.Http.Client        (Connection, Method (..),
                                              baselineContextSSL, buildRequest,
                                              closeConnection, concatHandler,
@@ -39,9 +39,9 @@ import           Web.Stripe.Client.Util     (fromSeconds, getParams, toBytestrin
                                              paramsToByteString, toText, (</>))
 
 import qualified Data.ByteString            as S
-import qualified Data.ByteString.Lazy       as BL
-import qualified Data.ByteString.Lazy.Char8 as BL8
-import qualified Data.Text                  as T
+
+
+
 import qualified Data.Text.Encoding         as T
 import qualified System.IO.Streams          as Streams
 

@@ -729,7 +729,6 @@ instance FromJSON Plan where
              <*> o .:? "statement_description"
    parseJSON _ = mzero
 
-
 --- Account ---
 data AccountId
   = AccountId Text
