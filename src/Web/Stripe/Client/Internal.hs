@@ -100,6 +100,7 @@ sendStripeRequest
               \response inputStream ->
                   concatHandler response inputStream >>= \result -> do
                       print result
+                      print (decodeStrict result :: Maybe Value)
                       {- for debugging purposes -}
                       handleStream response result
       closeConnection con

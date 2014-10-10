@@ -235,7 +235,7 @@ getCustomer
 getCustomer (CustomerId cid) = callAPI request
   where request = StripeRequest GET url params
         url     = "customers" </> cid
-        params  = []
+        params  = [ ("expand[]", "default_card") ]
 
 ------------------------------------------------------------------------------
 -- | Retrieve up to 100 customers at a time

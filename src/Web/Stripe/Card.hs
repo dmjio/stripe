@@ -255,7 +255,8 @@ getCardBase
     (CardId cardId) = callAPI request
   where request = StripeRequest GET url params
         url     = requestType </> requestId </> "cards" </> cardId
-        params  = []
+        params  = [ 
+                  ]
 
 ------------------------------------------------------------------------------
 -- | Get card by `CustomerId` and `CardId`
