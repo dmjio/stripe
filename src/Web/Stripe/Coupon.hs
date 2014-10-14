@@ -20,7 +20,7 @@ module Web.Stripe.Coupon
     , StripeDeleteResult (..)
     ) where
 
-import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
+import           Web.Stripe.Client.Internal (Method (POST, DELETE), Stripe,
                                              StripeRequest (..), callAPI, toMetaData,
                                              getParams, toText, (</>))
 import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
@@ -47,7 +47,7 @@ createCoupon
   -> MetaData
   -> Stripe Coupon
 createCoupon
-    couponId
+    couponid
     duration
     amountOff
     currency
@@ -59,7 +59,7 @@ createCoupon
   where request = StripeRequest POST url params
         url     = "coupons"
         params  = toMetaData metadata ++ getParams [
-                    ("id", (\(CouponId x) -> x) `fmap` couponId )
+                    ("id", (\(CouponId x) -> x) `fmap` couponid )
                   , ("duration", toText `fmap` Just duration )
                   , ("amount_off", (\(AmountOff x) -> toText x) `fmap` amountOff )
                   , ("currency", (\(Currency x) -> x) `fmap` currency)
@@ -75,9 +75,9 @@ getCoupon
     :: CouponId
     -> Stripe Coupon
 getCoupon
-    (CouponId couponId) = callAPI request
+    (CouponId couponid) = callAPI request
   where request = StripeRequest POST url params
-        url     = "coupons" </> couponId
+        url     = "coupons" </> couponid
         params  = []
 
 ------------------------------------------------------------------------------
@@ -117,8 +117,8 @@ deleteCoupon
     :: CouponId
     -> Stripe StripeDeleteResult
 deleteCoupon
-    (CouponId couponId) = callAPI request
+    (CouponId couponid) = callAPI request
   where request = StripeRequest DELETE url params
-        url     = "coupons" </> couponId
+        url     = "coupons" </> couponid
         params  = []
 

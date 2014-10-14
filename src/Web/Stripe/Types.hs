@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Types where
 
-import           Control.Applicative
-import           Control.Monad
+import           Control.Applicative        (pure, (<$>), (<*>), (<|>))
+import           Control.Monad              (mzero)
 import           Data.Aeson
 import           Data.Text                  (Text)
 import           Data.Time                  (UTCTime)
-import           Web.Stripe.Client.Internal
+
+import           Web.Stripe.Client.Internal (fromSeconds)
 
 ------------------------------------------------------------------------------
 -- | Common Types
@@ -18,12 +19,14 @@ type Value = Text
 type URL   = Text
 type Name  = Text
 type TaxID  = Text
+type Capture = Bool
 type MiddleInitial = Char
 type Description   = Text
 type AccountBalance = Int
 type TrialPeriod = UTCTime
 type MetaData = [ (Text,Text) ]
-type Capture = Bool
+type ExpandParams = [Text]
+newtype Quantity = Quantity Int deriving (Show, Eq)
 newtype Email = Email Text deriving (Show, Eq)
 newtype StatementDescription = StatementDescription Text deriving (Show, Eq)
 newtype ReceiptEmail = ReceiptEmail Text deriving (Show, Eq)
@@ -58,7 +61,6 @@ instance FromJSON StripeDeleteResult where
 
 ------------------------------------------------------------------------------
 -- | Charge
-
 data ChargeId
   = ChargeId Text
   | ExpandedCharge Charge
@@ -149,7 +151,7 @@ instance FromJSON Refund where
                <*> (fromSeconds <$> o .: "created")
                <*> o .: "object"
                <*> (ChargeId <$> o .: "charge")
-               <*> ((TransactionId <$> o .: "balance_transaction") 
+               <*> ((TransactionId <$> o .: "balance_transaction")
                <|> (ExpandedTransaction <$> o .: "balance_transaction"))
                <*> o .: "metadata"
    parseJSON _ = mzero
@@ -215,6 +217,10 @@ data CardId = CardId Text
             | ExpandedCard Card
             deriving (Eq, Show)
 
+data RecipientCardId = RecipientCardId Text
+            | ExpandedRecipientCard RecipientCard
+            deriving (Eq, Show)
+
 instance FromJSON CardId where
    parseJSON o@(Object _) = ExpandedCard <$> parseJSON o
    parseJSON (String x)   = pure $ CardId x
@@ -274,7 +280,7 @@ data Card = Card {
     } deriving (Show, Eq)
 
 data RecipientCard = RecipientCard {
-      recipientCardId                :: CardId
+      recipientCardId                :: RecipientCardId
     , recipientCardLastFour          :: Text
     , recipientCardBrand             :: Brand
     , recipientCardFunding           :: Text
@@ -323,7 +329,7 @@ instance FromJSON Card where
 instance FromJSON RecipientCard where
     parseJSON (Object o) =
        RecipientCard
-             <$> (CardId <$> o .: "id")
+             <$> (RecipientCardId <$> o .: "id")
              <*> o .: "last4"
              <*> o .: "brand"
              <*> o .: "funding"
@@ -523,11 +529,11 @@ type Amount = Int
 ------------------------------------------------------------------------------
 -- | Discount
 data Discount = Discount {
-      discountCoupon   :: Coupon
-    , discountStart    :: Int
-    , discountEnd      :: Int
-    , discountCustomer :: CustomerId
-    , discountObject   :: Text
+      discountCoupon       :: Coupon
+    , discountStart        :: Int
+    , discountEnd          :: Int
+    , discountCustomer     :: CustomerId
+    , discountObject       :: Text
     , discountSubscription :: Subscription
 } deriving (Show, Eq)
 
@@ -544,9 +550,11 @@ instance FromJSON Discount where
 
 ------------------------------------------------------------------------------
 -- | Invoice
-data InvoiceId = InvoiceId Text
-               | ExpandedInvoice Invoice
-                 deriving (Show, Eq)
+data InvoiceId =
+    InvoiceId Text
+  | ExpandedInvoice Invoice
+  deriving (Show, Eq)
+
 
 instance FromJSON InvoiceId where
    parseJSON (String x)   = pure $ InvoiceId x
@@ -555,7 +563,7 @@ instance FromJSON InvoiceId where
 
 data Invoice = Invoice {
       invoiceDate                 :: UTCTime
-    , invoiceId                   :: Maybe InvoiceId
+    , invoiceId                   :: InvoiceId
     , invoicePeriodStart          :: UTCTime
     , invoicePeriodEnd            :: UTCTime
     , invoiceLineItems            :: StripeList InvoiceLineItem
@@ -587,7 +595,7 @@ data Invoice = Invoice {
 instance FromJSON Invoice where
    parseJSON (Object o) =
        Invoice <$> (fromSeconds <$> o .: "date")
-               <*> (fmap InvoiceId <$> o .:? "id")
+               <*> (InvoiceId <$> o .: "id")
                <*> (fromSeconds <$> o .: "period_start")
                <*> (fromSeconds <$> o .: "period_end")
                <*> o .: "lines"
@@ -656,7 +664,7 @@ instance FromJSON InvoiceItem where
 
 data InvoiceItemId
     = InvoiceItemId Text
-    | ExpandedInvoiceItem Invoice
+    | ExpandedInvoiceItem InvoiceItem
       deriving (Eq, Show)
 
 newtype InvoiceLineItemId =
@@ -1029,6 +1037,10 @@ data Account = Account {
      , accountDefaultCurrency     :: Text
      , accountCountry             :: Text
      , accountObject              :: Text
+     , accountBusinessName        :: Text
+     , accountBusinessURL         :: Text
+     , accountBusinessLogo        :: Text
+     , accountSupportPhone        :: Text
 } deriving (Show, Eq)
 
 instance FromJSON Account where
@@ -1045,6 +1057,10 @@ instance FromJSON Account where
                <*> o .:  "default_currency"
                <*> o .:  "country"
                <*> o .:  "object"
+               <*> o .:  "business_name"
+               <*> o .:  "business_url"
+               <*> o .:  "business_logo"
+               <*> o .:  "support_phone"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1053,12 +1069,16 @@ instance FromJSON Account where
 data Balance = Balance {
       balancePending   :: [BalanceAmount]
     , balanceAvailable :: [BalanceAmount]
+    , balanceLiveMode  :: Bool
+    , balanceObject    :: Text
     } deriving (Show, Eq)
 
 instance FromJSON Balance where
    parseJSON (Object o) =
        Balance <$> o .: "pending"
                <*> o .: "available"
+               <*> o .: "livemode"
+               <*> o .: "object"
    parseJSON _ = mzero
 
 data BalanceAmount = BalanceAmount {
@@ -1109,6 +1129,7 @@ instance FromJSON BalanceTransaction where
 data TransactionId = TransactionId Text
                    | ExpandedTransaction BalanceTransaction
                    deriving (Show, Eq)
+
 
 instance FromJSON TransactionId where
     parseJSON (String x)   = pure (TransactionId x)

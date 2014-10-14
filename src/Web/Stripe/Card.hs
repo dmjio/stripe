@@ -5,11 +5,13 @@ module Web.Stripe.Card
       -- *** Create Customer Card
       createCustomerCard
     , createCustomerCardByToken
-      -- *** Update Customer Card
-    , updateCustomerCard
       -- *** Get Customer Card(s)
     , getCustomerCard
+    , getCustomerCardExpandable
     , getCustomerCards
+    , getCustomerCardsExpandable
+      -- *** Update Customer Card
+    , updateCustomerCard
       -- *** Delete Card
     , deleteCustomerCard
       -- ** Recipients
@@ -18,7 +20,9 @@ module Web.Stripe.Card
     , createRecipientCardByToken
       -- *** Get Recipient Card(s)
     , getRecipientCard
+    , getRecipientCardExpandable
     , getRecipientCards
+    , getRecipientCardsExpandable
       -- *** Updated Recipient Card
     , updateRecipientCard
       -- *** Delete Recipient Card
@@ -46,6 +50,7 @@ import           Control.Applicative        ((<$>))
 import           Data.Aeson                 (FromJSON)
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
+import           Web.Stripe.Types.Util 
 
 ------------------------------------------------------------------------------
 -- | Base request function for `Card` creation, good for making custom create `Card` functions
@@ -70,7 +75,7 @@ createCardBase
 createCardBase
     requestType
     requestId
-    tokenId
+    tokenid
     cardNumber
     expMonth
     expYear
@@ -86,7 +91,7 @@ createCardBase
   where request = StripeRequest POST url params
         url     = requestType </> requestId </> "cards"
         params  = toMetaData metadata ++ getParams [
-                     ("card", (\(TokenId x) -> x) <$> tokenId)
+                     ("card", (\(TokenId x) -> x) <$> tokenid)
                    , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
                    , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
                    , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
@@ -107,8 +112,8 @@ createCustomerCardByToken
     -> TokenId    -- ^ The Token representative of the card
     -> Stripe Card
 createCustomerCardByToken
-    (CustomerId customerId)
-    tokenId = createCardBase "customers" customerId (Just tokenId)
+    customerid
+    tokenid = createCardBase "customers" (getCustomerId customerid) (Just tokenid)
               Nothing Nothing Nothing
               Nothing Nothing Nothing
               Nothing Nothing Nothing
@@ -121,8 +126,8 @@ createRecipientCardByToken
     -> TokenId     -- ^ The Token representative of the card
     -> Stripe RecipientCard
 createRecipientCardByToken
-    (RecipientId recipientId)
-    tokenId = createCardBase "customers" recipientId (Just tokenId)
+    recipientid
+    tokenid = createCardBase "customers" (getRecipientId recipientid) (Just tokenid)
               Nothing Nothing Nothing
               Nothing Nothing Nothing
               Nothing Nothing Nothing
@@ -138,11 +143,11 @@ createCustomerCard
     -> CVC        -- ^ `Card` cvc number
     -> Stripe Card
 createCustomerCard
-    (CustomerId customerId)
+    customerid
     cardNumber
     expMonth
     expYear
-    cvc = createCardBase "customers" customerId Nothing
+    cvc = createCardBase "customers" (getCustomerId customerid) Nothing
               (Just cardNumber) (Just expMonth) (Just expYear)
               (Just cvc) Nothing Nothing
               Nothing Nothing Nothing
@@ -158,11 +163,11 @@ createRecipientCard
     -> CVC         -- ^ `Card` cvc number
     -> Stripe RecipientCard
 createRecipientCard
-    (RecipientId recipientId)
+    recipientid
     cardNumber
     expMonth
     expYear
-    cvc = createCardBase "recipients" recipientId Nothing
+    cvc = createCardBase "recipients" (getRecipientId recipientid) Nothing
               (Just cardNumber) (Just expMonth) (Just expYear)
               (Just cvc) Nothing Nothing
               Nothing Nothing Nothing
@@ -187,7 +192,7 @@ updateCardBase
 updateCardBase
     requestType
     requestId
-    (CardId cardId)
+    cardid
     name
     addressCity
     addressCountry
@@ -197,7 +202,7 @@ updateCardBase
     addressZip 
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = requestType </> requestId </> "cards" </> cardId
+        url     = requestType </> requestId </> "cards" </> getCardId cardid
         params  = toMetaData metadata ++ getParams [
                      ("name", name)
                    , ("address_city", (\(AddressCity x) -> x) <$> addressCity)
@@ -223,7 +228,7 @@ updateCustomerCard
     -> MetaData             -- ^ MetaData for `Card`
     -> Stripe Card
 updateCustomerCard
-    (CustomerId customerId)  = updateCardBase "customers" customerId 
+    customerid  = updateCardBase "customers" (getCustomerId customerid)
 
 ------------------------------------------------------------------------------
 -- | Update a `Recipient` `Card`
@@ -240,23 +245,25 @@ updateRecipientCard
     -> MetaData             -- ^ MetaData for `Card`
     -> Stripe Card
 updateRecipientCard
-    (RecipientId recipientId)  = updateCardBase "recipients" recipientId 
+    recipientid  = updateCardBase "recipients" (getRecipientId recipientid)
 
 ------------------------------------------------------------------------------
 -- | Base Request for retrieving cards from either a `Customer` or `Recipient`
 getCardBase
-    :: URL    -- ^ The type of the request to support (recipient or customer)
-    -> ID     -- ^ `CustomerId` or `RecipientId` of the `Card` to retrieve
-    -> CardId -- ^ `CardId` of the card to retrieve
-    -> Stripe Card
+    :: FromJSON a
+    => URL          -- ^ The type of the request to support (recipient or customer)
+    -> ID           -- ^ `CustomerId` or `RecipientId` of the `Card` to retrieve
+    -> ID           -- ^ `CardId` or `RecipientCardId` of the `Card` or `RecipientCard` to retrieve
+    -> ExpandParams -- ^ `ExpandParams` of the `Card`
+    -> Stripe a
 getCardBase
     requestType
     requestId
-    (CardId cardId) = callAPI request
+    cardid
+    expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = requestType </> requestId </> "cards" </> cardId
-        params  = [ 
-                  ]
+        url     = requestType </> requestId </> "cards" </> cardid
+        params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Get card by `CustomerId` and `CardId`
@@ -265,62 +272,156 @@ getCustomerCard
     -> CardId     -- ^ `CardId` of the card to retrieve
     -> Stripe Card
 getCustomerCard
-    (CustomerId customerId) = getCardBase "customers" customerId
+    customerid cardid = getCustomerCardExpandable customerid cardid []
+
+------------------------------------------------------------------------------
+-- | Get card by `CustomerId` and `CardId` with `ExpandParams`
+getCustomerCardExpandable
+    :: CustomerId   -- ^ `CustomerId` of the `Card` to retrieve
+    -> CardId       -- ^ `CardId` of the card to retrieve
+    -> ExpandParams -- ^ `CardId` of the card to retrieve
+    -> Stripe Card
+getCustomerCardExpandable
+    customerid cardid expandParams =
+      getCardBase "customers" (getCustomerId customerid) (getCardId cardid) expandParams
 
 ------------------------------------------------------------------------------
 -- | Get card by `RecipientId` and `CardId`
 getRecipientCard
-    :: RecipientId -- ^ `RecipientId` of the `Card` to retrieve
-    -> CardId      -- ^ `CardId` of the card to retrieve
-    -> Stripe Card
+    :: RecipientId     -- ^ `RecipientId` of the `Card` to retrieve
+    -> RecipientCardId -- ^ `CardId` of the `Recipient` `Card` to retrieve
+    -> Stripe RecipientCard
 getRecipientCard
-       (RecipientId recipientId) = getCardBase "recipients" recipientId
+  recipientid
+  cardid = getRecipientCardExpandable recipientid cardid []
 
 ------------------------------------------------------------------------------
--- | Base Request for retrieving `Customer` or `Recipient` cards
-getCardsBase
-    :: FromJSON a
-    => URL  -- ^ The type of the request to support (`Recipient` or `Customer`)
-    -> ID   -- ^ `CustomerId` or `RecipientId` of the `Card` to retrieve
-    -> Maybe Limit          -- ^ Defaults to 10 if `Nothing` specified
+-- | Get card by `RecipientId` and `CardId`
+getRecipientCardExpandable
+    :: RecipientId     -- ^ `RecipientId` of the `Card` to retrieve
+    -> RecipientCardId -- ^ `CardId` of the `Recipient` `Card` to retrieve
+    -> ExpandParams    -- ^ `ExpandParams` of the `Recipient` `Card` to retrieve
+    -> Stripe RecipientCard
+getRecipientCardExpandable
+    recipientid
+    cardid
+    expandParams
+      = getCardBase "recipients" (getRecipientId recipientid)
+          (getRecipientCardId cardid) expandParams
+
+------------------------------------------------------------------------------
+-- | Base Request for retrieving `Customer` cards
+getCustomerCardsBase
+    :: CustomerId -- ^ `CustomerId` of the `Card` to retrieve
+    -> Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter CardId -- ^ Paginate starting after the following `CardId`
     -> EndingBefore CardId  -- ^ Paginate ending before the following `CardId`
-    -> Stripe (StripeList a)
-getCardsBase
-    requestType
-    requestId
+    -> ExpandParams  -- ^ Expansion on `Card`
+    -> Stripe (StripeList Card)
+getCustomerCardsBase
+    customerid
     limit
     startingAfter
-    endingBefore = callAPI request
+    endingBefore
+    expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = requestType </> requestId </> "cards"
+        url     = "customer" </> getCustomerId customerid </> "cards"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(CardId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(CardId x) -> x) `fmap` endingBefore)
-          ]
+          ] ++ toExpandable expandParams 
+
+------------------------------------------------------------------------------
+-- | Base Request for retrieving `Customer` or `Recipient` cards
+getRecipientCardsBase
+    :: RecipientId -- ^ `RecipientId` of the `Card` to retrieve
+    -> Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter RecipientCardId -- ^ Paginate starting after the following `CardId`
+    -> EndingBefore RecipientCardId  -- ^ Paginate ending before the following `CardId`
+    -> ExpandParams  -- ^ Expansion on `Card`
+    -> Stripe (StripeList RecipientCard)
+getRecipientCardsBase
+    recipientid
+    limit
+    startingAfter
+    endingBefore
+    expandParams = callAPI request
+  where request = StripeRequest GET url params
+        url     = "recipient" </> getRecipientId recipientid </> "cards"
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(RecipientCardId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(RecipientCardId x) -> x) `fmap` endingBefore)
+          ] ++ toExpandable expandParams 
+
 
 ------------------------------------------------------------------------------
 -- | Retrieve all cards associated with a `Customer`
 getCustomerCards
-    :: CustomerId   -- ^ The `CustomerId` associated with the cards
+    :: CustomerId           -- ^ The `CustomerId` associated with the cards
     -> Maybe Limit          -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter CardId -- ^ Paginate starting after the following `CardId`
     -> EndingBefore CardId  -- ^ Paginate ending before the following `CardId`
     -> Stripe (StripeList Card)
 getCustomerCards
-    (CustomerId customerId) = getCardsBase "customers" customerId
+    customerid
+    limit
+    startingAfter
+    endingBefore
+    = getCustomerCardsExpandable customerid limit startingAfter endingBefore []
+
+------------------------------------------------------------------------------
+-- | Retrieve all cards associated with a `Customer`
+getCustomerCardsExpandable
+    :: CustomerId           -- ^ The `CustomerId` associated with the cards
+    -> Maybe Limit          -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter CardId -- ^ Paginate starting after the following `CardId`
+    -> EndingBefore CardId  -- ^ Paginate ending before the following `CardId`
+    -> ExpandParams         -- ^ Expansion on `Card`
+    -> Stripe (StripeList Card)
+getCustomerCardsExpandable
+    customerid
+    limit
+    startingAfter
+    endingBefore
+    expandParams =
+      getCustomerCardsBase customerid
+        limit startingAfter endingBefore expandParams
 
 ------------------------------------------------------------------------------
 -- | Retrieve all cards associated with a `Recipient`
 getRecipientCards
-    :: RecipientId   -- ^ The `RecipientId` associated with the cards
-    -> Maybe Limit          -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter CardId -- ^ Paginate starting after the following `CardId`
-    -> EndingBefore CardId  -- ^ Paginate ending before the following `CardId`
+    :: RecipientId -- ^ The `RecipientId` associated with the cards
+    -> Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter RecipientCardId -- ^ Paginate starting after the following `CardId`
+    -> EndingBefore RecipientCardId  -- ^ Paginate ending before the following `CardId`
     -> Stripe (StripeList RecipientCard)
 getRecipientCards
-    (RecipientId recipientId) = getCardsBase "recipients" recipientId
+    recipientid
+    limit
+    startingAfter
+    endingBefore =
+      getRecipientCardsExpandable recipientid limit
+        startingAfter endingBefore []
+
+------------------------------------------------------------------------------
+-- | Retrieve all cards associated with a `Recipient`
+getRecipientCardsExpandable
+    :: RecipientId -- ^ The `RecipientId` associated with the cards
+    -> Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter RecipientCardId -- ^ Paginate starting after the following `CardId`
+    -> EndingBefore RecipientCardId -- ^ Paginate ending before the following `CardId`
+    -> ExpandParams -- ^ Expansion on `Card`
+    -> Stripe (StripeList RecipientCard)
+getRecipientCardsExpandable
+    recipientid
+    limit
+    startingAfter
+    endingBefore
+    expandParams =
+      getRecipientCardsBase recipientid
+        limit startingAfter endingBefore expandParams
 
 ------------------------------------------------------------------------------
 -- | Base request for `Card` removal from a `Customer` or `Recipient`
@@ -332,9 +433,9 @@ deleteCardBase
 deleteCardBase
     requestType
     requestId
-    (CardId cardId) = callAPI request
+    cardid = callAPI request
   where request = StripeRequest DELETE url params
-        url     = requestType </> requestId </> "cards" </> cardId
+        url     = requestType </> requestId </> "cards" </> getCardId cardid
         params  = []
 
 ------------------------------------------------------------------------------
@@ -344,7 +445,7 @@ deleteCustomerCard
     -> CardId     -- ^ The `CardId` of the `Card` to be removed
     -> Stripe StripeDeleteResult
 deleteCustomerCard
-    (CustomerId customerId) = deleteCardBase "customers" customerId
+    customerid = deleteCardBase "customers" (getCustomerId customerid)
 
 ------------------------------------------------------------------------------
 -- | Removes a card from a `Customer`
@@ -353,4 +454,4 @@ deleteRecipientCard
     -> CardId      -- ^ The `CardId` of the `Card` to be removed
     -> Stripe StripeDeleteResult
 deleteRecipientCard
-    (RecipientId recipientId) = deleteCardBase "recipients" recipientId
+    recipientid = deleteCardBase "recipients" (getRecipientId recipientid)

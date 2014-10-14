@@ -3,7 +3,9 @@ module Web.Stripe.InvoiceItem
     ( -- * API 
       createInvoiceItem
     , getInvoiceItem
+    , getInvoiceItemExpandable
     , getInvoiceItems
+    , getInvoiceItemsExpandable
     , updateInvoiceItem
     , deleteInvoiceItem
       -- * Types
@@ -12,21 +14,23 @@ module Web.Stripe.InvoiceItem
     , CustomerId         (..)
     , Currency           (..)
     , InvoiceId          (..)
+    , Invoice            (..)
     , SubscriptionId     (..)
-    , Description        (..)
     , StripeDeleteResult (..)
+    , Description      
     , Amount
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
-                                             StripeRequest (..), callAPI, toMetaData,
+                                             StripeRequest (..), callAPI, toMetaData, toExpandable,
                                              getParams, toText, (</>))
 import           Web.Stripe.Types           (Amount, Currency (..),
-                                             CustomerId (..), Description (..),
-                                             InvoiceId (..), InvoiceItem (..),
+                                             CustomerId (..), Description,
+                                             InvoiceId (..), InvoiceItem (..), Invoice(..),
                                              InvoiceItemId (..), Limit, StartingAfter, EndingBefore,
-                                             StripeDeleteResult (..),
+                                             StripeDeleteResult (..), ExpandParams,
                                              SubscriptionId (..), MetaData)
+import           Web.Stripe.Types.Util
 
 ------------------------------------------------------------------------------
 -- | Create an invoice for a Customer
@@ -40,20 +44,20 @@ createInvoiceItem
     -> MetaData              -- ^ `MetaData` to use for `InvoiceItem`
     -> Stripe InvoiceItem
 createInvoiceItem
-    (CustomerId customerId)
+    customerid
     amount
     (Currency currency)
-    invoiceId
+    invoiceid
     subscriptionId
     description
     metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "invoiceitems"
         params  = toMetaData metadata ++ getParams [
-                    ("customer", Just customerId)
+                    ("customer", Just $ getCustomerId customerid)
                   , ("amount", toText `fmap` Just amount)
                   , ("currency", Just currency)
-                  , ("invoice", (\(InvoiceId x) -> x) `fmap` invoiceId)
+                  , ("invoice", (\(InvoiceId x) -> x) `fmap` invoiceid)
                   , ("subscription", (\(SubscriptionId x) -> x) `fmap` subscriptionId)
                   , ("description", description)
                   ]
@@ -67,12 +71,12 @@ getInvoiceItems
     -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `InvoiceItemId`
     -> Stripe InvoiceItem
 getInvoiceItems
-    (InvoiceItemId itemId)
+    invoiceitemid
     limit
     startingAfter
     endingBefore = callAPI request
   where request = StripeRequest GET url params
-        url     = "invoiceitems" </> itemId
+        url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(InvoiceItemId x) -> x) `fmap` startingAfter)
@@ -80,15 +84,49 @@ getInvoiceItems
           ]
 
 ------------------------------------------------------------------------------
+-- | Retrieve an `InvoiceItem` by `InvoiceItemId` with `ExpandParams`
+getInvoiceItemsExpandable
+    :: InvoiceItemId               -- ^ `InvoiceItemId` of `InvoiceItem` to retrieve
+    -> Limit                       -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter InvoiceItemId -- ^ Paginate starting after the following `InvoiceItemId`
+    -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `InvoiceItemId`
+    -> ExpandParams
+    -> Stripe InvoiceItem
+getInvoiceItemsExpandable
+    invoiceitemid
+    limit
+    startingAfter
+    endingBefore
+    expandParams = callAPI request
+  where request = StripeRequest GET url params
+        url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(InvoiceItemId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(InvoiceItemId x) -> x) `fmap` endingBefore)
+          ] ++ toExpandable expandParams
+
+------------------------------------------------------------------------------
 -- | Retrieve an `InvoiceItem` by `InvoiceItemId`
 getInvoiceItem
     :: InvoiceItemId -- ^ `InvoiceItemId` of `InvoiceItem` to retrieve
     -> Stripe InvoiceItem
 getInvoiceItem
-    (InvoiceItemId itemId) = callAPI request
+    invoiceitemid =
+      getInvoiceItemExpandable invoiceitemid []
+
+------------------------------------------------------------------------------
+-- | Retrieve an `InvoiceItem` by `InvoiceItemId`
+getInvoiceItemExpandable
+    :: InvoiceItemId -- ^ `InvoiceItemId` of `InvoiceItem` to retrieve
+    -> ExpandParams
+    -> Stripe InvoiceItem
+getInvoiceItemExpandable
+    invoiceitemid
+    expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = "invoiceitems" </> itemId
-        params  = []
+        url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
+        params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Update an `InvoiceItem` by `InvoiceItemId`
@@ -97,10 +135,10 @@ updateInvoiceItem
     -> MetaData       -- ^ `MetaData` of `InvoiceItem` to update
     -> Stripe InvoiceItem
 updateInvoiceItem
-    (InvoiceItemId itemId)
+    invoiceitemid
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = "invoiceitems" </> itemId
+        url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
@@ -109,8 +147,8 @@ deleteInvoiceItem
     :: InvoiceItemId -- ^ `InvoiceItemdId` of `InvoiceItem` to be deleted
     -> Stripe StripeDeleteResult
 deleteInvoiceItem
-    (InvoiceItemId itemId) = callAPI request
+    invoiceitemid = callAPI request
   where request = StripeRequest DELETE url params
-        url     = "invoiceitems" </> itemId
+        url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = []
 

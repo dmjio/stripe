@@ -4,7 +4,7 @@ module Test.Stripe
     ) where
 
 import           Web.Stripe.Client
-import           Control.Monad.Reader
+import           Control.Monad.Trans.Reader
 
 type StripeTest a = ReaderT StripeConfig IO a
 

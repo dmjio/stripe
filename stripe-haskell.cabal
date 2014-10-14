@@ -17,23 +17,33 @@ description:
 Test-Suite tests
     type:             exitcode-stdio-1.0
     main-is:          tests/Main.hs
-    build-depends:    base, stripe-simple, bytestring, mtl, text, transformers, hspec
+    build-depends:    base
+                    , bytestring
+                    , hspec
+                    , mtl
+                    , mtl >= 2.1.3.1
+                    , stripe-simple
+                    , text
+                    , transformers
     default-language: Haskell2010
     ghc-options:      -Wall 
 
 Benchmark benchmarks
     type:             exitcode-stdio-1.0
     main-is:          benchmarks/Main.hs
-    build-depends:    base, stripe-simple, criterion
+    build-depends:    base
+                    , criterion
+                    , mtl >= 2.1.3.1
+                    , stripe-simple
     default-language: Haskell2010
     ghc-options:      -Wall 
 
 library 
   hs-source-dirs:      src
-  build-depends:       aeson
+  build-depends:       HsOpenSSL
+                     , aeson
                      , base >=4.7 && <4.8
                      , bytestring
-                     , HsOpenSSL
                      , http-streams
                      , io-streams
                      , text
@@ -48,6 +58,7 @@ library
                        Web.Stripe.Client.Types
                        Web.Stripe.Client.Util
                        Web.Stripe.Types
+                       Web.Stripe.Types.Util
   exposed-modules:     Web.Stripe.Client
                        Web.Stripe.Account
                        Web.Stripe.ApplicationFee

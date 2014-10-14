@@ -8,7 +8,7 @@ import Web.Stripe.Client
 import Web.Stripe.Account
 
 import Test.Stripe
-import Control.Monad.Reader (ask)
+import Control.Monad.Trans.Reader (ask)
 import Control.Monad.IO.Class (liftIO)
 
 runAccountTests :: StripeTest ()

@@ -2,6 +2,8 @@
 module Web.Stripe.Plan 
     ( -- * API 
       createPlan
+    , createPlanIntervalCount
+    , createPlanTrialPeriodDays
     , createPlanBase
     , getPlan
     , getPlans
@@ -32,7 +34,7 @@ createPlanBase
     -> MetaData              -- ^ MetaData for the Plan
     -> Stripe Plan
 createPlanBase
-    (PlanId planId)
+    (PlanId planid)
     amount
     (Currency currency)
     interval
@@ -44,7 +46,7 @@ createPlanBase
   where request = StripeRequest POST url params
         url     = "plans"
         params  = toMetaData metadata ++ getParams [
-                     ("id", Just planId) 
+                     ("id", Just planid) 
                    , ("amount", toText `fmap` Just amount) 
                    , ("currency", Just currency)
                    , ("interval", toText `fmap` Just interval) 
@@ -65,11 +67,11 @@ createPlan
     -> MetaData      -- ^ MetaData for the Plan
     -> Stripe Plan
 createPlan 
-    planId
+    planid
     amount
     currency
     intervalCount
-    name = createPlanBase planId amount currency intervalCount name Nothing Nothing Nothing 
+    name = createPlanBase planid amount currency intervalCount name Nothing Nothing Nothing 
 
 ------------------------------------------------------------------------------
 -- | Create a `Plan` with a specified `IntervalCount`
@@ -82,12 +84,12 @@ createPlanIntervalCount
     -> IntervalCount -- ^ # of billins between each `Subscription` billing
     -> Stripe Plan
 createPlanIntervalCount
-    planId
+    planid
     amount
     currency
     interval
     name
-    intervalCount = createPlanBase planId amount 
+    intervalCount = createPlanBase planid amount 
                     currency interval name
                     (Just intervalCount) Nothing Nothing []
 
@@ -102,14 +104,14 @@ createPlanTrialPeriodDays
     -> TrialPeriodDays -- ^ Number of Trial Period Days to be displayed on `Invoice`s
     -> Stripe Plan
 createPlanTrialPeriodDays
-    planId
+    planid
     amount
     currency
     interval
     name
     trialPeriodDays = 
         createPlanBase
-          planId
+          planid
           amount
           currency
           interval
@@ -125,9 +127,9 @@ getPlan
     :: PlanId -- ^ The ID of the plan to retrieve
     -> Stripe Plan
 getPlan
-    (PlanId planId) = callAPI request
+    (PlanId planid) = callAPI request
   where request = StripeRequest GET url params
-        url     = "plans" </> planId
+        url     = "plans" </> planid
         params  = []
 
 ------------------------------------------------------------------------------
@@ -158,12 +160,12 @@ updatePlanBase
     -> MetaData          -- ^ The `MetaData` for the `Plan`
     -> Stripe Plan
 updatePlanBase
-    (PlanId planId)
+    (PlanId planid)
     name
     description 
     metadata    = callAPI request 
   where request = StripeRequest POST url params
-        url     = "plans" </> planId
+        url     = "plans" </> planid
         params  = toMetaData metadata ++ getParams [
                       ("name", name)
                     , ("statement_description", description)
@@ -176,10 +178,10 @@ updatePlanDescription
     -> Description -- ^ The `Description` of the `Plan` to update
     -> Stripe Plan
 updatePlanDescription
-    (PlanId planId)
+    (PlanId planid)
     description = callAPI request 
   where request = StripeRequest POST url params
-        url     = "plans" </> planId
+        url     = "plans" </> planid
         params  = getParams [
                     ("statement_description", Just description)
                   ]
@@ -191,10 +193,10 @@ updatePlanName
     -> Description -- ^ The `Name` of the `Plan` to update
     -> Stripe Plan
 updatePlanName
-    (PlanId planId)
+    (PlanId planid)
     name = callAPI request 
   where request = StripeRequest POST url params
-        url     = "plans" </> planId
+        url     = "plans" </> planid
         params  = getParams [
                     ("name", Just name)
                   ]
@@ -205,7 +207,7 @@ deletePlan
     :: PlanId -- ^ The ID of the `Plan` to delete
     -> Stripe StripeDeleteResult
 deletePlan 
-    (PlanId planId) = callAPI request 
+    (PlanId planid) = callAPI request 
   where request = StripeRequest DELETE url params
-        url     = "plans" </> planId
+        url     = "plans" </> planid
         params  = []

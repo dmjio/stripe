@@ -3,11 +3,14 @@ module Web.Stripe.Invoice
     ( -- * API 
       createInvoice
     , getInvoice
+    , getInvoiceExpandable
+    , getInvoices
+    , getInvoicesExpandable
     , getInvoiceLineItems
     , getUpcomingInvoice
+    , getUpcomingInvoices
     , updateInvoice
     , payInvoice
-    , getInvoices
        -- * Types
     , Invoice   (..)
     , InvoiceId (..)
@@ -15,6 +18,7 @@ module Web.Stripe.Invoice
 
 import           Web.Stripe.Client.Internal
 import           Web.Stripe.Types
+import           Web.Stripe.Types.Util
 
 ------------------------------------------------------------------------------
 -- | The `Invoice` to be created for a `Customer`
@@ -23,12 +27,12 @@ createInvoice
     -> MetaData   -- ^ `MetaData` of `Customer` to `Invoice`
     -> Stripe Invoice
 createInvoice
-    (CustomerId customerId)
+    customerid
     metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "invoices"
         params  = toMetaData metadata ++ getParams [
-                   ("customer", Just customerId)
+                   ("customer", Just $ getCustomerId customerid)
                   ]
 
 ------------------------------------------------------------------------------
@@ -37,32 +41,20 @@ getInvoice
     :: InvoiceId -- ^ Get an `Invoice` by `InvoiceId`
     -> Stripe Invoice
 getInvoice
-    (InvoiceId invoiceId) = callAPI request
-  where request = StripeRequest GET url params
-        url     = "invoices" </> invoiceId
-        params  = []
+    invoiceid = getInvoiceExpandable invoiceid []
 
 ------------------------------------------------------------------------------
--- | Retrieve an `Invoice` by `InvoiceId`
-getInvoiceLineItems
-    :: InvoiceId                       -- ^ Get an `Invoice` by `InvoiceId`
-    -> Limit                           -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter InvoiceLineItemId -- ^ Paginate starting after the following `InvoiceLineItemId`
-    -> EndingBefore InvoiceLineItemId  -- ^ Paginate ending before the following `InvoiceLineItemId`
-    -> Stripe (StripeList InvoiceLineItem)
-getInvoiceLineItems
-    (InvoiceId invoiceId)
-    limit
-    startingAfter
-    endingBefore = callAPI request
+-- | Retrieve an `Invoice` by `InvoiceId` with `ExpandParams`
+getInvoiceExpandable
+    :: InvoiceId    -- ^ Get an `Invoice` by `InvoiceId`
+    -> ExpandParams -- ^ `ExpandParams` 
+    -> Stripe Invoice
+getInvoiceExpandable
+    invoiceid
+    expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = "invoices" </> invoiceId </> "lines"
-        params  = getParams [
-            ("limit", toText `fmap` limit )
-          , ("starting_after", (\(InvoiceLineItemId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(InvoiceLineItemId x) -> x) `fmap` endingBefore)
-          ]
-
+        url     = "invoices" </> getInvoiceId invoiceid
+        params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `StripeList` of `Invoice`s
@@ -74,14 +66,51 @@ getInvoices
 getInvoices
     limit
     startingAfter
-    endingBefore = callAPI request
+    endingBefore =
+      getInvoicesExpandable limit startingAfter endingBefore []
+
+------------------------------------------------------------------------------
+-- | Retrieve a `StripeList` of `Invoice`s with `ExpandParams`
+getInvoicesExpandable
+    :: Maybe Limit                 -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter InvoiceItemId -- ^ Paginate starting after the following `Customer`
+    -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `CustomerID`
+    -> ExpandParams               
+    -> Stripe (StripeList Invoice)
+getInvoicesExpandable
+    limit
+    startingAfter
+    endingBefore
+    expandParams = callAPI request
   where request = StripeRequest GET url params
         url     = "invoices"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(InvoiceItemId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(InvoiceItemId x) -> x) `fmap` endingBefore)
+          ] ++ toExpandable expandParams
+
+------------------------------------------------------------------------------
+-- | Retrieve an `Invoice` by `InvoiceId`
+getInvoiceLineItems
+    :: InvoiceId                       -- ^ Get an `Invoice` by `InvoiceId`
+    -> Limit                           -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter InvoiceLineItemId -- ^ Paginate starting after the following `InvoiceLineItemId`
+    -> EndingBefore InvoiceLineItemId  -- ^ Paginate ending before the following `InvoiceLineItemId`
+    -> Stripe (StripeList InvoiceLineItem)
+getInvoiceLineItems
+    invoiceid
+    limit
+    startingAfter
+    endingBefore = callAPI request
+  where request = StripeRequest GET url params
+        url     = "invoices" </> getInvoiceId invoiceid </> "lines"
+        params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(InvoiceLineItemId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(InvoiceLineItemId x) -> x) `fmap` endingBefore)
           ]
+
 
 ------------------------------------------------------------------------------
 -- | Pay `Invoice` by `InvoiceId`
@@ -89,9 +118,9 @@ payInvoice
     :: InvoiceId -- ^ The `InvoiceId` of the `Invoice` to pay
     -> Stripe Invoice
 payInvoice
-    (InvoiceId invoiceId) = callAPI request
+    invoiceid   = callAPI request
   where request = StripeRequest POST url params
-        url     = "invoices" </> invoiceId </> "pay"
+        url     = "invoices" </> getInvoiceId invoiceid </> "pay"
         params  = []
 
 ------------------------------------------------------------------------------
@@ -101,10 +130,10 @@ updateInvoice
     -> MetaData   -- ^ `MetaData` of `Customer` to `Invoice`
     -> Stripe Invoice
 updateInvoice
-    (InvoiceId invoiceId)
+    invoiceid
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = "invoices" </> invoiceId
+        url     = "invoices" </> getInvoiceId invoiceid
         params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
@@ -113,11 +142,11 @@ getUpcomingInvoice
     :: CustomerId -- ^ The `InvoiceId` of the `Invoice` to retrieve
     -> Stripe Invoice
 getUpcomingInvoice
-    (CustomerId customerId) = callAPI request
+    customerid = callAPI request
   where request = StripeRequest GET url params
         url     = "invoices" </> "upcoming"
         params  = getParams [
-                   ("customer", Just customerId)
+                   ("customer", Just $ getCustomerId customerid)
                   ]
 
 ------------------------------------------------------------------------------
@@ -126,9 +155,9 @@ getUpcomingInvoices
     :: CustomerId -- ^ The `InvoiceId` of the `Invoice` to retrieve
     -> Stripe (StripeList Invoice)
 getUpcomingInvoices
-    (CustomerId customerId) = callAPI request
+    customerid = callAPI request
   where request = StripeRequest GET url params
         url     = "invoices"
         params  = getParams [
-                   ("customer", Just customerId)
+                   ("customer", Just $ getCustomerId customerid)
                   ]

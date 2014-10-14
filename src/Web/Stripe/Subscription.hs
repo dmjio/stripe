@@ -8,17 +8,20 @@ module Web.Stripe.Subscription
       -- * API
     , createSubscription
     , getSubscription
+    , getSubscriptionExpandable
     , getSubscriptions
+    , getSubscriptionsExpandable
     , updateSubscription
     , deleteSubscription
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
                                              StripeRequest (..), callAPI, toText, toMetaData,
-                                             getParams, (</>))
+                                             getParams, (</>), toExpandable)
 import           Web.Stripe.Types           (CustomerId (..), PlanId (..),
                                              Subscription (..), Limit, StartingAfter, EndingBefore,
-                                             SubscriptionId (..), MetaData)
+                                             SubscriptionId (..), MetaData, ExpandParams)
+import           Web.Stripe.Types.Util      
 
 ------------------------------------------------------------------------------
 -- | Create a `Subscription` by `CustomerId` and `PlanId`
@@ -28,12 +31,12 @@ createSubscription
     -> MetaData
     -> Stripe Subscription
 createSubscription
-    (CustomerId customerId)
-    (PlanId planId) 
+    customerid
+    (PlanId planid) 
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = "customers" </> customerId </> "subscriptions"
-        params  = toMetaData metadata ++ getParams [ ("plan", Just planId)  ]
+        url     = "customers" </> getCustomerId customerid </> "subscriptions"
+        params  = toMetaData metadata ++ getParams [ ("plan", Just planid)  ]
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId`
@@ -42,11 +45,25 @@ getSubscription
     -> SubscriptionId
     -> Stripe Subscription
 getSubscription
-    (CustomerId customerId)
-    (SubscriptionId subscriptionId) = callAPI request
+    customerid
+    subscriptionid =
+      getSubscriptionExpandable
+        customerid subscriptionid []
+
+------------------------------------------------------------------------------
+-- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId` with `ExpandParams`
+getSubscriptionExpandable
+    :: CustomerId
+    -> SubscriptionId
+    -> ExpandParams
+    -> Stripe Subscription
+getSubscriptionExpandable
+    customerid
+    (SubscriptionId subscriptionid)
+    expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
-        params  = []
+        url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
+        params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Retrieve active `Subscription`s
@@ -57,18 +74,35 @@ getSubscriptions
     -> EndingBefore SubscriptionId  -- ^ Paginate ending before the following `CustomerId`
     -> Stripe Subscription
 getSubscriptions
-    (CustomerId customerId)
+    customerid
+    limit
+    startingAfter
+    endingBefore =
+      getSubscriptionsExpandable customerid limit
+        startingAfter endingBefore []
+
+------------------------------------------------------------------------------
+-- | Retrieve active `Subscription`s
+getSubscriptionsExpandable
+    :: CustomerId
+    -> Limit                        -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter SubscriptionId -- ^ Paginate starting after the following `CustomerId`
+    -> EndingBefore SubscriptionId  -- ^ Paginate ending before the following `CustomerId`
+    -> ExpandParams
+    -> Stripe Subscription
+getSubscriptionsExpandable
+    customerid
     limit
     startingAfter
     endingBefore
-     = callAPI request
+    expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = "customers" </> customerId </> "subscriptions"
+        url     = "customers" </> getCustomerId customerid </> "subscriptions"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(SubscriptionId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(SubscriptionId x) -> x) `fmap` endingBefore)
-          ]
+          ] ++ toExpandable expandParams 
 
 ------------------------------------------------------------------------------
 -- | Update a `Subscription` by `CustomerId` and `SubscriptionId`
@@ -78,11 +112,11 @@ updateSubscription
     -> MetaData
     -> Stripe Subscription
 updateSubscription
-    (CustomerId customerId)
-    (SubscriptionId subscriptionId)
+    customerid
+    (SubscriptionId subscriptionid)
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
+        url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
         params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
@@ -92,9 +126,9 @@ deleteSubscription
     -> SubscriptionId
     -> Stripe Subscription
 deleteSubscription
-    (CustomerId customerId)
-    (SubscriptionId subscriptionId) = callAPI request
+    customerid
+    (SubscriptionId subscriptionid) = callAPI request
   where request = StripeRequest DELETE url params
-        url     = "customers" </> customerId </> "subscriptions" </> subscriptionId
+        url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
         params  = []
 

@@ -7,6 +7,7 @@ module Web.Stripe.Client.Util
     , toBytestring
     , (</>)
     , toMetaData
+    , toExpandable
     ) where
 
 import           Data.ByteString       (ByteString)
@@ -17,8 +18,8 @@ import           Data.Text             (Text)
 import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as T
 import           Data.Time.Clock       (UTCTime)
-import           Data.Time.Clock.POSIX (posixSecondsToUTCTime,
-                                        utcTimeToPOSIXSeconds)
+import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+
 ------------------------------------------------------------------------------
 -- | Conversion from a `Show` constrained type to `Text`
 toText 
@@ -71,4 +72,11 @@ toMetaData :: [(Text, Text)] -> [(ByteString, ByteString)]
 toMetaData = map toKV
   where
     toKV (k,v) = ("metadata[" <> T.encodeUtf8 k <> "]",  T.encodeUtf8 v)
+
+------------------------------------------------------------------------------
+-- | To Expandable
+toExpandable :: [Text] -> [(ByteString, ByteString)]
+toExpandable = map toKV
+  where
+    toKV v = ("expand[]",  T.encodeUtf8 v)
 

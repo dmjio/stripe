@@ -14,12 +14,13 @@ module Web.Stripe.Token
    , Country       (..)
    , RoutingNumber (..)
    , AccountNumber (..)
+   , Account       (..)
    ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              StripeRequest (..), callAPI,
                                              getParams, toText, (</>))
-import           Web.Stripe.Types           (Account, AccountNumber (..),
+import           Web.Stripe.Types           (Account(..), AccountNumber (..),
                                              CVC (..), CardNumber (..),
                                              Country (..), ExpMonth (..),
                                              ExpYear (..), RoutingNumber (..),

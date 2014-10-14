@@ -14,10 +14,12 @@ module Web.Stripe.Balance
 
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, toText, (</>))
-import           Web.Stripe.Types           (Balance(..), BalanceTransaction,
+                                             getParams, toText, (</>), toExpandable)
+import           Web.Stripe.Types           (Balance (..), BalanceTransaction,
                                              EndingBefore, Limit, StartingAfter,
-                                             StripeList(..), TransactionId (..))
+                                             StripeList (..), ExpandParams,
+                                             TransactionId (..))
+import           Web.Stripe.Types.Util      (getTransactionId)
 
 ------------------------------------------------------------------------------
 -- | Retrieve the current 'Balance' for your Stripe account
@@ -32,11 +34,20 @@ getBalance = callAPI request
 getBalanceTransaction
     :: TransactionId
     -> Stripe BalanceTransaction
-getBalanceTransaction
-    (TransactionId transactionid) = callAPI request
+getBalanceTransaction 
+    transactionid = getBalanceTransactionExpandable transactionid []
+
+------------------------------------------------------------------------------
+-- | Retrieve a 'BalanceTransaction' by 'TransactionId' with `ExpandParams`
+getBalanceTransactionExpandable
+    :: TransactionId
+    -> ExpandParams
+    -> Stripe BalanceTransaction
+getBalanceTransactionExpandable
+    transactionid expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = "balance" </> "history" </> transactionid
-        params  = []
+        url     = "balance" </> "history" </> getTransactionId transactionid
+        params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Retrieve the history of 'BalanceTransaction's

@@ -18,6 +18,7 @@ import           Web.Stripe.Types           (ChargeId (..), Dispute (..),
                                              DisputeReason (..),
                                              DisputeStatus (..),
                                              Evidence (..), MetaData)
+import           Web.Stripe.Types.Util      (getChargeId)
 
 ------------------------------------------------------------------------------
 -- | `Dispute` to be updated
@@ -27,11 +28,11 @@ updateDispute
     -> MetaData        -- ^ `MetaData` associated with `Dispute`
     -> Stripe Dispute
 updateDispute
-    (ChargeId chargeId)
+    chargeId
     evidence
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = "charges" </> chargeId </> "dispute"
+        url     = "charges" </> getChargeId chargeId </> "dispute"
         params  = toMetaData metadata ++ getParams [
                    ("evidence", (\(Evidence x) -> x) `fmap` evidence)
                   ]
@@ -41,7 +42,7 @@ closeDispute
     :: ChargeId  -- ^ The ID of the Charge being disputed
     -> Stripe Dispute
 closeDispute
-    (ChargeId chargeId) = callAPI request
+    chargeId = callAPI request
   where request = StripeRequest POST url params
-        url     = "charges" </> chargeId </> "dispute" </> "close"
+        url     = "charges" </> getChargeId chargeId </> "dispute" </> "close"
         params  = []

@@ -1,9 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Transfer
-    ( -- * API 
+    ( -- * API
       createTransfer
     , getTransfer
+    , getTransferExpandable
     , getTransfers
+    , getTransfersExpandable
     , updateTransfer
     , cancelTransfer
       -- * Types
@@ -18,11 +20,14 @@ module Web.Stripe.Transfer
 
 import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, toText, (</>), toMetaData)
+                                             getParams, toMetaData, toText,
+                                             (</>), toExpandable)
 import           Web.Stripe.Types           (Amount, Currency, Currency (..),
-                                             Limit, RecipientId (..),
-                                             StripeList (..), Transfer (..), StartingAfter, EndingBefore,
-                                             TransferId (..), MetaData)
+                                             EndingBefore, Limit, MetaData,
+                                             RecipientId (..), StartingAfter,
+                                             StripeList (..), Transfer (..),
+                                             TransferId (..), ExpandParams)
+import           Web.Stripe.Types.Util      (getRecipientId)
 
 ------------------------------------------------------------------------------
 -- | Create a `Transfer`
@@ -33,7 +38,7 @@ createTransfer
     -> MetaData
     -> Stripe Transfer
 createTransfer
-    (RecipientId recipientId)
+    recipientid
     amount
     (Currency currency)
     metadata    = callAPI request
@@ -42,7 +47,7 @@ createTransfer
         params  = toMetaData metadata ++ getParams [
                    ("amount", toText `fmap` Just amount)
                  , ("currency",  Just currency)
-                 , ("recipient", Just recipientId)
+                 , ("recipient", getRecipientId `fmap` Just recipientid)
                  ]
 
 ------------------------------------------------------------------------------
@@ -50,10 +55,21 @@ createTransfer
 getTransfer
     :: TransferId -- ^ `TransferId` associated with the `Transfer` to retrieve
     -> Stripe Transfer
-getTransfer (TransferId transferId) = callAPI request
+getTransfer transferid =
+    getTransferExpandable transferid []
+
+------------------------------------------------------------------------------
+-- | Retrieve a `Transfer` with `ExpandParams`
+getTransferExpandable
+    :: TransferId -- ^ `TransferId` associated with the `Transfer` to retrieve
+    -> ExpandParams
+    -> Stripe Transfer
+getTransferExpandable
+    (TransferId transferid)
+    expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = "transfers" </> transferId
-        params  = []
+        url     = "transfers" </> transferid
+        params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Retrieve StripeList of `Transfers`
@@ -65,14 +81,29 @@ getTransfers
 getTransfers
     limit
     startingAfter
-    endingBefore = callAPI request
+    endingBefore =
+      getTransfersExpandable limit startingAfter endingBefore []
+
+------------------------------------------------------------------------------
+-- | Retrieve StripeList of `Transfers` with `ExpandParams`
+getTransfersExpandable
+    :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter TransferId -- ^ Paginate starting after the following `TransferId`
+    -> EndingBefore TransferId  -- ^ Paginate ending before the following `TransferId`
+    -> ExpandParams
+    -> Stripe (StripeList Transfer)
+getTransfersExpandable
+    limit
+    startingAfter
+    endingBefore
+    expandParams = callAPI request
   where request = StripeRequest GET url params
         url     = "transfers"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(TransferId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(TransferId x) -> x) `fmap` endingBefore)
-          ]
+          ] ++ toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Update a `Transfer`
@@ -81,10 +112,10 @@ updateTransfer
     -> MetaData
     -> Stripe Transfer
 updateTransfer
-    (TransferId transferId)
+    (TransferId transferid)
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = "transfers" </> transferId
+        url     = "transfers" </> transferid
         params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
@@ -92,7 +123,7 @@ updateTransfer
 cancelTransfer
     :: TransferId
     -> Stripe Transfer
-cancelTransfer (TransferId transferId) = callAPI request
+cancelTransfer (TransferId transferid) = callAPI request
   where request = StripeRequest POST url params
-        url     = "transfers" </> transferId </> "cancel"
+        url     = "transfers" </> transferid </> "cancel"
         params  = []

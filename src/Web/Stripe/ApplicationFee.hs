@@ -10,10 +10,11 @@ module Web.Stripe.ApplicationFee
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
-                                             StripeRequest (..), callAPI, (</>), getParams, toText)
-
-import           Web.Stripe.Types           (ApplicationFee (..), FeeId (..),
-                                             StripeList (..), Limit, StartingAfter, EndingBefore)
+                                             StripeRequest (..), callAPI,
+                                             getParams, toText, (</>))
+import           Web.Stripe.Types           (ApplicationFee (..), EndingBefore,
+                                             FeeId (..), Limit, StartingAfter,
+                                             StripeList (..))
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee' retrieval

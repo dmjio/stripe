@@ -9,12 +9,13 @@ module Web.Stripe.Discount
     , SubscriptionId     (..)
     ) where
 
-import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
+import           Web.Stripe.Client.Internal (Method (DELETE), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, toText, (</>))
+                                             (</>))
 import           Web.Stripe.Types           (CustomerId (..),
                                              StripeDeleteResult (..),
                                              SubscriptionId (..))
+import           Web.Stripe.Types.Util      (getCustomerId)
 
 ------------------------------------------------------------------------------
 -- | Delete `Customer` `Discount` by `CustomerId`
@@ -22,9 +23,9 @@ deleteCustomerDiscount
     :: CustomerId -- ^ The Customer to remove the discount from
     -> Stripe StripeDeleteResult
 deleteCustomerDiscount
-    (CustomerId customerId) = callAPI request
+    customerId = callAPI request
   where request = StripeRequest DELETE url params
-        url     = "customers" </> customerId </> "discount"
+        url     = "customers" </> getCustomerId customerId </> "discount"
         params  = []
 
 ------------------------------------------------------------------------------
@@ -34,8 +35,8 @@ deleteSubscriptionDiscount
   -> SubscriptionId -- ^ The Subscription to remove the discount from
   -> Stripe StripeDeleteResult
 deleteSubscriptionDiscount
-    (CustomerId customerId)
+    customerId
     (SubscriptionId subId) = callAPI request
   where request = StripeRequest DELETE url params
-        url     = "customers" </> customerId </> "subscriptions" </> subId </> "discount"
+        url     = "customers" </> getCustomerId customerId </> "subscriptions" </> subId </> "discount"
         params  = []

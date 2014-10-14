@@ -2,8 +2,14 @@
 module Web.Stripe.Recipient
     ( -- * API
       createRecipient
+    , createRecipientByCard
+    , createRecipientByToken
+    , createRecipientByBank
+    , createRecipientBase
     , getRecipient
+    , getRecipientExpandable
     , getRecipients
+    , getRecipientsExpandable
     , updateRecipientName
     , updateRecipientTaxID
     , updateRecipientBankAccount
@@ -12,6 +18,7 @@ module Web.Stripe.Recipient
     , updateRecipientDefaultCard
     , updateRecipientEmail
     , updateRecipientDescription
+    , updateRecipientMetaData
     , updateRecipientBase
     , deleteRecipient
       -- * Types
@@ -33,7 +40,7 @@ module Web.Stripe.Recipient
     , Limit
     ) where
 
-import           Data.Monoid                (mempty, (<>))
+import           Data.Monoid                ((<>))
 import qualified Data.Text                  as T
 
 import           Web.Stripe.Client.Internal
@@ -46,11 +53,12 @@ import           Web.Stripe.Types           (AccountNumber (..),
                                              ExpYear (..), FirstName (..),
                                              LastName (..), Limit,
                                              MiddleInitial, Recipient (..),
-                                             RecipientId (..),
+                                             RecipientId (..), ExpandParams,
                                              RecipientType (..), 
                                              RoutingNumber (..), EndingBefore, StartingAfter,
                                              StripeList (..), TaxID, TokenId,
                                              TokenId (..), MetaData)
+import           Web.Stripe.Types.Util
 
 ------------------------------------------------------------------------------
 -- | Base Request for issues create `Recipient` requests
@@ -74,7 +82,7 @@ createRecipientBase
     (FirstName firstName)
     (LastName lastName)
     middleInitial
-    recipientType
+    recipienttype
     taxId
     bankAccount
     tokenId
@@ -92,7 +100,7 @@ createRecipientBase
                 middle = maybe " " (\x -> " " <> T.singleton x <> " ") middleInitial
             in toMetaData metadata ++ getParams [
                     ("name", Just name)
-                  , ("type", toText `fmap` Just recipientType)
+                  , ("type", toText `fmap` Just recipienttype)
                   , ("tax_id", taxId)
                   , ("bank_account[country]", ((\(BankAccount { bankAccountCountry = Country x }) -> x) `fmap` bankAccount))
                   , ("bank_account[routing_number]",  ((\(BankAccount { bankAccountRoutingNumber = RoutingNumber x }) -> x) `fmap` bankAccount))
@@ -117,8 +125,8 @@ createRecipient
     firstName
     lastName
     middleInitial
-    recipientType
-    = createRecipientBase firstName lastName middleInitial recipientType
+    recipienttype
+    = createRecipientBase firstName lastName middleInitial recipienttype
       Nothing Nothing Nothing Nothing Nothing
       Nothing Nothing Nothing Nothing []
 ------------------------------------------------------------------------------
@@ -137,12 +145,12 @@ createRecipientByCard
     firstName
     lastName
     middleInitial
-    recipientType
+    recipienttype
     cardNumber
     expMonth
     expYear
     cvc
-    = createRecipientBase firstName lastName middleInitial recipientType
+    = createRecipientBase firstName lastName middleInitial recipienttype
       Nothing Nothing Nothing (Just cardNumber) (Just expMonth)
       (Just expYear) (Just cvc) Nothing Nothing []
 
@@ -159,9 +167,9 @@ createRecipientByToken
     firstName
     lastName
     middleInitial
-    recipientType
+    recipienttype
     tokenId
-    = createRecipientBase firstName lastName middleInitial recipientType
+    = createRecipientBase firstName lastName middleInitial recipienttype
       Nothing Nothing (Just tokenId) Nothing Nothing
       Nothing Nothing Nothing Nothing []
 
@@ -178,9 +186,9 @@ createRecipientByBank
     firstName
     lastName
     middleInitial
-    recipientType
+    recipienttype
     bankAccount
-    = createRecipientBase firstName lastName middleInitial recipientType
+    = createRecipientBase firstName lastName middleInitial recipienttype
       Nothing (Just bankAccount) Nothing Nothing Nothing Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
@@ -189,10 +197,20 @@ getRecipient
     :: RecipientId -- ^ The 'RecipientId' of the 'Recipient' to be retrieved
     -> Stripe Recipient
 getRecipient
-    (RecipientId recipientId) = callAPI request
+    recipientid = getRecipientExpandable recipientid []
+
+------------------------------------------------------------------------------
+-- | Retrieve a 'Recipient'
+getRecipientExpandable
+    :: RecipientId -- ^ The 'RecipientId' of the 'Recipient' to be retrieved
+    -> ExpandParams
+    -> Stripe Recipient
+getRecipientExpandable
+    recipientid
+    expandParams = callAPI request
   where request =  StripeRequest GET url params
-        url     = "recipients" </> recipientId
-        params  = []
+        url     = "recipients" </> getRecipientId recipientid
+        params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Retrieve multiple 'Recipient's
@@ -204,14 +222,31 @@ getRecipients
 getRecipients
   limit
   startingAfter
-  endingBefore  = callAPI request
+  endingBefore  =
+    getRecipientsExpandable
+      limit startingAfter endingBefore []
+
+------------------------------------------------------------------------------
+-- | Retrieve multiple 'Recipient's with `ExpandParams`
+getRecipientsExpandable
+    :: Limit                     -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter RecipientId -- ^ Paginate starting after the following `RecipientId`
+    -> EndingBefore RecipientId  -- ^ Paginate ending before the following `RecipientId`
+    -> ExpandParams
+    -> Stripe (StripeList Recipient)
+getRecipientsExpandable
+  limit
+  startingAfter
+  endingBefore
+  expandParams  = callAPI request
   where request =  StripeRequest GET url params
         url     = "recipients"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(RecipientId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(RecipientId x) -> x) `fmap` endingBefore)
-          ]
+          ] ++ toExpandable expandParams
+
 
 ------------------------------------------------------------------------------
 -- | Base Request for updating a 'Recipient', useful for creating custom 'Recipient' update functions
@@ -233,7 +268,7 @@ updateRecipientBase
     -> MetaData            -- ^ The `MetaData` associated with the `Recipient`
     -> Stripe Recipient
 updateRecipientBase
-    (RecipientId recipientId)
+    recipientid
     firstName
     lastName
     middleInitial
@@ -249,7 +284,7 @@ updateRecipientBase
     description
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = "recipients" </> recipientId
+        url     = "recipients" </> getRecipientId recipientid
         params  =
             let name = if firstName == Nothing || lastName == Nothing
                          then Nothing
@@ -271,7 +306,7 @@ updateRecipientBase
                   , ("default_card", (\(CardId x) -> x) `fmap` cardId)
                   , ("email", (\(Email x) -> x) `fmap` email)
                   , ("description", description)
-                  ]
+                  ] ++ toMetaData metadata
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'FirstName', 'LastName' and/or 'MiddleInitial'
@@ -282,11 +317,11 @@ updateRecipientName
     -> MiddleInitial -- ^ Middle Initial of 'Recipient'
     -> Stripe Recipient
 updateRecipientName
-    recipientId
+    recipientid
     firstName
     lastName
     middleInitial = updateRecipientBase
-                     recipientId (Just firstName) (Just lastName) (Just middleInitial)
+                     recipientid (Just firstName) (Just lastName) (Just middleInitial)
                      Nothing Nothing Nothing Nothing
                      Nothing Nothing Nothing Nothing
                      Nothing Nothing []
@@ -305,9 +340,9 @@ updateRecipientBankAccount
     -> BankAccount   -- ^ 'BankAccount' of the 'Recipient' to be updated
     -> Stripe Recipient
 updateRecipientBankAccount
-    recipientId
+    recipientid
     bankAccount = updateRecipientBase
-         recipientId Nothing Nothing Nothing
+         recipientid Nothing Nothing Nothing
          Nothing (Just bankAccount)Nothing Nothing
          Nothing Nothing Nothing Nothing
          Nothing Nothing []
@@ -322,9 +357,9 @@ updateRecipientTaxID
     -> TaxID         -- ^ 'TaxID' of 'Recipient' to be updated
     -> Stripe Recipient
 updateRecipientTaxID
-    recipientId
+    recipientid
     taxID = updateRecipientBase
-              recipientId Nothing Nothing Nothing
+              recipientid Nothing Nothing Nothing
               (Just taxID) Nothing Nothing Nothing
               Nothing Nothing Nothing Nothing
               Nothing Nothing []
@@ -339,9 +374,9 @@ updateRecipientTokenID
     -> TokenId       -- ^ 'TaxID' of 'Recipient' to be updated
     -> Stripe Recipient
 updateRecipientTokenID
-    recipientId
+    recipientid
     tokenId = updateRecipientBase
-              recipientId Nothing Nothing Nothing
+              recipientid Nothing Nothing Nothing
               Nothing Nothing (Just tokenId) Nothing
               Nothing Nothing Nothing Nothing
               Nothing Nothing []
@@ -364,12 +399,12 @@ updateRecipientCard
     -> CVC         -- ^ CVC of Card
     -> Stripe Recipient
 updateRecipientCard
-    recipientId
+    recipientid
     cardNumber
     expMonth
     expYear
     cvc = updateRecipientBase
-              recipientId Nothing Nothing Nothing
+              recipientid Nothing Nothing Nothing
               Nothing Nothing Nothing (Just cardNumber)
               (Just expMonth) (Just expYear) (Just cvc)
               Nothing Nothing Nothing []
@@ -384,13 +419,12 @@ updateRecipientDefaultCard
     -> CardId        -- ^ 'CardId' of 'Card' to be made default
     -> Stripe Recipient
 updateRecipientDefaultCard
-    recipientId
+    recipientid
     cardId = updateRecipientBase
-              recipientId Nothing Nothing Nothing Nothing
+              recipientid Nothing Nothing Nothing Nothing
                           Nothing Nothing Nothing Nothing
                           Nothing Nothing (Just cardId) Nothing
                           Nothing []
-
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Email' Address
@@ -402,9 +436,9 @@ updateRecipientEmail
     -> Email         -- ^ 'Email' of 'Recipient' to be updated
     -> Stripe Recipient
 updateRecipientEmail
-    recipientId
+    recipientid
     email = updateRecipientBase
-              recipientId Nothing Nothing Nothing Nothing
+              recipientid Nothing Nothing Nothing Nothing
                           Nothing Nothing Nothing Nothing
                           Nothing Nothing Nothing (Just email)
                           Nothing []
@@ -419,9 +453,9 @@ updateRecipientDescription
     -> Description   -- ^ 'Description' of 'Recipient' to be updated
     -> Stripe Recipient
 updateRecipientDescription
-    recipientId
+    recipientid
     description = updateRecipientBase
-                   recipientId Nothing Nothing Nothing Nothing
+                   recipientid Nothing Nothing Nothing Nothing
                                Nothing Nothing Nothing Nothing
                                Nothing Nothing Nothing Nothing
                               (Just description) []
@@ -452,7 +486,7 @@ deleteRecipient
     :: RecipientId
     -> Stripe Recipient
 deleteRecipient
-   (RecipientId recipientId) = callAPI request
+   recipientid = callAPI request
   where request =  StripeRequest DELETE url params
-        url     = "recipients" </> recipientId
+        url     = "recipients" </> getRecipientId recipientid
         params  = []

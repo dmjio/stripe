@@ -14,17 +14,15 @@ module Web.Stripe.Client.Internal
 
 import           Control.Exception          (SomeException, try)
 import           Control.Monad.IO.Class     (MonadIO (liftIO))
-import           Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
-import           Data.Aeson                 (FromJSON, Value (Object),
-                                             decodeStrict, parseJSON, (.:))
-
-
+import           Control.Monad.Trans.Reader (ask, runReaderT)
+import           Data.Aeson                 (FromJSON, Value, 
+                                             decodeStrict)
 import           Data.Monoid                (mempty, (<>))
-
+import           Control.Monad              (when)
 import           Network.Http.Client        (Connection, Method (..),
                                              baselineContextSSL, buildRequest,
                                              closeConnection, concatHandler,
-                                             emptyBody, getStatusCode, http,
+                                              getStatusCode, http,
                                              inputStreamBody, openConnectionSSL,
                                              receiveResponse, sendRequest,
                                              setAuthorizationBasic,
@@ -33,14 +31,15 @@ import           OpenSSL                    (withOpenSSL)
 import           Web.Stripe.Client.Error    (StripeError (..),
                                              StripeErrorHTTPCode (..),
                                              StripeErrorType (..))
-import           Web.Stripe.Client.Types    (Stripe, StripeConfig (..),
-                                             StripeRequest (..), APIVersion(..))
-import           Web.Stripe.Client.Util     (fromSeconds, getParams, toBytestring, toMetaData,
-                                             paramsToByteString, toText, (</>))
+import           Web.Stripe.Client.Types    (APIVersion (..), Stripe,
+                                             StripeConfig (..),
+                                             StripeRequest (..))
+import           Web.Stripe.Client.Util     (fromSeconds, getParams,
+                                             paramsToByteString, toBytestring,
+                                             toExpandable, toMetaData, toText,
+                                             (</>))
 
 import qualified Data.ByteString            as S
-
-
 
 import qualified Data.Text.Encoding         as T
 import qualified System.IO.Streams          as Streams
@@ -53,6 +52,11 @@ runStripe
     -> Stripe a
     -> IO (Either StripeError a)
 runStripe = flip runReaderT
+
+------------------------------------------------------------------------------
+-- | Debug Helper
+debug :: Bool
+debug = True
 
 ------------------------------------------------------------------------------
 -- | API request to be issued
@@ -93,29 +97,30 @@ sendStripeRequest
           http method $ "/v1/" <> reqURL
           setAuthorizationBasic secretKey mempty
           setContentType "application/x-www-form-urlencoded"
-          setHeader "Stripe-Version" (toBytestring V20140908)
+          setHeader "Stripe-Version" (toBytestring V20141007)
       body <- Streams.fromByteString reqBody
       sendRequest con req $ inputStreamBody body
       json <- receiveResponse con $
-              \response inputStream ->
+              \response inputStream -> do
+                  when debug $ print response
                   concatHandler response inputStream >>= \result -> do
-                      print result
-                      print (decodeStrict result :: Maybe Value)
-                      {- for debugging purposes -}
+                      when debug $ do
+                        print result
+                        print (decodeStrict result :: Maybe Value)
                       handleStream response result
       closeConnection con
       return json
-    parseFail = Left $ StripeError ParseFailure "could not parse response" Nothing Nothing Nothing  
-    unknownCode = Left $ StripeError UnknownErrorType mempty Nothing Nothing Nothing  
+    parseFail = Left $ StripeError ParseFailure "could not parse response" Nothing Nothing Nothing
+    unknownCode = Left $ StripeError UnknownErrorType mempty Nothing Nothing Nothing
     handleStream p x =
-        return $ 
+        return $
           case getStatusCode p of
             200 -> case decodeStrict x of
                      Nothing -> parseFail
                      Just json -> Right json
-            code | code >= 400 -> 
+            code | code >= 400 ->
                     case decodeStrict x :: Maybe StripeError of
-                      Nothing -> parseFail 
+                      Nothing -> parseFail
                       Just json ->
                           Left $ case code of
                              400 -> json { errorHTTP = Just BadRequest }

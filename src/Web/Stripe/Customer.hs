@@ -16,7 +16,9 @@ module Web.Stripe.Customer
     , deleteCustomer
       ---- * Get customer(s)
     , getCustomer
+    , getCustomerExpandable
     , getCustomers
+    , getCustomersExpandable
       -- * Types
     , Customer           (..)
     , CustomerId         (..)
@@ -40,7 +42,7 @@ module Web.Stripe.Customer
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
                                              StripeRequest (..), callAPI, toMetaData,
-                                             getParams, toText, (</>))
+                                             getParams, toText, (</>), toExpandable)
 import           Web.Stripe.Types           (AccountBalance, CVC (..),
                                              CardId (..), CardNumber (..),
                                              CouponId (..), Customer (..),
@@ -51,7 +53,8 @@ import           Web.Stripe.Types           (AccountBalance, CVC (..),
                                              StartingAfter,
                                              StripeDeleteResult (..),
                                              StripeList (..), TokenId (..),
-                                             TrialPeriod)
+                                             TrialPeriod, ExpandParams)
+import           Web.Stripe.Types.Util
 
 ------------------------------------------------------------------------------
 -- | The base request for customer creation
@@ -162,7 +165,7 @@ updateCustomerBase
     -> MetaData             -- ^ MetaData associated with the customer being created
     -> Stripe Customer
 updateCustomerBase
-    (CustomerId customerid)
+    customerid
     accountBalance
     cardId
     cardNumber
@@ -175,7 +178,7 @@ updateCustomerBase
     email
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = "customers" </> customerid
+        url     = "customers" </> getCustomerId customerid
         params  = toMetaData metadata ++ getParams [
                     ("account_balance", toText `fmap` accountBalance)
                   , ("card", (\(TokenId x) -> x) `fmap` cardId)
@@ -222,9 +225,9 @@ updateCustomerDefaultCard
 deleteCustomer
     :: CustomerId
     -> Stripe StripeDeleteResult
-deleteCustomer (CustomerId cid) = callAPI request
+deleteCustomer customerid = callAPI request
   where request = StripeRequest DELETE url params
-        url     = "customers" </> cid
+        url     = "customers" </> getCustomerId customerid
         params  = []
 
 ------------------------------------------------------------------------------
@@ -232,10 +235,21 @@ deleteCustomer (CustomerId cid) = callAPI request
 getCustomer
     :: CustomerId
     -> Stripe Customer
-getCustomer (CustomerId cid) = callAPI request
+getCustomer customerid =
+  getCustomerExpandable customerid []
+
+------------------------------------------------------------------------------
+-- | Retrieves a customer by his/her `CustomerID` with `ExpandParams`
+getCustomerExpandable
+    :: CustomerId  -- ^ The `CustomerId` of the `Customer` to retrieve
+    -> ExpandParams -- ^ Retrieve a `Customer` with expansion
+    -> Stripe Customer
+getCustomerExpandable
+    customerid
+    expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = "customers" </> cid
-        params  = [ ("expand[]", "default_card") ]
+        url     = "customers" </> getCustomerId customerid
+        params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Retrieve up to 100 customers at a time
@@ -247,13 +261,28 @@ getCustomers
 getCustomers
     limit
     startingAfter
+    endingBefore =
+      getCustomersExpandable limit startingAfter endingBefore []
+
+------------------------------------------------------------------------------
+-- | Retrieve up to 100 customers at a time
+getCustomersExpandable
+    :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter CustomerId -- ^ Paginate starting after the following `CustomerId`
+    -> EndingBefore CustomerId  -- ^ Paginate ending before the following `CustomerId`
+    -> ExpandParams             -- ^ Get Customers with `ExpandParams`
+    -> Stripe (StripeList Customer)
+getCustomersExpandable
+    limit
+    startingAfter
     endingBefore
-    = callAPI request
+    expandParams = callAPI request
   where request = StripeRequest GET url params
         url     = "customers"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(CustomerId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(CustomerId x) -> x) `fmap` endingBefore)
-          ]
+          ] ++ toExpandable expandParams
+
 

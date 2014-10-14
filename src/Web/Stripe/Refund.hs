@@ -1,23 +1,31 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 module Web.Stripe.Refund
     ( -- * API
       createRefund
     , getRefund
+    , getRefundExpandable
     , getRefunds
+    , getRefundsExpandable
     , updateRefund
       -- * Types
     , Refund     (..)
     , RefundId   (..)
     , ChargeId   (..)
+    , Charge     (..)
     , StripeList (..)
     ) where
 
-import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
-                                             StripeRequest (..), callAPI, toText, toMetaData,
-                                             getParams, (</>))
-import           Web.Stripe.Types           (ChargeId (..), EndingBefore, Limit,
-                                             Refund (..), RefundId (..), MetaData,
-                                             StartingAfter, StripeList (..))
+import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
+                                             StripeRequest (..), callAPI,
+                                             getParams, toMetaData, toText,
+                                             (</>), toExpandable)
+import           Web.Stripe.Types           (Charge (..), ChargeId (..),
+                                             EndingBefore, Limit, MetaData,
+                                             Refund (..), Refund (..),
+                                             RefundId (..), StartingAfter, ExpandParams,
+                                             StripeList (..))
+import           Web.Stripe.Types.Util      (getChargeId)
 
 ------------------------------------------------------------------------------
 -- | `Refund` a `Charge`
@@ -26,10 +34,10 @@ createRefund
     -> MetaData -- ^ `MetaData` associated with a `Refund`
     -> Stripe Refund
 createRefund
-    (ChargeId chargeId)
+    chargeid
     metadata    = callAPI request
   where request = StripeRequest POST url params
-        url     = "charges" </> chargeId </> "refunds"
+        url     = "charges" </> getChargeId chargeid </> "refunds"
         params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
@@ -39,11 +47,26 @@ getRefund
     -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
     -> Stripe Refund
 getRefund
-    (ChargeId chargeId)
-    (RefundId refId) = callAPI request
+    chargeid
+    (RefundId refundid) = callAPI request
    where request = StripeRequest GET url params
-         url     = "charges" </> chargeId </> "refunds" </> refId
+         url     = "charges" </> getChargeId chargeid </> "refunds" </> refundid
          params  = []
+
+------------------------------------------------------------------------------
+-- | Retrieve a `Refund` by `ChargeId` and `RefundId` with `ExpandParams`
+getRefundExpandable
+    :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be retrieved
+    -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
+    -> ExpandParams
+    -> Stripe Refund
+getRefundExpandable
+    chargeid
+    (RefundId refundid)
+    expandParams = callAPI request
+   where request = StripeRequest GET url params
+         url     = "charges" </> getChargeId chargeid </> "refunds" </> refundid
+         params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Update a `Refund` by `ChargeId` and `RefundId`
@@ -53,11 +76,11 @@ updateRefund
     -> MetaData -- ^ `MetaData` associated with a `Refund`
     -> Stripe Refund
 updateRefund
-   (ChargeId chargeId)
-   (RefundId refId) 
+   chargeid
+   (RefundId refid)
    metadata     = callAPI request
   where request = StripeRequest POST url params
-        url     = "charges" </> chargeId </> "refunds" </> refId
+        url     = "charges" </> getChargeId chargeid  </> "refunds" </> refid
         params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
@@ -69,16 +92,35 @@ getRefunds
     -> EndingBefore RefundId  -- ^ Paginate ending before the following `RefundId`
     -> Stripe (StripeList Refund)
 getRefunds
-  (ChargeId chargeId)
+  chargeid
   limit
   startingAfter
-  endingBefore  = callAPI request
+  endingBefore  =
+    getRefundsExpandable chargeid
+      limit startingAfter endingBefore []
+
+------------------------------------------------------------------------------
+-- | Retrieve a lot of Refunds by `ChargeId` with `ExpandParams`
+getRefundsExpandable
+    :: ChargeId               -- ^ 'ChargeId' associated with the 'Charge' to be updated
+    -> Limit                  -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter RefundId -- ^ Paginate starting after the following `RefundId`
+    -> EndingBefore RefundId  -- ^ Paginate ending before the following `RefundId`
+    -> ExpandParams
+    -> Stripe (StripeList Refund)
+getRefundsExpandable
+  chargeid
+  limit
+  startingAfter
+  endingBefore
+  expandParams  = callAPI request
   where request = StripeRequest GET url params
-        url     = "charges" </> chargeId </> "refunds"
+        url     = "charges" </> getChargeId chargeid </> "refunds"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(RefundId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(RefundId x) -> x) `fmap` endingBefore)
-          ]
+          ] ++ toExpandable expandParams
+
 
 
