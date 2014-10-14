@@ -56,7 +56,7 @@ runStripe = flip runReaderT
 ------------------------------------------------------------------------------
 -- | Debug Helper
 debug :: Bool
-debug = True
+debug = False
 
 ------------------------------------------------------------------------------
 -- | API request to be issued

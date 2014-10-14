@@ -1,5 +1,5 @@
 module Web.Stripe.Client
-    ( -- * Function to run a `Stripe` action
+    ( -- * Run a `Stripe` action
       runStripe
       -- * Base type for `Stripe` API
     , Stripe

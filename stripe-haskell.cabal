@@ -1,6 +1,6 @@
 name:                stripe-haskell
 version:             0.1.0.0
-synopsis:            Soon-to-be official Haskell support for Stripe
+synopsis:            Official Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson
@@ -9,7 +9,6 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
 description:         
- This package offers a simple interface to the Stripe API.
  .
  <<https://stripe.com/img/navigation/logo@2x.png>> 
  .
@@ -40,10 +39,10 @@ Benchmark benchmarks
 
 library 
   hs-source-dirs:      src
-  build-depends:       HsOpenSSL
-                     , aeson
+  build-depends:       aeson                  
                      , base >=4.7 && <4.8
                      , bytestring
+                     , HsOpenSSL
                      , http-streams
                      , io-streams
                      , text
@@ -53,13 +52,15 @@ library
                      , vector
               
   default-language:    Haskell2010
-  other-modules:       Web.Stripe.Client.Internal
+  other-modules:       Web.Stripe.Client
+                       Web.Stripe.Client.Internal
                        Web.Stripe.Client.Error
                        Web.Stripe.Client.Types
                        Web.Stripe.Client.Util
                        Web.Stripe.Types
                        Web.Stripe.Types.Util
-  exposed-modules:     Web.Stripe.Client
+  exposed-modules:     
+                       Web.Stripe
                        Web.Stripe.Account
                        Web.Stripe.ApplicationFee
                        Web.Stripe.ApplicationFeeRefund

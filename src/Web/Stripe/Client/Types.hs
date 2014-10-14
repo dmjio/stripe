@@ -11,7 +11,7 @@ import           Control.Monad.Trans.Reader (ReaderT)
 import           Data.ByteString            (ByteString)
 import           Data.Text                  (Text)
 import           Network.Http.Client        (Method)
-import           Web.Stripe.Client.Error    (StripeError)
+import           Web.Stripe.Client.Error    (StripeError(..))
 
 ------------------------------------------------------------------------------
 -- | Base Type we use for Stripe
@@ -30,7 +30,7 @@ data StripeRequest = StripeRequest
     } deriving Show
 
 ------------------------------------------------------------------------------
--- | Information for Stripe secret key and API Version
+-- | Information for Stripe secret key 
 data StripeConfig = StripeConfig
     { secretKey :: ByteString
     } deriving Show

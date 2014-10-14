@@ -47,6 +47,8 @@ data StripeErrorCode =
         | UnknownError 
           deriving Show
 
+------------------------------------------------------------------------------
+-- | Stripe Error Type
 data StripeError = StripeError {
       errorType  :: StripeErrorType
     , errorMsg   :: Text

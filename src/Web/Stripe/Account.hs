@@ -4,13 +4,15 @@ module Web.Stripe.Account
       getAccountDetails
       -- * Types
     , Account   (..)
+    , AccountId (..)
     ) where
 
 import           Web.Stripe.Client.Internal ( Method (GET)
                                             , Stripe
                                             , StripeRequest (..)
                                             , callAPI )
-import           Web.Stripe.Types           ( Account(..) )
+import           Web.Stripe.Types           ( Account   (..)
+                                            , AccountId (..) )
 
 ------------------------------------------------------------------------------
 -- | Retrieve the object that represents your Stripe account
