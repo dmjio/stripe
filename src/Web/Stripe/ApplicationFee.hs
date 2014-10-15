@@ -2,7 +2,9 @@
 module Web.Stripe.ApplicationFee
     (  -- * API
       getApplicationFee
+    , getApplicationFeeExpanded
     , getApplicationFees
+    , getApplicationFeesExpanded
        -- * Types
     , ApplicationId  (..)
     , ApplicationFee (..)
@@ -11,15 +13,16 @@ module Web.Stripe.ApplicationFee
     , EndingBefore
     , StartingAfter
     , Limit
+    , ExpandParams
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, toText, (</>))
+                                             getParams, toText, (</>), toExpandable)
 import           Web.Stripe.Types           (ApplicationFee (..),
                                              ApplicationId (..), 
                                              EndingBefore, FeeId (..),
-                                             Limit, StartingAfter,
+                                             Limit, StartingAfter, ExpandParams,
                                              StripeList (..))
 
 ------------------------------------------------------------------------------
@@ -28,10 +31,20 @@ getApplicationFee
     :: FeeId -- ^ The FeeID associated with the application
     -> Stripe ApplicationFee
 getApplicationFee
-    (FeeId feeid) = callAPI request
+    feeid = getApplicationFeeExpanded feeid []
+
+------------------------------------------------------------------------------
+-- | 'ApplicationFee' retrieval with `ExpandParams`
+getApplicationFeeExpanded
+    :: FeeId        -- ^ The `FeeID` associated with the application
+    -> ExpandParams -- ^ The `ExpandParams` for an `ApplicationFee`
+    -> Stripe ApplicationFee
+getApplicationFeeExpanded
+    (FeeId feeid)
+    expandParams = callAPI request
   where request = StripeRequest GET url params
         url     = "application_fees" </> feeid
-        params  = []
+        params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee's retrieval
@@ -43,13 +56,29 @@ getApplicationFees
 getApplicationFees
     limit
     startingAfter
-    endingBefore  = callAPI request
+    endingBefore =
+      getApplicationFeesExpanded
+        limit startingAfter endingBefore []
+
+------------------------------------------------------------------------------
+-- | 'ApplicationFee's retrieval with `ExpandParams`
+getApplicationFeesExpanded
+    :: Maybe Limit         -- ^ Defaults to 10 if `Nothing` specified
+    -> StartingAfter FeeId -- ^ Paginate starting after the following `FeeId`
+    -> EndingBefore FeeId  -- ^ Paginate ending before the following `FeeId`
+    -> ExpandParams        -- ^ The `ExpandParams` for `ApplicationFee`s
+    -> Stripe (StripeList ApplicationFee)
+getApplicationFeesExpanded
+    limit
+    startingAfter
+    endingBefore
+    expandParams = callAPI request
   where request = StripeRequest GET url params
         url     = "application_fees"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(FeeId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(FeeId x) -> x) `fmap` endingBefore)
-          ]
+          ] ++ toExpandable expandParams
 
 

@@ -23,7 +23,7 @@ customerTests :: Spec
 customerTests = describe "Customer tests" $ do
   it "Creates an empty customer, then deletes it" $ do
     config <- getConfig
-    result <- runStripe config $ do
+    result <- stripe config $ do
       Customer{..} <- createEmptyCustomer
       deleteCustomer customerId
     result `shouldSatisfy` isRight

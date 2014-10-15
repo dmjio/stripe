@@ -1,9 +1,9 @@
 module Web.Stripe.Client
     ( -- * Run a `Stripe` action
-      runStripe
+      stripe
       -- * Base type for `Stripe` API
     , Stripe
-      -- * Encapsulates `Stripe` secret key and API version information
+      -- * Encapsulates `Stripe` Secret Key 
     , StripeConfig       (..)
       -- * Error type for Request
     , module Web.Stripe.Client.Error

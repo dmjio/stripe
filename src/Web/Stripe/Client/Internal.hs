@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Web.Stripe.Client.Internal
     ( callAPI
-    , runStripe
+    , stripe
     , Stripe
     , StripeRequest      (..)
     , StripeError        (..)
@@ -45,12 +45,12 @@ import qualified System.IO.Streams          as Streams
 
 ------------------------------------------------------------------------------
 -- | Main entry point for beginning a `Stripe` API request
-runStripe
+stripe
     :: FromJSON a
     => StripeConfig
     -> Stripe a
     -> IO (Either StripeError a)
-runStripe config requests = do
+stripe config requests = do
   withOpenSSL $ do
     ctx <- baselineContextSSL
     result <- try (openConnectionSSL ctx "api.stripe.com" 443) :: IO (Either SomeException Connection)
