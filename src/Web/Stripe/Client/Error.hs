@@ -1,5 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
-
+-- |
+-- Module      : Web.Stripe.Client.Error
+-- Description : Error Handling for Stripe Requests
+-- Copyright   : (c) David Johnson, 2014
+-- License     : MIT
+-- Maintainer  : djohnson.m@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
+-- |
 module Web.Stripe.Client.Error 
     ( -- * Types
       StripeErrorHTTPCode (..)
@@ -13,6 +21,8 @@ import           Data.Aeson
 import           Data.Text           (Text)
 import           Control.Monad       (mzero)
 
+------------------------------------------------------------------------------
+-- | Error Codes for Common HTTP Responses
 data StripeErrorHTTPCode = 
           BadRequest        -- ^ 400
         | UnAuthorized      -- ^ 401
@@ -22,6 +32,8 @@ data StripeErrorHTTPCode =
         | UnknownHTTPCode   -- ^ All other codes
           deriving Show
 
+------------------------------------------------------------------------------
+-- | Stripe Error Types
 data StripeErrorType =
           InvalidRequest
         | APIError
@@ -31,6 +43,8 @@ data StripeErrorType =
         | UnknownErrorType 
           deriving Show
 
+------------------------------------------------------------------------------
+-- | Stripe Error Codes
 data StripeErrorCode =
           IncorrectNumber
         | InvalidNumber
@@ -57,6 +71,8 @@ data StripeError = StripeError {
     , errorHTTP  :: Maybe StripeErrorHTTPCode
     } deriving Show
 
+------------------------------------------------------------------------------
+-- | Parse an error message into a `StripeErrorType`
 toErrorType
     :: Text
     -> StripeErrorType
@@ -65,6 +81,8 @@ toErrorType "api_error"             = APIError
 toErrorType "card_error"            = CardError
 toErrorType _                       = UnknownErrorType
 
+------------------------------------------------------------------------------
+-- | Parse an error message into a `StripeErrorCode`
 toErrorCode
     :: Text
     -> StripeErrorCode

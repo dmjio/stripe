@@ -1,4 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
+-- |
+-- Module      : Web.Stripe.Client.Error
+-- Description : Internal Types for Stripe Requests
+-- Copyright   : (c) David Johnson, 2014
+-- License     : MIT
+-- Maintainer  : djohnson.m@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
+-- |
 module Web.Stripe.Client.Types
   ( -- * Types
     Stripe
@@ -17,7 +26,6 @@ import           Web.Stripe.Client.Error    (StripeError (..))
 ------------------------------------------------------------------------------
 -- | Base Type we use for Stripe
 type Stripe a = EitherT StripeError (ReaderT (StripeConfig, Connection) IO) a
--- type Stripe a = ReaderT StripeConfig IO (Either StripeError a)
 
 ------------------------------------------------------------------------------
 -- | HTTP Params type
@@ -37,6 +45,8 @@ data StripeConfig = StripeConfig
     { secretKey :: ByteString
     } deriving Show
 
+------------------------------------------------------------------------------
+-- | API Version
 data APIVersion =
     V20141007 -- ^ Stripe API Version for this package release
     deriving Eq

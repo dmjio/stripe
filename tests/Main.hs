@@ -20,13 +20,32 @@ main :: IO ()
 main = hspec $ customerTests
 
 customerTests :: Spec
-customerTests = describe "Customer tests" $ do
-  it "Creates an empty customer, then deletes it" $ do
-    config <- getConfig
-    result <- stripe config $ do
-      Customer{..} <- createEmptyCustomer
-      deleteCustomer customerId
+customerTests =
+  describe "Customer tests" $ do
+    it "Creates an empty customer, then deletes it" $ do
+      config <- getConfig
+      result <- stripe config $ do
+        Customer{..} <- createEmptyCustomer
+        deleteCustomer customerId
     result `shouldSatisfy` isRight
+
+accountTests :: Spec
+accountTests = do
+  describe "Customer tests" $ do
+    it "Creates an empty customer, then deletes it" $ do
+      config <- getConfig
+      result <- stripe config $ do
+        Customer{..} <- createEmptyCustomer
+        deleteCustomer customerId
+    result `shouldSatisfy` isRight
+  liftIO $ either handleNoAccount handleAccount
+      =<< runStripe config getAccountDetails
+  where
+    handleAccount Account {..} 
+        = putStrLn "Retrieved Account Details"
+    handleNoAccount
+        = error "Couldn't retrieve account details!"
+
 
 ------------------------------------------------------------------------------
 -- | Top level testing function

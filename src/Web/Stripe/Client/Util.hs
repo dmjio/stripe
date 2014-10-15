@@ -1,6 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
+-- |
+-- Module      : Web.Stripe.Client.Util
+-- Description : Utilities for issuing Stripe Requests
+-- Copyright   : (c) David Johnson, 2014
+-- License     : MIT
+-- Maintainer  : djohnson.m@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
+-- |
 module Web.Stripe.Client.Util
-    ( fromSeconds
+    ( -- * Utils
+      fromSeconds
     , paramsToByteString
     , toText
     , getParams
@@ -12,7 +22,7 @@ module Web.Stripe.Client.Util
 
 import           Data.ByteString       (ByteString)
 import qualified Data.ByteString.Char8 as B8
-import           Data.Monoid           (Monoid, (<>), mempty, mconcat)
+import           Data.Monoid           (Monoid, mconcat, mempty, (<>))
 import           Data.String           (IsString)
 import           Data.Text             (Text)
 import qualified Data.Text             as T
@@ -22,10 +32,10 @@ import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
 ------------------------------------------------------------------------------
 -- | Conversion from a `Show` constrained type to `Text`
-toText 
-    :: Show a 
-    => a
-    -> Text
+toText
+    :: Show a
+    => a    
+    -> Text 
 toText = T.pack . show
 
 ------------------------------------------------------------------------------
@@ -36,13 +46,13 @@ paramsToByteString
     -> m
 paramsToByteString []           = mempty
 paramsToByteString ((x,y) : []) = x <> "=" <> y
-paramsToByteString ((x,y) : xs) = 
+paramsToByteString ((x,y) : xs) =
     mconcat [ x, "=", y, "&" ] <> paramsToByteString xs
 
 ------------------------------------------------------------------------------
 -- | Forward slash interspersion on `Monoid` and `IsString`
 -- constrained types
-(</>) 
+(</>)
     :: (Monoid m, IsString m)
     => m
     -> m
@@ -56,6 +66,8 @@ fromSeconds
     -> UTCTime
 fromSeconds = posixSecondsToUTCTime . fromInteger
 
+------------------------------------------------------------------------------
+-- | Retrieve and encode the optional parameters
 getParams
     :: [(ByteString, Maybe Text)]
     -> [(ByteString, ByteString)]
