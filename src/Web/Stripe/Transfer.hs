@@ -9,10 +9,12 @@ module Web.Stripe.Transfer
     , updateTransfer
     , cancelTransfer
       -- * Types
-    , Transfer    (..)
-    , TransferId  (..)
-    , RecipientId (..)
-    , StripeList  (..)
+    , Transfer        (..)
+    , TransferId      (..)
+    , TransferStatus  (..)
+    , TransferType   (..)
+    , RecipientId     (..)
+    , StripeList      (..)
     , Amount
     , Currency
     , Limit
@@ -20,13 +22,15 @@ module Web.Stripe.Transfer
 
 import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, toMetaData, toText,
-                                             (</>), toExpandable)
+                                             getParams, toExpandable,
+                                             toMetaData, toText, (</>))
 import           Web.Stripe.Types           (Amount, Currency, Currency (..),
-                                             EndingBefore, Limit, MetaData,
-                                             RecipientId (..), StartingAfter,
-                                             StripeList (..), Transfer (..),
-                                             TransferId (..), ExpandParams)
+                                             EndingBefore, ExpandParams, Limit,
+                                             MetaData, RecipientId (..),
+                                             StartingAfter, StripeList (..),
+                                             Transfer (..), TransferId (..),
+                                             TransferStatus (..),
+                                             TransferType (..))
 import           Web.Stripe.Types.Util      (getRecipientId)
 
 ------------------------------------------------------------------------------

@@ -12,9 +12,11 @@ module Web.Stripe.Plan
     , updatePlanBase
     , deletePlan
       -- * Types
-    , PlanId   (..)
-    , Plan     (..)
-    , Interval (..)
+    , PlanId          (..)
+    , Plan            (..)
+    , Interval        (..)
+    , IntervalCount   (..)
+    , TrialPeriodDays (..)
     ) where
 
 import           Web.Stripe.Client.Internal

@@ -5,19 +5,24 @@ module Web.Stripe.Balance
     , getBalanceTransaction
     , getBalanceTransactionHistory
       -- * Types
-    , Balance       (..)
-    , TransactionId (..)
-    , StripeList    (..)
+    , Balance                (..)
+    , TransactionId          (..)
+    , StripeList             (..)
+    , EndingBefore
+    , StartingAfter
     , Limit
     , BalanceTransaction
+    , BalanceAmount
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, toText, (</>), toExpandable)
-import           Web.Stripe.Types           (Balance (..), BalanceTransaction,
-                                             EndingBefore, Limit, StartingAfter,
-                                             StripeList (..), ExpandParams,
+                                             getParams, toExpandable, toText,
+                                             (</>))
+import           Web.Stripe.Types           (Balance (..), BalanceAmount,
+                                             BalanceTransaction, EndingBefore,
+                                             ExpandParams, Limit, StartingAfter,
+                                             StripeList (..),
                                              TransactionId (..))
 import           Web.Stripe.Types.Util      (getTransactionId)
 
@@ -34,7 +39,7 @@ getBalance = callAPI request
 getBalanceTransaction
     :: TransactionId
     -> Stripe BalanceTransaction
-getBalanceTransaction 
+getBalanceTransaction
     transactionid = getBalanceTransactionExpandable transactionid []
 
 ------------------------------------------------------------------------------

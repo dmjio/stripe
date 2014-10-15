@@ -28,22 +28,23 @@ module Web.Stripe.Card
       -- *** Delete Recipient Card
     , deleteRecipientCard
       -- * Types
-    , Brand          (..)
-    , Card           (..)
-    , CardId         (..)
-    , CardNumber     (..)
-    , ExpMonth       (..)
-    , ExpYear        (..)
-    , CVC            (..)
+    , Brand           (..)
+    , Card            (..)
+    , RecipientCard   (..)
+    , CardId          (..)
+    , RecipientCardId (..)
+    , CardNumber      (..)
+    , ExpMonth        (..)
+    , ExpYear         (..)
+    , CVC             (..)
     , Name
-    , AddressLine1   (..)
-    , AddressLine2   (..)
-    , AddressCity    (..)
-    , AddressCountry (..)
-    , AddressState   (..)
-    , AddressZip     (..)
-    , RecipientId    (..)
-    , RecipientCard  (..)
+    , AddressLine1    (..)
+    , AddressLine2    (..)
+    , AddressCity     (..)
+    , AddressCountry  (..)
+    , AddressState    (..)
+    , AddressZip      (..)
+    , RecipientId     (..)
     ) where
 
 import           Control.Applicative        ((<$>))

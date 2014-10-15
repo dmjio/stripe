@@ -13,17 +13,24 @@ module Web.Stripe.ApplicationFeeRefund
     , ApplicationFee         (..)
     , ApplicationFeeRefund   (..)
     , StripeList             (..)
+    , EndingBefore
+    , StartingAfter
+    , Limit
+    , ExpandParams
+    , MetaData
     , Amount
     ) where
 
 import           Web.Stripe.Client.Internal (Method (POST, GET), Stripe,
-                                             StripeRequest (..), callAPI,toMetaData, 
-                                             getParams, toText, (</>), toExpandable)
+                                             StripeRequest (..), callAPI,
+                                             getParams, toExpandable,
+                                             toMetaData, toText, (</>))
 import           Web.Stripe.Types           (Amount, ApplicationFee (..),
-                                             ApplicationFeeRefund (..),  MetaData,
-                                             EndingBefore, FeeId (..), Limit,
+                                             ApplicationFeeRefund (..),
+                                             EndingBefore, ExpandParams,
+                                             FeeId (..), Limit, MetaData,
                                              RefundId (..), StartingAfter,
-                                             StripeList (..), ExpandParams)
+                                             StripeList (..))
 
 ------------------------------------------------------------------------------
 -- | Create a new 'ApplicationFeeRefund'
@@ -77,7 +84,7 @@ getApplicationFeeRefunds
    limit
    startingAfter
    endingBefore =
-     getApplicationFeeRefundsExpandable 
+     getApplicationFeeRefundsExpandable
        feeid limit startingAfter endingBefore []
 
 ------------------------------------------------------------------------------

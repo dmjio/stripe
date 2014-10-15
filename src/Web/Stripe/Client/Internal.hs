@@ -9,6 +9,7 @@ module Web.Stripe.Client.Internal
     , StripeConfig       (..)
     , Method             (..)
     , module Web.Stripe.Client.Util
+    , module Web.Stripe.Client.Error
     ) where
 
 

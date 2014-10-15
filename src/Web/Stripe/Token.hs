@@ -11,6 +11,7 @@ module Web.Stripe.Token
    , CVC           (..)
    , Token         (..)
    , TokenId       (..)
+   , TokenType     (..)
    , Country       (..)
    , RoutingNumber (..)
    , AccountNumber (..)
@@ -24,7 +25,7 @@ import           Web.Stripe.Types           (Account(..), AccountNumber (..),
                                              CVC (..), CardNumber (..),
                                              Country (..), ExpMonth (..),
                                              ExpYear (..), RoutingNumber (..),
-                                             Token (..), TokenId (..))
+                                             Token (..), TokenId (..), TokenType(..))
 
 ------------------------------------------------------------------------------
 -- | Create a `Token` by specifiy Credit `Card` information

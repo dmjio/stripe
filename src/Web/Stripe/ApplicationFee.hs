@@ -4,16 +4,22 @@ module Web.Stripe.ApplicationFee
       getApplicationFee
     , getApplicationFees
        -- * Types
+    , ApplicationId  (..)
     , ApplicationFee (..)
     , FeeId          (..)
     , StripeList     (..)
+    , EndingBefore
+    , StartingAfter
+    , Limit
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
                                              StripeRequest (..), callAPI,
                                              getParams, toText, (</>))
-import           Web.Stripe.Types           (ApplicationFee (..), EndingBefore,
-                                             FeeId (..), Limit, StartingAfter,
+import           Web.Stripe.Types           (ApplicationFee (..),
+                                             ApplicationId (..), 
+                                             EndingBefore, FeeId (..),
+                                             Limit, StartingAfter,
                                              StripeList (..))
 
 ------------------------------------------------------------------------------

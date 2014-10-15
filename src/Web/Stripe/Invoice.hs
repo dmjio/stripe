@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Invoice
-    ( -- * API 
+    ( -- * API
       createInvoice
     , getInvoice
     , getInvoiceExpandable
@@ -12,8 +12,13 @@ module Web.Stripe.Invoice
     , updateInvoice
     , payInvoice
        -- * Types
-    , Invoice   (..)
-    , InvoiceId (..)
+    , Invoice             (..)
+    , InvoiceId           (..)
+    , InvoiceLineItem     (..)
+    , InvoiceLineItemId   (..)
+    , InvoiceLineItemType (..)
+    , Discount            (..)
+    , Period              (..)
     ) where
 
 import           Web.Stripe.Client.Internal
@@ -47,7 +52,7 @@ getInvoice
 -- | Retrieve an `Invoice` by `InvoiceId` with `ExpandParams`
 getInvoiceExpandable
     :: InvoiceId    -- ^ Get an `Invoice` by `InvoiceId`
-    -> ExpandParams -- ^ `ExpandParams` 
+    -> ExpandParams -- ^ `ExpandParams`
     -> Stripe Invoice
 getInvoiceExpandable
     invoiceid
@@ -75,7 +80,7 @@ getInvoicesExpandable
     :: Maybe Limit                 -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter InvoiceItemId -- ^ Paginate starting after the following `Customer`
     -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `CustomerID`
-    -> ExpandParams               
+    -> ExpandParams
     -> Stripe (StripeList Invoice)
 getInvoicesExpandable
     limit

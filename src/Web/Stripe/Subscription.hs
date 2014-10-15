@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Stripe.Subscription
     ( -- * Types
-      CustomerId     (..)
-    , PlanId         (..)
-    , Subscription   (..)
-    , SubscriptionId (..)
+      CustomerId         (..)
+    , PlanId             (..)
+    , Subscription       (..)
+    , SubscriptionId     (..)
+    , SubscriptionStatus (..)
       -- * API
     , createSubscription
     , getSubscription
@@ -16,12 +17,16 @@ module Web.Stripe.Subscription
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
-                                             StripeRequest (..), callAPI, toText, toMetaData,
-                                             getParams, (</>), toExpandable)
-import           Web.Stripe.Types           (CustomerId (..), PlanId (..),
-                                             Subscription (..), Limit, StartingAfter, EndingBefore,
-                                             SubscriptionId (..), MetaData, ExpandParams)
-import           Web.Stripe.Types.Util      
+                                             StripeRequest (..), callAPI,
+                                             getParams, toExpandable,
+                                             toMetaData, toText, (</>))
+import           Web.Stripe.Types           (CustomerId (..), EndingBefore,
+                                             ExpandParams, Limit, MetaData,
+                                             PlanId (..), StartingAfter,
+                                             Subscription (..),
+                                             SubscriptionId (..),
+                                             SubscriptionStatus (..))
+import           Web.Stripe.Types.Util
 
 ------------------------------------------------------------------------------
 -- | Create a `Subscription` by `CustomerId` and `PlanId`
@@ -32,7 +37,7 @@ createSubscription
     -> Stripe Subscription
 createSubscription
     customerid
-    (PlanId planid) 
+    (PlanId planid)
     metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions"
@@ -102,7 +107,7 @@ getSubscriptionsExpandable
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(SubscriptionId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(SubscriptionId x) -> x) `fmap` endingBefore)
-          ] ++ toExpandable expandParams 
+          ] ++ toExpandable expandParams
 
 ------------------------------------------------------------------------------
 -- | Update a `Subscription` by `CustomerId` and `SubscriptionId`
