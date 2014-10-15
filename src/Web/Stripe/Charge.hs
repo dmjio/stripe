@@ -1,4 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+-- |
+-- Module      : Web.Stripe.Charge
+-- Copyright   : (c) David Johnson, 2014
+-- Maintainer  : djohnson.m@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
 module Web.Stripe.Charge
     ( -- * API
       ---- * Create Charges
@@ -28,7 +34,7 @@ module Web.Stripe.Charge
     , ExpMonth     (..)
     , ExpYear      (..)
     , StripeList   (..)
-    , ReceiptEmail (..)
+    , Email (..)
     , Description
     , StatementDescription
     , Amount
@@ -46,7 +52,7 @@ import           Web.Stripe.Types           (Amount, CVC (..), Capture,
                                              CustomerId (..), Description,
                                              EndingBefore, ExpMonth (..),
                                              ExpYear (..), Limit, MetaData,
-                                             ReceiptEmail (..), StartingAfter,
+                                             Email (..), StartingAfter,
                                              StatementDescription(..), ExpandParams,
                                              StripeList (..), TokenId (..))
 import           Web.Stripe.Types.Util
@@ -102,7 +108,7 @@ createCharge
     -> Maybe CustomerId   -- ^ Optional, either CustomerId or TokenId has to be specified
     -> Maybe TokenId      -- ^ Optional, either CustomerId or TokenId has to be specified
     -> Maybe StatementDescription -- ^ Optional, Arbitrary string to include on CC statements
-    -> Maybe ReceiptEmail -- ^ Optional, Arbitrary string to include on CC statements
+    -> Maybe Email        -- ^ Optional, Arbitrary string to include on CC statements
     -> Capture            -- ^ Optional, default is True
     -> Maybe CardNumber
     -> Maybe ExpMonth
@@ -133,7 +139,7 @@ createCharge
                    , ("card", (\(TokenId tokenid) -> tokenid) `fmap` tokenId)
                    , ("description", description)
                    , ("statement_description", (\(StatementDescription x) -> x) `fmap` statementDescription)
-                   , ("receipt_email", (\(ReceiptEmail email) -> email) `fmap` receiptEmail)
+                   , ("receipt_email", (\(Email email) -> email) `fmap` receiptEmail)
                    , ("capture", (\x -> if x then "true" else "false") `fmap` Just capture)
                    , ("card[number]", (\(CardNumber c) -> toText c) `fmap` cardNumber)
                    , ("card[exp_month]", (\(ExpMonth m) -> toText m) `fmap` expMonth)
@@ -258,7 +264,7 @@ updateCharge
 captureCharge
     :: ChargeId           -- ^ The Charge to capture
     -> Maybe Amount       -- ^ If Nothing the entire charge will be captured, otherwise the remaining will be refunded
-    -> Maybe ReceiptEmail -- ^ Email address to send this charge's receipt to
+    -> Maybe Email -- ^ Email address to send this charge's receipt to
     -> Stripe Charge
 captureCharge
     chargeid
@@ -268,5 +274,5 @@ captureCharge
         url      = "charges" </> getChargeId chargeid </> "capture"
         params   = getParams [
                      ("amount", toText `fmap` amount)
-                   , ("receipt_email", (\(ReceiptEmail email) -> email) `fmap` receiptEmail)
+                   , ("receipt_email", (\(Email email) -> email) `fmap` receiptEmail)
                    ]

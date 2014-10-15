@@ -1,13 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- |
 -- Module      : Web.Stripe.Client.Util
--- Description : Utilities for issuing Stripe Requests
 -- Copyright   : (c) David Johnson, 2014
--- License     : MIT
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
--- |
 module Web.Stripe.Client.Util
     ( -- * Utils
       fromSeconds

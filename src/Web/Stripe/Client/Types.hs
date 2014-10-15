@@ -1,13 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- |
--- Module      : Web.Stripe.Client.Error
--- Description : Internal Types for Stripe Requests
+-- Module      : Web.Stripe.Client.Types
 -- Copyright   : (c) David Johnson, 2014
--- License     : MIT
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
--- |
 module Web.Stripe.Client.Types
   ( -- * Types
     Stripe

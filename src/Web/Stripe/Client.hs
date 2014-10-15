@@ -1,3 +1,9 @@
+-- |
+-- Module      : Web.Stripe.Client
+-- Copyright   : (c) David Johnson, 2014
+-- Maintainer  : djohnson.m@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
 module Web.Stripe.Client
     ( -- * Run a `Stripe` action
       stripe

@@ -1,4 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+-- |
+-- Module      : Web.Stripe.ApplicationFeeRefund
+-- Copyright   : (c) David Johnson, 2014
+-- Maintainer  : djohnson.m@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
 module Web.Stripe.ApplicationFeeRefund
     ( -- * API
       createApplicationFeeRefund
