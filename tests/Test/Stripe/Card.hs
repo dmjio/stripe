@@ -2,7 +2,8 @@
 {-# LANGUAGE RecordWildCards #-}
 module Test.Stripe.Card (runCardTests) where
 
-import Control.Monad.Reader
+import Control.Monad.Trans.Reader
+import Control.Monad.IO.Class (liftIO)
 
 import Test.Stripe
 import Test.Hspec

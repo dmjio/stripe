@@ -7,15 +7,17 @@ module Web.Stripe.Client.Types
   , APIVersion    (..)
   ) where
 
-import           Control.Monad.Trans.Reader (ReaderT)
+import           Control.Monad.Reader       (ReaderT)
+import           Control.Monad.Trans.Either (EitherT)
 import           Data.ByteString            (ByteString)
 import           Data.Text                  (Text)
-import           Network.Http.Client        (Method)
-import           Web.Stripe.Client.Error    (StripeError(..))
+import           Network.Http.Client        (Connection, Method)
+import           Web.Stripe.Client.Error    (StripeError (..))
 
 ------------------------------------------------------------------------------
 -- | Base Type we use for Stripe
-type Stripe a = ReaderT StripeConfig IO (Either StripeError a)
+type Stripe a = EitherT StripeError (ReaderT (StripeConfig, Connection) IO) a
+-- type Stripe a = ReaderT StripeConfig IO (Either StripeError a)
 
 ------------------------------------------------------------------------------
 -- | HTTP Params type
@@ -30,7 +32,7 @@ data StripeRequest = StripeRequest
     } deriving Show
 
 ------------------------------------------------------------------------------
--- | Information for Stripe secret key 
+-- | Information for Stripe secret key
 data StripeConfig = StripeConfig
     { secretKey :: ByteString
     } deriving Show

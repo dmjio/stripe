@@ -19,9 +19,7 @@ Test-Suite tests
     build-depends:    base
                     , bytestring
                     , hspec
-                    , mtl
-                    , mtl >= 2.1.3.1
-                    , stripe-simple
+                    , stripe-haskell
                     , text
                     , transformers
     default-language: Haskell2010
@@ -33,18 +31,21 @@ Benchmark benchmarks
     build-depends:    base
                     , criterion
                     , mtl >= 2.1.3.1
-                    , stripe-simple
+                    , stripe-haskell
     default-language: Haskell2010
     ghc-options:      -Wall 
 
 library 
   hs-source-dirs:      src
-  build-depends:       aeson                  
+  build-depends:       HsOpenSSL
+                     , aeson
                      , base >=4.7 && <4.8
                      , bytestring
-                     , HsOpenSSL
+                     , either
+                     , hspec
                      , http-streams
                      , io-streams
+                     , mtl >= 2.1.3.1
                      , text
                      , time
                      , transformers

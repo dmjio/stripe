@@ -26,6 +26,7 @@ type AccountBalance = Int
 type TrialPeriod = UTCTime
 type MetaData = [ (Text,Text) ]
 type ExpandParams = [Text]
+
 newtype Quantity = Quantity Int deriving (Show, Eq)
 newtype Email = Email Text deriving (Show, Eq)
 newtype StatementDescription = StatementDescription Text deriving (Show, Eq)

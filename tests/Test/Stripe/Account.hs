@@ -4,10 +4,9 @@ module Test.Stripe.Account
     ( runAccountTests
     ) where
 
-import Web.Stripe.Client
+import Web.Stripe
 import Web.Stripe.Account
 
-import Test.Stripe
 import Control.Monad.Trans.Reader (ask)
 import Control.Monad.IO.Class (liftIO)
 
