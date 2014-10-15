@@ -3,5 +3,3 @@ module Web.Stripe
        ) where
 
 import Web.Stripe.Client
-
-
