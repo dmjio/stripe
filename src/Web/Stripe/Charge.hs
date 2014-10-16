@@ -247,7 +247,7 @@ getCustomerChargesExpandable
 updateCharge
     :: ChargeId    -- ^ The `Charge` to update
     -> Description -- ^ The `Charge` Description to update
-    -> MetaData    -- ^ The `Charge` Description to update
+    -> MetaData    -- ^ The `Charge` MetaData to update
     -> Stripe Charge
 updateCharge
     chargeid

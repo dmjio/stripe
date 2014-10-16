@@ -80,8 +80,8 @@ getApplicationFeeRefundExpandable (FeeId feeid) (RefundId refundid) expansion
 ------------------------------------------------------------------------------
 -- | Retrieve a list of all 'ApplicationFeeRefund's for a given Application 'FeeId'
 getApplicationFeeRefunds
-    :: FeeId   -- ^ The `FeeID` associated with the application
-    -> Limit   -- ^ Limit on how many Refunds to return (max 100, default 10)
+    :: FeeId               -- ^ The `FeeID` associated with the application
+    -> Limit               -- ^ Limit on how many Refunds to return (max 100, default 10)
     -> StartingAfter FeeId -- ^ Lower bound on how many Refunds to return
     -> EndingBefore FeeId  -- ^ Upper bound on how many Refunds to return
     -> Stripe (StripeList ApplicationFeeRefund)
@@ -120,13 +120,13 @@ getApplicationFeeRefundsExpandable
 ------------------------------------------------------------------------------
 -- | Update an `ApplicationFeeRefund` for a given Application `FeeId` and `RefundId`
 updateApplicationFeeRefund
-    :: RefundId -- ^ The `RefundId` associated with the application
-    -> FeeId    -- ^ The `FeeID` associated with the application
+    :: FeeId    -- ^ The `FeeID` associated with the application
+    -> RefundId -- ^ The `RefundId` associated with the application
     -> MetaData -- ^ The `MetaData` associated with the Fee (optional)
     -> Stripe (StripeList ApplicationFeeRefund)
 updateApplicationFeeRefund
-    (RefundId refundid)
     (FeeId feeid)
+    (RefundId refundid)
     metadata = callAPI request
   where
     request = StripeRequest GET url params

@@ -13,6 +13,7 @@ import           Data.Aeson                 (FromJSON (parseJSON), Object,
                                              Value (String, Object), (.:),
                                              (.:?))
 import           Data.Text                  (Text)
+import qualified Data.HashMap.Strict  as H
 import           Data.Time                  (UTCTime)
 import           Web.Stripe.Client.Internal (fromSeconds)
 
@@ -57,7 +58,7 @@ data Charge = Charge {
     , chargeInvoice              :: Maybe InvoiceId
     , chargeDescription          :: Maybe Text
     , chargeDispute              :: Maybe Text
-    , chargeMetaData             :: Object
+    , chargeMetaData             :: [(Text,Text)]
     , chargeStatementDescription :: Maybe Text
     , chargeReceiptEmail         :: Maybe Text
     , chargeReceiptNumber        :: Maybe Text
@@ -89,7 +90,7 @@ instance FromJSON Charge where
                <|> (fmap ExpandedInvoice <$> o .:? "invoice"))
                <*> o .:? "description"
                <*> o .:? "dispute"
-               <*> o .: "metadata"
+               <*> (H.toList <$> o .: "metadata")
                <*> o .:? "statement_description"
                <*> o .:? "receipt_email"
                <*> o .:? "receipt_number"
@@ -117,7 +118,7 @@ data Refund = Refund {
     , refundObject             :: Text
     , refundCharge             :: ChargeId
     , refundBalanceTransaction :: TransactionId
-    , refundMetaData           :: Object
+    , refundMetaData           :: [(Text,Text)]
     } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
