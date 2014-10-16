@@ -9,11 +9,11 @@ module Web.Stripe.Types where
 
 import           Control.Applicative        (pure, (<$>), (<*>), (<|>))
 import           Control.Monad              (mzero)
-import           Data.Aeson                 (FromJSON (parseJSON), Object,
+import           Data.Aeson                 (FromJSON (parseJSON),
                                              Value (String, Object), (.:),
                                              (.:?))
+import qualified Data.HashMap.Strict        as H
 import           Data.Text                  (Text)
-import qualified Data.HashMap.Strict  as H
 import           Data.Time                  (UTCTime)
 import           Web.Stripe.Client.Internal (fromSeconds)
 
@@ -58,7 +58,7 @@ data Charge = Charge {
     , chargeInvoice              :: Maybe InvoiceId
     , chargeDescription          :: Maybe Text
     , chargeDispute              :: Maybe Text
-    , chargeMetaData             :: [(Text,Text)]
+    , chargeMetaData             :: MetaData
     , chargeStatementDescription :: Maybe Text
     , chargeReceiptEmail         :: Maybe Text
     , chargeReceiptNumber        :: Maybe Text
@@ -118,7 +118,7 @@ data Refund = Refund {
     , refundObject             :: Text
     , refundCharge             :: ChargeId
     , refundBalanceTransaction :: TransactionId
-    , refundMetaData           :: [(Text,Text)]
+    , refundMetaData           :: MetaData
     } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ instance FromJSON Refund where
                <*> (ChargeId <$> o .: "charge")
                <*> ((TransactionId <$> o .: "balance_transaction")
                <|> (ExpandedTransaction <$> o .: "balance_transaction"))
-               <*> o .: "metadata"
+               <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ data Customer = Customer {
     , customerCards          :: StripeList Card
     , customerCurrency       :: Maybe Currency
     , customerDefaultCard    :: Maybe CardId
-    , customerMetaData       :: Object
+    , customerMetaData       :: MetaData
     } | DeletedCustomer {
       deletedCustomer   :: Bool
     , deletedCustomerId :: CustomerId
@@ -194,7 +194,7 @@ instance FromJSON Customer where
            <*> (fmap Currency <$> o .:? "currency")
            <*> ((fmap CardId <$> o .:? "default_card")
            <|> (fmap ExpandedCard <$> o.:? "default_card"))
-           <*> o .: "metadata"
+           <*> (H.toList <$> o .: "metadata")
            <|> DeletedCustomer
            <$> o .: "deleted"
            <*> (CustomerId <$> o .: "id")
@@ -484,7 +484,7 @@ data Plan = Plan {
     , planLiveMode        :: Bool
     , planIntervalCount   :: Maybe Int -- optional, max of 1 year intervals allowed, default 1
     , planTrialPeriodDays :: Maybe Int
-    , planMetaData        :: Object
+    , planMetaData        :: MetaData
     , planDescription     :: Maybe Text
 } deriving (Show, Eq)
 
@@ -567,7 +567,7 @@ data Coupon = Coupon {
     , couponTimesRedeemed    :: Maybe Int
     , couponDurationInMonths :: Maybe Int
     , couponValid            :: Bool
-    , couponMetaData         :: Object
+    , couponMetaData         :: MetaData
     } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -586,7 +586,7 @@ instance FromJSON Coupon where
                <*> o .:? "times_redeemed"
                <*> o .:? "duration_in_months"
                <*> o .: "valid"
-               <*> o .: "metadata"
+               <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -699,7 +699,7 @@ data Invoice = Invoice {
     , invoiceSubscription         :: Maybe SubscriptionId
     , invoiceStatementDescription :: Maybe Text
     , invoiceDescription          :: Maybe Text
-    , invoiceMetaData             :: Object
+    , invoiceMetaData             :: MetaData
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -735,7 +735,7 @@ instance FromJSON Invoice where
                <*> (fmap SubscriptionId <$> o .: "subscription")
                <*> o .:? "statement_description"
                <*> o .:? "description"
-               <*> o .: "metadata"
+               <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -762,7 +762,7 @@ data InvoiceItem = InvoiceItem {
     , invoiceItemDescription  :: Text
     , invoiceItemInvoice      :: Maybe InvoiceId
     , invoiceItemSubscription :: Maybe Subscription
-    , invoiceItemMetaData     :: Object
+    , invoiceItemMetaData     :: MetaData
     } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -782,7 +782,7 @@ instance FromJSON InvoiceItem where
                    <*> ((fmap InvoiceId <$> o .:? "invoice")
                    <|> (fmap ExpandedInvoice <$> o .:? "invoice"))
                    <*> o .:? "subscription"
-                   <*> o .: "metadata"
+                   <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -818,7 +818,7 @@ data InvoiceLineItem = InvoiceLineItem {
     , invoiceLineItemQuantity    :: Maybe Quantity
     , invoiceLineItemPlan        :: Maybe Plan
     , invoiceLineItemDescription :: Maybe Text
-    , invoiceLineItemMetaData    :: Object
+    , invoiceLineItemMetaData    :: MetaData
   } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -851,7 +851,7 @@ instance FromJSON InvoiceLineItem where
                        <*> (fmap Quantity <$> o .:? "quantity")
                        <*> o .:? "plan"
                        <*> o .:? "description"
-                       <*> o .: "metadata"
+                       <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -921,7 +921,7 @@ data Dispute = Dispute {
     , disputeBalanceTransactions :: [Text]
     , disputeEvidenceDueBy       :: UTCTime
     , disputeEvidence            :: Maybe Text
-    , disputeMetaData            :: Object
+    , disputeMetaData            :: MetaData
     } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -945,7 +945,7 @@ instance FromJSON Dispute where
                 <*> o .: "balance_transactions"
                 <*> (fromSeconds <$> o .: "evidence_due_by")
                 <*> o .:? "evidence"
-                <*> o .: "metadata"
+                <*> (H.toList <$> o .: "metadata")
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1006,7 +1006,7 @@ data Transfer = Transfer {
     , transferFailureCode          :: Maybe Text
     , transferStatementDescription :: Maybe Text
     , transferRecipient            :: Maybe RecipientId
-    , transferMetaData             :: Object
+    , transferMetaData             :: MetaData
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1031,7 +1031,7 @@ instance FromJSON Transfer where
                  <*> o .:? "statement_description"
                  <*> ((fmap RecipientId <$> o .:? "recipient")
                  <|> (fmap ExpandedRecipient <$> o .:? "recipient"))
-                 <*> o .: "metadata"
+                 <*> (H.toList <$> o .: "metadata")
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1164,7 +1164,7 @@ data ApplicationFee = ApplicationFee {
     , applicationFeeAccountId          :: AccountId
     , applicationFeeApplicationId      :: ApplicationId
     , applicationFeeChargeId           :: ChargeId
-    , applicationFeeMetaData           :: Object
+    , applicationFeeMetaData           :: MetaData
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1192,7 +1192,7 @@ instance FromJSON ApplicationFee where
                       <*> (ApplicationId <$> o .: "application")
                       <*> ((ChargeId <$> o .: "charge")
                       <|> (ExpandedCharge <$> o .: "charge"))
-                      <*> o .: "metadata"
+                      <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1212,7 +1212,7 @@ data ApplicationFeeRefund = ApplicationFeeRefund {
      , applicationFeeRefundObject             :: Text
      , applicationFeeRefundBalanceTransaction :: Maybe TransactionId
      , applicationFeeRefundFee                :: FeeId
-     , applicationFeeRefundMetaData           :: Object
+     , applicationFeeRefundMetaData           :: MetaData
      } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1227,7 +1227,7 @@ instance FromJSON ApplicationFeeRefund where
               <*> ((fmap TransactionId <$> o .:? "balance_transaction")
               <|> (fmap ExpandedTransaction <$> o .:? "balance_transaction"))
               <*> (FeeId <$> o .: "fee")
-              <*> o .: "metadata"
+              <*> (H.toList <$> o .: "metadata")
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
