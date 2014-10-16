@@ -9,9 +9,10 @@ module Web.Stripe.Charge
     ( -- * API
       ---- * Create Charges
       chargeCustomer
-    , createCharge
     , chargeCardByToken
+    , chargeCustomerByCardId
     , chargeCard
+    , chargeBase
       ---- * Get Charge(s)
     , getCharge
     , getChargeExpandable
@@ -54,11 +55,11 @@ import           Web.Stripe.Types           (Amount, CVC (..), Capture,
                                              ExpYear (..), Limit, MetaData,
                                              Email (..), StartingAfter,
                                              StatementDescription(..), ExpandParams,
-                                             StripeList (..), TokenId (..))
+                                             StripeList (..), TokenId (..), CardId(..))
 import           Web.Stripe.Types.Util
 
 ------------------------------------------------------------------------------
--- | Charge `Customer``s by `CustomerId`
+-- | Charge `Customer``s by `CustomerId`, will charge the default `Card` if exists
 chargeCustomer
     :: CustomerId   -- ^ The ID of the customer to be charged
     -> Currency     -- ^ Required, 3-letter ISO Code
@@ -66,9 +67,29 @@ chargeCustomer
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
 chargeCustomer customerId currency amount description =
-    createCharge amount currency description (Just customerId)
-    Nothing Nothing Nothing False
+    chargeBase amount currency description (Just customerId)
+    Nothing Nothing Nothing True
     Nothing Nothing Nothing Nothing []
+
+------------------------------------------------------------------------------
+-- | Charge `Customer``s by `CustomerId`
+chargeCustomerByCardId
+    :: CustomerId   -- ^ The ID of the `Customer` to be charged
+    -> CardId       -- ^ `CardId` of `Customer` to charge
+    -> Currency     -- ^ Required, 3-letter ISO Code
+    -> Amount       -- ^ Required, Integer value of 100 represents $1
+    -> Maybe Description -- ^ Optional, default is null
+    -> Stripe Charge
+chargeCustomerByCardId
+    customerId
+    cardid
+    currency
+    amount
+    description =
+      chargeBase amount currency description
+      (Just customerId) (Just $ TokenId $ getCardId cardid)  Nothing
+      Nothing True Nothing Nothing
+      Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Charge a card by a `Token`
@@ -79,7 +100,7 @@ chargeCardByToken
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
 chargeCardByToken tokenId currency amount description =
-    createCharge amount currency description Nothing (Just tokenId)
+    chargeBase amount currency description Nothing (Just tokenId)
     Nothing Nothing True Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
@@ -94,14 +115,14 @@ chargeCard
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
 chargeCard cardNumber expMonth expYear cvc currency amount description =
-    createCharge amount currency description
+    chargeBase amount currency description
     Nothing Nothing Nothing Nothing True
     (Just cardNumber) (Just expMonth)
     (Just expYear) (Just cvc) []
 
 ------------------------------------------------------------------------------
 -- | Base method for creating a `Charge`
-createCharge
+chargeBase
     :: Amount             -- ^ Required, Integer value of 100 represents $1
     -> Currency           -- ^ Required, 3-letter ISO Code
     -> Maybe Description  -- ^ Optional, default is nullo
@@ -116,7 +137,7 @@ createCharge
     -> Maybe CVC
     -> MetaData
     -> Stripe Charge
-createCharge
+chargeBase
     amount
     (Currency currency)
     description
@@ -141,10 +162,10 @@ createCharge
                    , ("statement_description", (\(StatementDescription x) -> x) `fmap` statementDescription)
                    , ("receipt_email", (\(Email email) -> email) `fmap` receiptEmail)
                    , ("capture", (\x -> if x then "true" else "false") `fmap` Just capture)
-                   , ("card[number]", (\(CardNumber c) -> toText c) `fmap` cardNumber)
-                   , ("card[exp_month]", (\(ExpMonth m) -> toText m) `fmap` expMonth)
+                   , ("card[number]", (\(CardNumber c) -> c) `fmap` cardNumber)
+                   , ("card[exp_month]", (\(ExpMonth m) ->  toText m) `fmap` expMonth)
                    , ("card[exp_year]", (\(ExpYear y) -> toText y) `fmap` expYear)
-                   , ("card[cvc]", (\(CVC c) -> toText c) `fmap` cvc')
+                   , ("card[cvc]", (\(CVC c) -> c) `fmap` cvc')
                   ]
 
 ------------------------------------------------------------------------------

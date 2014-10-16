@@ -14,8 +14,7 @@ import           Test.Customer             (customerTests)
 ------------------------------------------------------------------------------
 -- | Main function entry point
 main :: IO ()
-main = hspec $ do
-  -- chargeTests
+main = hspec $ chargeTests
   -- accountTests
   -- customerTests
   -- applicationFeeTests
