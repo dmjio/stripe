@@ -1039,9 +1039,8 @@ instance FromJSON Transfer where
 ------------------------------------------------------------------------------
 -- | `BankAccount` Object
 data BankAccount = BankAccount {
-      bankAccountId            :: TokenId
+      bankAccountId            :: BankAccountId
     , bankAccountObject        :: Text
-    , bankAccountLiveMode      :: Bool
     , bankAccountLast4         :: Text
     , bankAccountCountry       :: Country
     , bankAccountCurrency      :: Currency
@@ -1054,9 +1053,8 @@ data BankAccount = BankAccount {
 -- | `BankAccount` JSON Instance
 instance FromJSON BankAccount where
    parseJSON (Object o) =
-     BankAccount <$> (TokenId <$> o .: "id")
+     BankAccount <$> (BankAccountId <$> o .: "id")
                  <*> o .: "object"
-                 <*> o .: "livemode"
                  <*> o .: "last4"
                  <*> (Country <$> o .: "country")
                  <*> (Currency <$> o .: "currency")
@@ -1064,6 +1062,11 @@ instance FromJSON BankAccount where
                  <*> o .:? "fingerprint"
                  <*> o .: "bank_name"
    parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | `BankAccountId` for `BankAccount`
+newtype BankAccountId = BankAccountId Text
+                        deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
 -- | `BankAccountStatus` Object
@@ -1074,7 +1077,7 @@ data BankAccountStatus =
 ------------------------------------------------------------------------------
 -- | `BankAccountStatus` JSON instance
 instance FromJSON BankAccountStatus where
-   parseJSON (String "new") = pure New
+   parseJSON (String "new") = pure $ New
    parseJSON (String "validated") = pure Validated
    parseJSON (String "verified") = pure Verified
    parseJSON (String "errored") = pure Errored

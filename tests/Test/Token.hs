@@ -8,12 +8,6 @@ import           Test.Hspec
 import           Web.Stripe
 import           Web.Stripe.Token
 
-
-f = getConfig >>= \config -> stripe config $ createBankAccountToken
-                                  (Country "US")
-                                  (RoutingNumber "110000000")
-                                  (AccountNumber "000123456789")
-
 tokenTests :: Spec
 tokenTests = do
   describe "Token tests" $ do
@@ -28,12 +22,20 @@ tokenTests = do
                                   (RoutingNumber "110000000")
                                   (AccountNumber "000123456789")
       result `shouldSatisfy` isRight
-    it "Can retrieve an Existing Token" $ do
+    it "Can retrieve an Existing Card Token" $ do
       config <- getConfig
       result <- stripe config $ do
         Token { tokenId = tkid } <- createCardToken cn em ey cvc
-        getToken tkid
-      print result
+        getCardToken tkid
+      result `shouldSatisfy` isRight
+    it "Can retrieve an Existing Bank Account Token" $ do
+      config <- getConfig
+      result <- stripe config $ do
+        Token { tokenId = tkid } <- createBankAccountToken
+                 (Country "US")
+                 (RoutingNumber "110000000")
+                 (AccountNumber "000123456789")
+        getBankAccountToken tkid
       result `shouldSatisfy` isRight
   where
     cn  = CardNumber "4242424242424242"

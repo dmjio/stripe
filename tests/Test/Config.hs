@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Test.Config where
 
 import           Data.ByteString (ByteString)
