@@ -16,5 +16,4 @@ applicationFeeTests = do
     it "Succesfully retrieves all application fees" $ do
       config <- getConfig
       result <- stripe config $ getApplicationFees Nothing Nothing Nothing
-      print result
       result `shouldSatisfy` isRight

@@ -7,6 +7,7 @@ import           Data.Either               (isLeft, isRight)
 import           Test.Hspec
 
 import           Test.Account              (accountTests)
+import           Test.Charge               (chargeTests)
 import           Test.ApplicationFee       (applicationFeeTests)
 import           Test.ApplicationFeeRefund (applicationFeeRefundTests)
 import           Test.Customer             (customerTests)
@@ -14,10 +15,11 @@ import           Test.Customer             (customerTests)
 ------------------------------------------------------------------------------
 -- | Main function entry point
 main :: IO ()
-main = hspec $ chargeTests
-  -- accountTests
-  -- customerTests
-  -- applicationFeeTests
-  -- applicationFeeRefundTests
+main = hspec $ do
+  chargeTests
+  accountTests
+  customerTests
+  applicationFeeTests
+  applicationFeeRefundTests
 
 

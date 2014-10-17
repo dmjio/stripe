@@ -74,7 +74,9 @@ createRecipientBase
     -> Maybe MiddleInitial -- ^ Middle Initial of `Recipient`
     -> RecipientType       -- ^ `Individual` or `Corporation`
     -> Maybe TaxID         -- ^ SSN for `Individual`, EIN for `Corporation`
-    -> Maybe BankAccount   -- ^ `BankAccount` to attach to `Recipient`
+    -> Maybe Country       -- ^ `Country` of BankAccount to attach to `Recipient`
+    -> Maybe RoutingNumber -- ^ `RoutingNumber` of BankAccount to attach to `Recipient`
+    -> Maybe AccountNumber -- ^ `AccountNumber` of BankAccount to attach to `Recipient`
     -> Maybe TokenId       -- ^ `TokenId` of `Card` to attach to a `Recipient`
     -> Maybe CardNumber    -- ^ `CardNumber` to attach to `Card` of `Recipient`
     -> Maybe ExpMonth      -- ^ Expiration Month of `Card`
@@ -90,7 +92,9 @@ createRecipientBase
     middleInitial
     recipienttype
     taxId
-    bankAccount
+    country
+    routingNumber
+    accountNumber
     tokenId
     cardNumber
     expMonth
@@ -108,9 +112,9 @@ createRecipientBase
                     ("name", Just name)
                   , ("type", toText `fmap` Just recipienttype)
                   , ("tax_id", taxId)
-                  , ("bank_account[country]", ((\(BankAccount { bankAccountCountry = Country x }) -> x) `fmap` bankAccount))
-                  , ("bank_account[routing_number]",  ((\(BankAccount { bankAccountRoutingNumber = RoutingNumber x }) -> x) `fmap` bankAccount))
-                  , ("bank_account[account_number]",  ((\(BankAccount { bankAccountNumber = AccountNumber x }) -> x) `fmap` bankAccount))
+                  , ("bank_account[country]", (\(Country x) -> x) `fmap` country)
+                  , ("bank_account[routing_number]",  (\(RoutingNumber x ) -> x) `fmap` routingNumber)
+                  , ("bank_account[account_number]",  (\(AccountNumber x ) -> x) `fmap` accountNumber)
                   , ("card", (\(TokenId x) -> x) `fmap` tokenId)
                   , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
                   , ("card[exp_month]", (\(ExpMonth x) -> toText x) `fmap` expMonth)
@@ -133,7 +137,7 @@ createRecipient
     middleInitial
     recipienttype
     = createRecipientBase firstName lastName middleInitial recipienttype
-      Nothing Nothing Nothing Nothing Nothing
+      Nothing Nothing Nothing Nothing Nothing Nothing Nothing
       Nothing Nothing Nothing Nothing []
 ------------------------------------------------------------------------------
 -- | Create a 'Recipient' with an attached 'Card'
@@ -157,7 +161,7 @@ createRecipientByCard
     expYear
     cvc
     = createRecipientBase firstName lastName middleInitial recipienttype
-      Nothing Nothing Nothing (Just cardNumber) (Just expMonth)
+      Nothing Nothing Nothing Nothing Nothing (Just cardNumber) (Just expMonth) 
       (Just expYear) (Just cvc) Nothing Nothing []
 
 ------------------------------------------------------------------------------
@@ -176,26 +180,31 @@ createRecipientByToken
     recipienttype
     tokenId
     = createRecipientBase firstName lastName middleInitial recipienttype
-      Nothing Nothing (Just tokenId) Nothing Nothing
+      Nothing Nothing Nothing Nothing (Just tokenId) Nothing Nothing
       Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
--- | Create a 'Recipient' with a 'BankAccount'
+-- | Create a `Recipient` with a `BankAccount`
 createRecipientByBank
-    :: FirstName           -- ^ First Name of 'Recipient'
-    -> LastName            -- ^ Last Name of 'Recipient'
-    -> Maybe MiddleInitial -- ^ Middle Initial of 'Recipient'
-    -> RecipientType       -- ^ 'Individual' or 'Corporation'
-    -> BankAccount         -- ^ 'Card' Number
+    :: FirstName           -- ^ First Name of `Recipient`
+    -> LastName            -- ^ Last Name of `Recipient`
+    -> Maybe MiddleInitial -- ^ Middle Initial of `Recipient`
+    -> RecipientType       -- ^ `Individual` or `Corporation`
+    -> Country             -- ^ `Country` of BankAccount to attach to `Recipient`
+    -> RoutingNumber       -- ^ `RoutingNumber` of BankAccount to attach to `Recipient`
+    -> AccountNumber       -- ^ `AccountNumber` of BankAccount to attach to `Recipient`
     -> Stripe Recipient
 createRecipientByBank
     firstName
     lastName
     middleInitial
     recipienttype
-    bankAccount
+    country
+    routingNumber
+    accountNumber
     = createRecipientBase firstName lastName middleInitial recipienttype
-      Nothing (Just bankAccount) Nothing Nothing Nothing Nothing Nothing Nothing Nothing []
+      Nothing (Just country) (Just routingNumber) (Just accountNumber) Nothing Nothing
+      Nothing Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a 'Recipient'
@@ -262,7 +271,9 @@ updateRecipientBase
     -> Maybe LastName      -- ^ Last Name of 'Recipient'
     -> Maybe MiddleInitial -- ^ Middle Initial of 'Recipient'
     -> Maybe TaxID         -- ^ SSN for 'Individual', EIN for 'Corporation'
-    -> Maybe BankAccount   -- ^ 'BankAccount' to attach to 'Recipient'
+    -> Maybe Country       -- ^ `Country` of BankAccount to attach to `Recipient`
+    -> Maybe RoutingNumber -- ^ `RoutingNumber` of BankAccount to attach to `Recipient`
+    -> Maybe AccountNumber -- ^ `AccountNumber` of BankAccount to attach to `Recipient`
     -> Maybe TokenId       -- ^ 'TokenId' of 'Card' to attach to a 'Recipient'
     -> Maybe CardNumber    -- ^ 'CardNumber' to attach to 'Card' of 'Recipient'
     -> Maybe ExpMonth      -- ^ Expiration Month of 'Card'
@@ -279,7 +290,9 @@ updateRecipientBase
     lastName
     middleInitial
     taxId
-    bankAccount
+    country
+    routingNumber
+    accountNumber
     tokenId
     cardNumber
     expMonth
@@ -301,9 +314,9 @@ updateRecipientBase
             in getParams [
                     ("name", name)
                   , ("tax_id", taxId)
-                  , ("bank_account[country]", ((\(BankAccount { bankAccountCountry = Country x }) -> x) `fmap` bankAccount))
-                  , ("bank_account[routing_number]",  ((\(BankAccount { bankAccountRoutingNumber = RoutingNumber x }) -> x) `fmap` bankAccount))
-                  , ("bank_account[account_number]",  ((\(BankAccount { bankAccountNumber = AccountNumber x }) -> x) `fmap` bankAccount))
+                  , ("bank_account[country]", (\(Country x) -> x) `fmap` country)
+                  , ("bank_account[routing_number]",  (\(RoutingNumber x ) -> x) `fmap` routingNumber)
+                  , ("bank_account[account_number]",  (\(AccountNumber x ) -> x) `fmap` accountNumber)
                   , ("card", (\(TokenId x) -> x) `fmap` tokenId)
                   , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
                   , ("card[exp_month]", (\(ExpMonth x) -> toText x) `fmap` expMonth)
@@ -315,12 +328,12 @@ updateRecipientBase
                   ] ++ toMetaData metadata
 
 ------------------------------------------------------------------------------
--- | Update a 'Recipient' 'FirstName', 'LastName' and/or 'MiddleInitial'
+-- | Update a `Recipient` `FirstName`, `LastName` and/or `MiddleInitial`
 updateRecipientName
-    :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
-    -> FirstName     -- ^ First Name of 'Recipient'
-    -> LastName      -- ^ Last Name of 'Recipient'
-    -> MiddleInitial -- ^ Middle Initial of 'Recipient'
+    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
+    -> FirstName     -- ^ First Name of `Recipient`
+    -> LastName      -- ^ Last Name of `Recipient`
+    -> MiddleInitial -- ^ Middle Initial of `Recipient`
     -> Stripe Recipient
 updateRecipientName
     recipientid
@@ -330,7 +343,7 @@ updateRecipientName
                      recipientid (Just firstName) (Just lastName) (Just middleInitial)
                      Nothing Nothing Nothing Nothing
                      Nothing Nothing Nothing Nothing
-                     Nothing Nothing []
+                     Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'BankAccount'
@@ -343,13 +356,19 @@ updateRecipientName
 --
 updateRecipientBankAccount
     :: RecipientId   -- ^ The 'RecipientId' of the 'Recipient' to be updated
-    -> BankAccount   -- ^ 'BankAccount' of the 'Recipient' to be updated
+    -> Country       -- ^ `Country` of BankAccount to attach to `Recipient`
+    -> RoutingNumber -- ^ `RoutingNumber` of BankAccount to attach to `Recipient`
+    -> AccountNumber -- ^ `AccountNumber` of BankAccount to attach to `Recipient`
     -> Stripe Recipient
 updateRecipientBankAccount
     recipientid
-    bankAccount = updateRecipientBase
+    country
+    routingNumber
+    accountNumber
+     = updateRecipientBase
          recipientid Nothing Nothing Nothing
-         Nothing (Just bankAccount)Nothing Nothing
+         Nothing (Just country) (Just routingNumber)
+         (Just accountNumber) Nothing Nothing
          Nothing Nothing Nothing Nothing
          Nothing Nothing []
 
@@ -368,7 +387,7 @@ updateRecipientTaxID
               recipientid Nothing Nothing Nothing
               (Just taxID) Nothing Nothing Nothing
               Nothing Nothing Nothing Nothing
-              Nothing Nothing []
+              Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Card' by 'TokenId'
@@ -383,9 +402,8 @@ updateRecipientTokenID
     recipientid
     tokenId = updateRecipientBase
               recipientid Nothing Nothing Nothing
-              Nothing Nothing (Just tokenId) Nothing
-              Nothing Nothing Nothing Nothing
-              Nothing Nothing []
+              Nothing Nothing Nothing Nothing (Just tokenId) Nothing
+              Nothing Nothing Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Card'
@@ -410,10 +428,10 @@ updateRecipientCard
     expMonth
     expYear
     cvc = updateRecipientBase
-              recipientid Nothing Nothing Nothing
-              Nothing Nothing Nothing (Just cardNumber)
-              (Just expMonth) (Just expYear) (Just cvc)
-              Nothing Nothing Nothing []
+          recipientid Nothing Nothing Nothing
+          Nothing Nothing Nothing Nothing Nothing (Just cardNumber)
+          (Just expMonth) (Just expYear) (Just cvc)
+          Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update default 'Card' of 'Recipient'
@@ -429,8 +447,8 @@ updateRecipientDefaultCard
     cardId = updateRecipientBase
               recipientid Nothing Nothing Nothing Nothing
                           Nothing Nothing Nothing Nothing
-                          Nothing Nothing (Just cardId) Nothing
-                          Nothing []
+                          Nothing Nothing Nothing Nothing
+                          (Just cardId) Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Email' Address
@@ -446,8 +464,8 @@ updateRecipientEmail
     email = updateRecipientBase
               recipientid Nothing Nothing Nothing Nothing
                           Nothing Nothing Nothing Nothing
-                          Nothing Nothing Nothing (Just email)
-                          Nothing []
+                          Nothing Nothing Nothing Nothing
+                          Nothing (Just email) Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'Description'
@@ -464,7 +482,7 @@ updateRecipientDescription
                    recipientid Nothing Nothing Nothing Nothing
                                Nothing Nothing Nothing Nothing
                                Nothing Nothing Nothing Nothing
-                              (Just description) []
+                               Nothing Nothing (Just description) []
 
 ------------------------------------------------------------------------------
 -- | Update a `Recipient` `MetaData`
@@ -481,7 +499,7 @@ updateRecipientMetaData
                recipientid Nothing Nothing Nothing Nothing
                Nothing Nothing Nothing Nothing
                Nothing Nothing Nothing Nothing
-               Nothing metadata
+               Nothing Nothing Nothing metadata
 
 ------------------------------------------------------------------------------
 -- | Delete a 'Recipient'

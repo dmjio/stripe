@@ -11,9 +11,17 @@ import           Web.Stripe.Customer
 customerTests :: Spec
 customerTests =
   describe "Customer tests" $ do
-    it "Creates an empty customer, then deletes it" $ do
+    it "Creates an empty customer" $ do
       config <- getConfig
       result <- stripe config $ do
         Customer{..} <- createEmptyCustomer
         deleteCustomer customerId
       result `shouldSatisfy` isRight
+    it "Deletes a customer" $ do
+      config <- getConfig
+      result <- stripe config $ do
+        Customer{..} <- createEmptyCustomer
+        deleteCustomer customerId
+      result `shouldSatisfy` isRight
+
+

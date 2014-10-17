@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 -- |
 -- Module      : Web.Stripe.Types
 -- Copyright   : (c) David Johnson, 2014
@@ -10,7 +11,7 @@ module Web.Stripe.Types where
 import           Control.Applicative        (pure, (<$>), (<*>), (<|>))
 import           Control.Monad              (mzero)
 import           Data.Aeson                 (FromJSON (parseJSON),
-                                             Value (String, Object), (.:),
+                                             Value (String, Object, Bool), (.:),
                                              (.:?))
 import qualified Data.HashMap.Strict        as H
 import           Data.Text                  (Text)
@@ -1034,13 +1035,50 @@ instance FromJSON Transfer where
                  <*> (H.toList <$> o .: "metadata")
     parseJSON _ = mzero
 
+
 ------------------------------------------------------------------------------
 -- | `BankAccount` Object
 data BankAccount = BankAccount {
-      bankAccountCountry       :: Country
-    , bankAccountRoutingNumber :: RoutingNumber
-    , bankAccountNumber        :: AccountNumber
+      bankAccountId            :: TokenId
+    , bankAccountObject        :: Text
+    , bankAccountLiveMode      :: Bool
+    , bankAccountLast4         :: Text
+    , bankAccountCountry       :: Country
+    , bankAccountCurrency      :: Currency
+    , bankAccountStatus        :: Maybe BankAccountStatus
+    , bankAccountFingerprint   :: Maybe Text
+    , bankAccountName          :: Text
 } deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | `BankAccount` JSON Instance
+instance FromJSON BankAccount where
+   parseJSON (Object o) =
+     BankAccount <$> (TokenId <$> o .: "id")
+                 <*> o .: "object"
+                 <*> o .: "livemode"
+                 <*> o .: "last4"
+                 <*> (Country <$> o .: "country")
+                 <*> (Currency <$> o .: "currency")
+                 <*> o .:? "status"
+                 <*> o .:? "fingerprint"
+                 <*> o .: "bank_name"
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | `BankAccountStatus` Object
+data BankAccountStatus =
+  New | Validated | Verified | Errored
+  deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | `BankAccountStatus` JSON instance
+instance FromJSON BankAccountStatus where
+   parseJSON (String "new") = pure New
+   parseJSON (String "validated") = pure Validated
+   parseJSON (String "verified") = pure Verified
+   parseJSON (String "errored") = pure Errored
+   parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | Routing Number for `BankAccount`
@@ -1121,7 +1159,7 @@ data Recipient = Recipient {
     , recipientEmail         :: Maybe Email
     , recipientName          :: Name
     , recipientVerified      :: Bool
-    , recipientActiveAccount :: Maybe AccountId
+    , recipientActiveAccount :: Maybe BankAccount
     , recipientCards         :: StripeList RecipientCard
     , recipientDefaultCard   :: Maybe CardId
 } deriving (Show, Eq)
@@ -1139,7 +1177,7 @@ instance FromJSON Recipient where
                  <*> (fmap Email <$> o .:? "email")
                  <*> o .: "name"
                  <*> o .: "verified"
-                 <*> (fmap AccountId <$> o .:? "active_account")
+                 <*> o .:? "active_account"
                  <*> o .: "cards"
                  <*> ((fmap CardId <$> o .:? "default_card")
                  <|> (fmap ExpandedCard <$> o .:? "default_card"))
@@ -1449,27 +1487,36 @@ instance FromJSON TokenType where
 
 ------------------------------------------------------------------------------
 -- | `Token` Object
-data Token = Token {
+data Token a = Token {
       tokenId       :: TokenId
     , tokenLiveMode :: Bool
     , tokenCreated  :: UTCTime
     , tokenUsed     :: Bool
     , tokenObject   :: Text
     , tokenType     :: TokenType
-    , tokenCard     :: Card
+    , tokenData     :: a
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Token`
-instance FromJSON Token where
+instance FromJSON a => FromJSON (Token a) where
    parseJSON (Object o) = do
-       Token <$> (TokenId <$> (o .: "id"))
-             <*> o .: "livemode"
-             <*> (fromSeconds <$> o .: "created")
-             <*> o .: "used"
-             <*> o .: "object"
-             <*> o .: "type"
-             <*> o .: "card"
+     tokenId <- TokenId <$> o .: "id"
+     Bool tokenLiveMode <- o .: "livemode"
+     tokenCreated <- fromSeconds <$> o .: "created"
+     Bool tokenUsed <- o .: "used"
+     String tokenObject <- o .: "object"
+     String typ <- o .: "type"
+     tokenType <- pure $ case typ of
+                      "card"         -> TokenCard
+                      "bank_account" -> TokenBankAccount
+                      _ -> error "unspecified type"
+     tokenData <-
+       case typ of
+        "bank_account" -> o .: "bank_account"
+        "card"         -> o .: "card"
+        _              -> mzero
+     return Token {..}
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
