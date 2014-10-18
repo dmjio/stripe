@@ -9,6 +9,7 @@ module Web.Stripe.Balance
     ( -- * API
       getBalance
     , getBalanceTransaction
+    , getBalanceTransactionExpandable
     , getBalanceTransactionHistory
       -- * Types
     , Balance                (..)

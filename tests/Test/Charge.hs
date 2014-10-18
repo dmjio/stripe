@@ -3,7 +3,6 @@
 module Test.Charge where
 
 import           Control.Monad
-import           Control.Monad.IO.Class (liftIO)
 import           Data.Either
 import           Data.Text              (Text)
 import           Test.Config            (getConfig)
@@ -35,7 +34,6 @@ chargeTests =
           void $ deleteCustomer cid
           return charge
         result `shouldSatisfy` isRight
-
     retrieveChargeTest = 
       it "Retrieves a charge succesfully" $ do
         config <- getConfig
@@ -46,7 +44,6 @@ chargeTests =
           void $ deleteCustomer cid
           return result
         result `shouldSatisfy` isRight
-
     updateChargeTest =
       it "Updates a charge succesfully" $ do
         config <- getConfig
@@ -61,7 +58,6 @@ chargeTests =
         let Right Charge { chargeMetaData = cmd, chargeDescription = desc } = result
         cmd `shouldSatisfy` (\x -> ("hi", "there") `elem` x)
         desc `shouldSatisfy` (==(Just "Cool" :: Maybe Text))
-
     retrieveExpandedChargeTest =
       it "Retrieves an expanded charge succesfully" $ do
         config <- getConfig
@@ -72,13 +68,11 @@ chargeTests =
           void $ deleteCustomer cid
           return result
         result `shouldSatisfy` isRight
-    
     retrieveAllChargesTest =
       it "Retrieves all charges" $ do
         config <- getConfig
         result <- stripe config $ getCharges Nothing Nothing Nothing
         result `shouldSatisfy` isRight
-
     captureChargeTest = 
       it "Captures a charge" $ do
         config <- getConfig

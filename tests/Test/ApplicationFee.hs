@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Test.ApplicationFee where
 
 import Test.Hspec

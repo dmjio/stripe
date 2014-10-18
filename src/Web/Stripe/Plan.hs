@@ -14,6 +14,7 @@ module Web.Stripe.Plan
     , getPlan
     , getPlans
     , updatePlanName
+
     , updatePlanDescription
     , updatePlanBase
     , deletePlan
@@ -23,6 +24,8 @@ module Web.Stripe.Plan
     , Interval        (..)
     , IntervalCount   (..)
     , TrialPeriodDays (..)
+    , Currency        (..)
+    , Name
     ) where
 
 import           Web.Stripe.Client.Internal
@@ -146,7 +149,7 @@ getPlans
     :: Limit                -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter PlanId -- ^ Paginate starting after the following `CustomerID`
     -> EndingBefore PlanId  -- ^ Paginate ending before the following `CustomerID`
-    -> Stripe Plan
+    -> Stripe (StripeList Plan)
 getPlans
     limit
     startingAfter

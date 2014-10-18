@@ -479,7 +479,7 @@ data Plan = Plan {
     , planName            :: Text
     , planCreated         :: UTCTime
     , planAmount          :: Int
-    , planCurrency        :: Text
+    , planCurrency        :: Currency
     , planId              :: PlanId
     , planObject          :: Text
     , planLiveMode        :: Bool
@@ -497,13 +497,13 @@ instance FromJSON Plan where
              <*> o .: "name"
              <*> (fromSeconds <$> o .: "created")
              <*> o .: "amount"
-             <*> o .: "currency"
+             <*> (Currency <$> o .: "currency")
              <*> (PlanId <$> o .: "id")
              <*> o .: "object"
              <*> o .: "livemode"
              <*> o .:? "interval_count"
              <*> o .:? "trial_period_days"
-             <*> o .: "meta_data"
+             <*> (H.toList <$> o .: "metadata")
              <*> o .:? "statement_description"
    parseJSON _ = mzero
 
@@ -556,11 +556,11 @@ instance FromJSON Duration where
 ------------------------------------------------------------------------------
 -- | `Coupon` Object
 data Coupon = Coupon {
-      couponId               :: Text
+      couponId               :: CouponId
     , couponCreated          :: UTCTime
-    , couponPercentOff       :: Int
+    , couponPercentOff       :: Maybe Int
     , couponAmountOff        :: Maybe Int
-    , couponCurrency         :: Maybe Text
+    , couponCurrency         :: Maybe Currency
     , couponLiveMode         :: Bool
     , couponDuration         :: Duration
     , couponRedeemBy         :: Maybe UTCTime
@@ -575,11 +575,11 @@ data Coupon = Coupon {
 -- | JSON Instance for `Coupon`
 instance FromJSON Coupon where
    parseJSON (Object o) =
-        Coupon <$> o .: "id"
+        Coupon <$> (CouponId <$> o .: "id")
                <*> (fromSeconds <$> o .: "created")
                <*> o .: "percent_off"
                <*> o .:? "amount_off"
-               <*> o .:? "currency"
+               <*> (fmap Currency <$> o .:? "currency")
                <*> o .: "livemode"
                <*> o .: "duration"
                <*> (fmap fromSeconds <$> o .:? "redeem_by")

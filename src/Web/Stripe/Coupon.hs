@@ -13,7 +13,7 @@ module Web.Stripe.Coupon
     , updateCoupon
     , deleteCoupon
       -- * Types
-    , Duration
+    , Duration           (..)
     , AmountOff          (..)
     , CouponId           (..)
     , Coupon             (..)
@@ -26,12 +26,12 @@ module Web.Stripe.Coupon
     , StripeDeleteResult (..)
     ) where
 
-import           Web.Stripe.Client.Internal (Method (POST, DELETE), Stripe,
+import           Web.Stripe.Client.Internal (Method (POST, DELETE, GET), Stripe,
                                              StripeRequest (..), callAPI, toMetaData,
                                              getParams, toText, (</>))
 import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
                                              CouponId (..), Currency (..),
-                                             Duration, DurationInMonths (..),
+                                             Duration(..), DurationInMonths (..),
                                              EndingBefore, Limit, MetaData,
                                              MaxRedemptions (..),
                                              PercentOff (..), RedeemBy (..),
@@ -82,7 +82,7 @@ getCoupon
     -> Stripe Coupon
 getCoupon
     (CouponId couponid) = callAPI request
-  where request = StripeRequest POST url params
+  where request = StripeRequest GET url params
         url     = "coupons" </> couponid
         params  = []
 
@@ -98,7 +98,7 @@ getCoupons
      startingAfter
      endingBefore
   = callAPI request
-  where request = StripeRequest POST url params
+  where request = StripeRequest GET url params
         url     = "coupons"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -109,18 +109,20 @@ getCoupons
 ------------------------------------------------------------------------------
 -- | Update a 'Coupon'
 updateCoupon
-    :: MetaData -- ^ The `MetaData` for the `Coupon`
-    -> Stripe (StripeList Coupon)
+    :: CouponId -- ^ The `CoupondId` of the `Coupon` to update
+    -> MetaData -- ^ The `MetaData` for the `Coupon`
+    -> Stripe Coupon
 updateCoupon
+     (CouponId couponid)
      metadata   = callAPI request
   where request = StripeRequest POST url params
-        url     = "coupons"
+        url     = "coupons" </> couponid
         params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
 -- | Delete a 'Coupon" by 'CouponId'
 deleteCoupon
-    :: CouponId
+    :: CouponId -- ^ The `CoupondId` of the `Coupon` to update
     -> Stripe StripeDeleteResult
 deleteCoupon
     (CouponId couponid) = callAPI request
