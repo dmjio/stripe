@@ -3,3 +3,7 @@ dist
 cabal.sandbox.config
 /src/Web/.DS_Store
 .DS_Store
+/tests.aux
+/tests.hp
+/tests.prof
+/tests.ps
