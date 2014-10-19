@@ -7,7 +7,7 @@ import           Control.Monad
 import           Data.Either
 import           Data.Maybe
 import           Test.Config         (getConfig)
-import           Control.Monad.IO.Class (liftIO)
+
 import           Test.Hspec
 
 import           Web.Stripe

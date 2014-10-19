@@ -180,7 +180,7 @@ data Customer = Customer {
 -- | JSON Instance for `Customer`
 instance FromJSON Customer where
     parseJSON (Object o)
-        = Customer
+        = (Customer
            <$> o .: "object"
            <*> (fromSeconds <$> o .: "created")
            <*> (CustomerId <$> o .: "id")
@@ -196,6 +196,9 @@ instance FromJSON Customer where
            <*> ((fmap CardId <$> o .:? "default_card")
            <|> (fmap ExpandedCard <$> o.:? "default_card"))
            <*> (H.toList <$> o .: "metadata")
+           <|> DeletedCustomer
+           <$> o .: "deleted"
+           <*> (CustomerId <$> o .: "id"))
            <|> DeletedCustomer
            <$> o .: "deleted"
            <*> (CustomerId <$> o .: "id")
@@ -429,17 +432,17 @@ instance FromJSON Subscription where
        Subscription <$> (SubscriptionId <$> o .: "id")
                     <*> o .: "plan"
                     <*> o .: "object"
-                    <*> o .: "start"
+                    <*> (fromSeconds <$> o .: "start")
                     <*> o .: "status"
                     <*> ((CustomerId <$> o .: "customer")
                     <|> (ExpandedCustomer <$> o .: "customer"))
                     <*> o .: "cancel_at_period_end"
-                    <*> o .: "cancel_at_period_start"
-                    <*> o .: "current_period_end"
-                    <*> o .:? "ended_at"
-                    <*> o .:? "trial_start"
-                    <*> o .:? "trial_end"
-                    <*> o .:? "canceled_at"
+                    <*> (fromSeconds <$> o .: "current_period_start")
+                    <*> (fromSeconds <$> o .: "current_period_end")
+                    <*> (fmap fromSeconds <$> o .:? "ended_at")
+                    <*> (fmap fromSeconds <$> o .:? "trial_start")
+                    <*> (fmap fromSeconds <$> o .:? "trial_end")
+                    <*> (fmap fromSeconds <$> o .:? "canceled_at")
                     <*> (Quantity <$> o .:  "quantity")
                     <*> o .:? "application_fee_percent"
                     <*> o .:? "discount"

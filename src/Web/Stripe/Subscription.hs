@@ -12,6 +12,7 @@ module Web.Stripe.Subscription
     , Subscription       (..)
     , SubscriptionId     (..)
     , SubscriptionStatus (..)
+    , StripeList         (..)
       -- * API
     , createSubscription
     , getSubscription
@@ -19,7 +20,7 @@ module Web.Stripe.Subscription
     , getSubscriptions
     , getSubscriptionsExpandable
     , updateSubscription
-    , deleteSubscription
+    , cancelSubscription
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
@@ -29,7 +30,7 @@ import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
 import           Web.Stripe.Types           (CustomerId (..), EndingBefore,
                                              ExpandParams, Limit, MetaData,
                                              PlanId (..), StartingAfter,
-                                             Subscription (..),
+                                             Subscription (..), StripeList(..),
                                              SubscriptionId (..),
                                              SubscriptionStatus (..))
 import           Web.Stripe.Types.Util
@@ -83,7 +84,7 @@ getSubscriptions
     -> Limit                        -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter SubscriptionId -- ^ Paginate starting after the following `CustomerId`
     -> EndingBefore SubscriptionId  -- ^ Paginate ending before the following `CustomerId`
-    -> Stripe Subscription
+    -> Stripe (StripeList Subscription)
 getSubscriptions
     customerid
     limit
@@ -100,7 +101,7 @@ getSubscriptionsExpandable
     -> StartingAfter SubscriptionId -- ^ Paginate starting after the following `CustomerId`
     -> EndingBefore SubscriptionId  -- ^ Paginate ending before the following `CustomerId`
     -> ExpandParams
-    -> Stripe Subscription
+    -> Stripe (StripeList Subscription)
 getSubscriptionsExpandable
     customerid
     limit
@@ -132,14 +133,17 @@ updateSubscription
 
 ------------------------------------------------------------------------------
 -- | Delete a `Subscription` by `CustomerId` and `SubscriptionId`
-deleteSubscription
+cancelSubscription
     :: CustomerId
     -> SubscriptionId
+    -> Bool -- ^ Flag set to true will delay cancellation until end of current period, default `False`
     -> Stripe Subscription
-deleteSubscription
+cancelSubscription
     customerid
-    (SubscriptionId subscriptionid) = callAPI request
+    (SubscriptionId subscriptionid)
+    atPeriodEnd
+     = callAPI request
   where request = StripeRequest DELETE url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
-        params  = []
+        params  = getParams [ ("at_period_end", Just $ toText atPeriodEnd) ]
 
