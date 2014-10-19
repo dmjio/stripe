@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards   #-}
 -- |
 -- Module      : Web.Stripe.Types
 -- Copyright   : (c) David Johnson, 2014
@@ -297,17 +297,17 @@ data Card = Card {
     , cardLastFour          :: Text
     , cardBrand             :: Brand
     , cardFunding           :: Text
-    , cardExpMonth          :: Int
-    , cardExpYear           :: Int
+    , cardExpMonth          :: ExpMonth
+    , cardExpYear           :: ExpYear
     , cardFingerprint       :: Text
     , cardCountry           :: Text
-    , cardName              :: Maybe Text
-    , cardAddressLine1      :: Maybe Text
-    , cardAddressLine2      :: Maybe Text
-    , cardAddressCity       :: Maybe Text
-    , cardAddressState      :: Maybe Text
-    , cardAddressZip        :: Maybe Text
-    , cardAddressCountry    :: Maybe Text
+    , cardName              :: Maybe Name
+    , cardAddressLine1      :: Maybe AddressLine1
+    , cardAddressLine2      :: Maybe AddressLine2
+    , cardAddressCity       :: Maybe AddressCity
+    , cardAddressState      :: Maybe AddressState
+    , cardAddressZip        :: Maybe AddressZip
+    , cardAddressCountry    :: Maybe AddressCountry
     , cardCVCCheck          :: Maybe Text
     , cardAddressLine1Check :: Maybe Text
     , cardAddressZipCheck   :: Maybe Text
@@ -321,17 +321,17 @@ data RecipientCard = RecipientCard {
     , recipientCardLastFour          :: Text
     , recipientCardBrand             :: Brand
     , recipientCardFunding           :: Text
-    , recipientCardExpMonth          :: Int
-    , recipientCardExpYear           :: Int
+    , recipientCardExpMonth          :: ExpMonth
+    , recipientCardExpYear           :: ExpYear
     , recipientCardFingerprint       :: Text
-    , recipientCardCountry           :: Text
-    , recipientCardName              :: Maybe Text
-    , recipientCardAddressLine1      :: Maybe Text
-    , recipientCardAddressLine2      :: Maybe Text
-    , recipientCardAddressCity       :: Maybe Text
-    , recipientCardAddressState      :: Maybe Text
-    , recipientCardAddressZip        :: Maybe Text
-    , recipientCardAddressCountry    :: Maybe Text
+    , recipientCardCountry           :: Country
+    , recipientCardName              :: Maybe Name
+    , recipientCardAddressLine1      :: Maybe AddressLine1
+    , recipientCardAddressLine2      :: Maybe AddressLine2
+    , recipientCardAddressCity       :: Maybe AddressCity
+    , recipientCardAddressState      :: Maybe AddressState
+    , recipientCardAddressZip        :: Maybe AddressZip
+    , recipientCardAddressCountry    :: Maybe AddressCountry
     , recipientCardCVCCheck          :: Maybe Text
     , recipientCardAddressLine1Check :: Maybe Text
     , recipientCardAddressZipCheck   :: Maybe Text
@@ -347,17 +347,17 @@ instance FromJSON Card where
              <*> o .: "last4"
              <*> o .: "brand"
              <*> o .: "funding"
-             <*> o .: "exp_month"
-             <*> o .: "exp_year"
+             <*> (ExpMonth <$> o .: "exp_month")
+             <*> (ExpYear <$> o .: "exp_year")
              <*> o .: "fingerprint"
              <*> o .: "country"
              <*> o .:? "name"
-             <*> o .:? "address_line1"
-             <*> o .:? "address_line2"
-             <*> o .:? "address_city"
-             <*> o .:? "address_state"
-             <*> o .:? "address_zip"
-             <*> o .:? "address_country"
+             <*> (fmap AddressLine1 <$> o .:? "address_line1")
+             <*> (fmap AddressLine2 <$> o .:? "address_line2")
+             <*> (fmap AddressCity <$> o .:? "address_city")
+             <*> (fmap AddressState <$> o .:? "address_state")
+             <*> (fmap AddressZip <$> o .:? "address_zip")
+             <*> (fmap AddressCountry <$> o .:? "address_country")
              <*> o .:? "cvc_check"
              <*> o .:? "address_line1_check"
              <*> o .:? "address_zip_check"
@@ -374,17 +374,17 @@ instance FromJSON RecipientCard where
              <*> o .: "last4"
              <*> o .: "brand"
              <*> o .: "funding"
-             <*> o .: "exp_month"
-             <*> o .: "exp_year"
+             <*> (ExpMonth <$> o .: "exp_month")
+             <*> (ExpYear <$> o .: "exp_year")
              <*> o .: "fingerprint"
-             <*> o .: "country"
+             <*> (Country <$> o .: "country")
              <*> o .:? "name"
-             <*> o .:? "address_line1"
-             <*> o .:? "address_line2"
-             <*> o .:? "address_city"
-             <*> o .:? "address_state"
-             <*> o .:? "address_zip"
-             <*> o .:? "address_country"
+             <*> (fmap AddressLine1 <$> o .:? "address_line1")
+             <*> (fmap AddressLine2 <$> o .:? "address_line2")
+             <*> (fmap AddressCity <$> o .:? "address_city")
+             <*> (fmap AddressState <$> o .:? "address_state")
+             <*> (fmap AddressZip <$> o .:? "address_zip")
+             <*> (fmap AddressCountry <$> o .:? "address_country")
              <*> o .:? "cvc_check"
              <*> o .:? "address_line1_check"
              <*> o .:? "address_zip_check"
@@ -1039,14 +1039,14 @@ instance FromJSON Transfer where
 ------------------------------------------------------------------------------
 -- | `BankAccount` Object
 data BankAccount = BankAccount {
-      bankAccountId            :: BankAccountId
-    , bankAccountObject        :: Text
-    , bankAccountLast4         :: Text
-    , bankAccountCountry       :: Country
-    , bankAccountCurrency      :: Currency
-    , bankAccountStatus        :: Maybe BankAccountStatus
-    , bankAccountFingerprint   :: Maybe Text
-    , bankAccountName          :: Text
+      bankAccountId          :: BankAccountId
+    , bankAccountObject      :: Text
+    , bankAccountLast4       :: Text
+    , bankAccountCountry     :: Country
+    , bankAccountCurrency    :: Currency
+    , bankAccountStatus      :: Maybe BankAccountStatus
+    , bankAccountFingerprint :: Maybe Text
+    , bankAccountName        :: Text
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1164,7 +1164,7 @@ data Recipient = Recipient {
     , recipientVerified      :: Bool
     , recipientActiveAccount :: Maybe BankAccount
     , recipientCards         :: StripeList RecipientCard
-    , recipientDefaultCard   :: Maybe CardId
+    , recipientDefaultCard   :: Maybe RecipientCardId
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1182,8 +1182,8 @@ instance FromJSON Recipient where
                  <*> o .: "verified"
                  <*> o .:? "active_account"
                  <*> o .: "cards"
-                 <*> ((fmap CardId <$> o .:? "default_card")
-                 <|> (fmap ExpandedCard <$> o .:? "default_card"))
+                 <*> ((fmap RecipientCardId <$> o .:? "default_card")
+                 <|> (fmap ExpandedRecipientCard <$> o .:? "default_card"))
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1525,7 +1525,7 @@ instance FromJSON a => FromJSON (Token a) where
 ------------------------------------------------------------------------------
 -- | Generic handling of `Stripe` list JSON results
 data StripeList a = StripeList {
-      stripeList :: [a]
+      list       :: [a]
     , stripeUrl  :: Text
     , object     :: Text
     , totalCount :: Maybe Int

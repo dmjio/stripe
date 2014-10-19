@@ -77,7 +77,6 @@ createCardBase
   -> Maybe AddressLine2   -- ^ Address Line 2 associated with `Card`
   -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
   -> Maybe AddressZip     -- ^ Address Zip associated with `Card`
-  -> MetaData             -- ^ MetaData for `Card`
   -> Stripe a
 createCardBase
     requestType
@@ -93,11 +92,10 @@ createCardBase
     addressLine1
     addressLine2
     addressState
-    addressZip
-    metadata    = callAPI request
+    addressZip  = callAPI request
   where request = StripeRequest POST url params
         url     = requestType </> requestId </> "cards"
-        params  = toMetaData metadata ++ getParams [
+        params  = getParams [
                      ("card", (\(TokenId x) -> x) <$> tokenid)
                    , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
                    , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
@@ -124,7 +122,7 @@ createCustomerCardByToken
               Nothing Nothing Nothing
               Nothing Nothing Nothing
               Nothing Nothing Nothing
-              Nothing Nothing []
+              Nothing Nothing 
 
 ------------------------------------------------------------------------------
 -- | Create a `Recipient` card using a `Token`
@@ -134,14 +132,14 @@ createRecipientCardByToken
     -> Stripe RecipientCard
 createRecipientCardByToken
     recipientid
-    tokenid = createCardBase "customers" (getRecipientId recipientid) (Just tokenid)
+    tokenid = createCardBase "recipients" (getRecipientId recipientid) (Just tokenid)
               Nothing Nothing Nothing
               Nothing Nothing Nothing
               Nothing Nothing Nothing
-              Nothing Nothing []
+              Nothing Nothing 
 
 ------------------------------------------------------------------------------
--- | Create a `Customer` card by `CardNumber`
+-- | Add a `Card` on a `Customer`
 createCustomerCard
     :: CustomerId -- ^ `Customer` to which the card will be added
     -> CardNumber -- ^ `Card` digits
@@ -158,7 +156,7 @@ createCustomerCard
               (Just cardNumber) (Just expMonth) (Just expYear)
               (Just cvc) Nothing Nothing
               Nothing Nothing Nothing
-              Nothing Nothing []
+              Nothing Nothing 
 
 ------------------------------------------------------------------------------
 -- | Create a `Recipient` `Card` by `CardNumber`
@@ -178,7 +176,7 @@ createRecipientCard
               (Just cardNumber) (Just expMonth) (Just expYear)
               (Just cvc) Nothing Nothing
               Nothing Nothing Nothing
-              Nothing Nothing []
+              Nothing Nothing 
 
 ------------------------------------------------------------------------------
 -- | Update a `Card`, any fields not specified will remain the same
@@ -186,7 +184,7 @@ updateCardBase
     :: FromJSON a
     => URL                  -- ^ The `Recipient` or `Customer` on which to make the `Card` value can be "recipients" or "customers" only
     -> ID                   -- ^ The `RecipientId` or `CustomerId` for which the `Card` can be made
-    -> CardId               -- ^ The `CardId` associated with the `Card` to be updated
+    -> Either CardId RecipientCardId  -- ^ The `CardId` associated with the `Card` to be updated
     -> Maybe Name           -- ^ Name of `Recipient` or `Customer` to be used for `Card`
     -> Maybe AddressCity    -- ^ City associated with `Card`
     -> Maybe AddressCountry -- ^ Country associated with `Card`
@@ -194,7 +192,6 @@ updateCardBase
     -> Maybe AddressLine2   -- ^ Address Line 2 associated with `Card`
     -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
     -> Maybe AddressZip     -- ^ Address Zip associated with `Card`
-    -> MetaData             -- ^ MetaData for `Card`
     -> Stripe a
 updateCardBase
     requestType
@@ -206,11 +203,12 @@ updateCardBase
     addressLine1
     addressLine2
     addressState
-    addressZip 
-    metadata    = callAPI request
+    addressZip  = callAPI request
   where request = StripeRequest POST url params
-        url     = requestType </> requestId </> "cards" </> getCardId cardid
-        params  = toMetaData metadata ++ getParams [
+        url     = requestType </> requestId </> "cards" </> case cardid of
+                                                              Right x -> getRecipientCardId x
+                                                              Left  x -> getCardId x
+        params  = getParams [
                      ("name", name)
                    , ("address_city", (\(AddressCity x) -> x) <$> addressCity)
                    , ("address_country", (\(AddressCountry x) -> x) <$> addressCountry)
@@ -232,16 +230,16 @@ updateCustomerCard
     -> Maybe AddressLine2   -- ^ Address Line 2 associated with `Card`
     -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
     -> Maybe AddressZip     -- ^ Address Zip associated with `Card`
-    -> MetaData             -- ^ MetaData for `Card`
     -> Stripe Card
 updateCustomerCard
-    customerid  = updateCardBase "customers" (getCustomerId customerid)
+    customerid
+    cardid = updateCardBase "customers" (getCustomerId customerid) (Left cardid)
 
 ------------------------------------------------------------------------------
 -- | Update a `Recipient` `Card`
 updateRecipientCard
     :: RecipientId          -- ^ `RecipientId` associated with the `Card` to be updated
-    -> CardId               -- ^ The `CardId` associated with the `Card` to be updated
+    -> RecipientCardId      -- ^ The `CardId` associated with the `Card` to be updated
     -> Maybe Name           -- ^ Name of `Recipient` or `Customer` to be used for `Card`
     -> Maybe AddressCity    -- ^ City associated with `Card`
     -> Maybe AddressCountry -- ^ Country associated with `Card`
@@ -249,10 +247,10 @@ updateRecipientCard
     -> Maybe AddressLine2   -- ^ Address Line 2 associated with `Card`
     -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
     -> Maybe AddressZip     -- ^ Address Zip associated with `Card`
-    -> MetaData             -- ^ MetaData for `Card`
-    -> Stripe Card
+    -> Stripe RecipientCard
 updateRecipientCard
-    recipientid  = updateCardBase "recipients" (getRecipientId recipientid)
+    recipientid
+    cardid = updateCardBase "recipients" (getRecipientId recipientid) (Right cardid)
 
 ------------------------------------------------------------------------------
 -- | Base Request for retrieving cards from either a `Customer` or `Recipient`
@@ -286,7 +284,7 @@ getCustomerCard
 getCustomerCardExpandable
     :: CustomerId   -- ^ `CustomerId` of the `Card` to retrieve
     -> CardId       -- ^ `CardId` of the card to retrieve
-    -> ExpandParams -- ^ `CardId` of the card to retrieve
+    -> ExpandParams -- ^ `ExpandParams` of the card to retrieve
     -> Stripe Card
 getCustomerCardExpandable
     customerid cardid expandParams =
@@ -332,7 +330,7 @@ getCustomerCardsBase
     endingBefore
     expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = "customer" </> getCustomerId customerid </> "cards"
+        url     = "customers" </> getCustomerId customerid </> "cards"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(CardId x) -> x) `fmap` startingAfter)
@@ -355,7 +353,7 @@ getRecipientCardsBase
     endingBefore
     expandParams = callAPI request
   where request = StripeRequest GET url params
-        url     = "recipient" </> getRecipientId recipientid </> "cards"
+        url     = "recipients" </> getRecipientId recipientid </> "cards"
         params  = getParams [
             ("limit", toText `fmap` limit )
           , ("starting_after", (\(RecipientCardId x) -> x) `fmap` startingAfter)
@@ -431,34 +429,29 @@ getRecipientCardsExpandable
         limit startingAfter endingBefore expandParams
 
 ------------------------------------------------------------------------------
--- | Base request for `Card` removal from a `Customer` or `Recipient`
-deleteCardBase
-    :: URL    -- ^ The type of the request to support (`Recipient` or `Customer`)
-    -> ID     -- ^ `CustomerId` or `RecipientId` of the `Card` to retrieve
-    -> CardId -- ^ `CardId` associated with `Card` to be deleted
+-- | Removes a card from a `Customer`
+deleteCustomerCard
+    :: CustomerId -- ^ `CustomerId` of the `Card` to retrieve
+    -> CardId     -- ^ `CardId` associated with `Card` to be deleted
     -> Stripe StripeDeleteResult
-deleteCardBase
-    requestType
-    requestId
+deleteCustomerCard
+    customerid
     cardid = callAPI request
   where request = StripeRequest DELETE url params
-        url     = requestType </> requestId </> "cards" </> getCardId cardid
+        url     = "customers" </> getCustomerId customerid </> "cards" </> getCardId cardid
         params  = []
 
 ------------------------------------------------------------------------------
 -- | Removes a card from a `Customer`
-deleteCustomerCard
-    :: CustomerId -- ^ The `CustomerId` associated with the `Card` to be removed
-    -> CardId     -- ^ The `CardId` of the `Card` to be removed
-    -> Stripe StripeDeleteResult
-deleteCustomerCard
-    customerid = deleteCardBase "customers" (getCustomerId customerid)
-
-------------------------------------------------------------------------------
--- | Removes a card from a `Customer`
 deleteRecipientCard
-    :: RecipientId -- ^ The `RecipientId` associated with the `Card` to be removed
-    -> CardId      -- ^ The `CardId` of the `Card` to be removed
+    :: RecipientId     -- ^ The `RecipientId` associated with the `Card` to be removed
+    -> RecipientCardId -- ^ The `CardId` of the `Card` to be removed
     -> Stripe StripeDeleteResult
 deleteRecipientCard
-    recipientid = deleteCardBase "recipients" (getRecipientId recipientid)
+    recipientid 
+    cardid      = callAPI request
+  where request = StripeRequest DELETE url params
+        url     = "recipients" </> getRecipientId recipientid
+                               </> "cards"
+                               </> getRecipientCardId cardid
+        params  = []

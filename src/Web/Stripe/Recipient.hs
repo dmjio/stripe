@@ -20,7 +20,7 @@ module Web.Stripe.Recipient
     , updateRecipientTaxID
     , updateRecipientBankAccount
     , updateRecipientTokenID
-    , updateRecipientCard
+--    , updateRecipientCard
     , updateRecipientDefaultCard
     , updateRecipientEmail
     , updateRecipientDescription
@@ -44,6 +44,7 @@ module Web.Stripe.Recipient
     , Email
     , Description
     , Limit
+    , StripeDeleteResult (..)
     ) where
 
 import           Data.Monoid                ((<>))
@@ -60,7 +61,7 @@ import           Web.Stripe.Types           (AccountNumber (..),
                                              LastName (..), Limit,
                                              MiddleInitial, Recipient (..),
                                              RecipientId (..), ExpandParams,
-                                             RecipientType (..), 
+                                             RecipientType (..), StripeDeleteResult(..),
                                              RoutingNumber (..), EndingBefore, StartingAfter,
                                              StripeList (..), TaxID, TokenId,
                                              TokenId (..), MetaData)
@@ -77,7 +78,7 @@ createRecipientBase
     -> Maybe Country       -- ^ `Country` of BankAccount to attach to `Recipient`
     -> Maybe RoutingNumber -- ^ `RoutingNumber` of BankAccount to attach to `Recipient`
     -> Maybe AccountNumber -- ^ `AccountNumber` of BankAccount to attach to `Recipient`
-    -> Maybe TokenId       -- ^ `TokenId` of `Card` to attach to a `Recipient`
+    -> Maybe TokenId       -- ^ `TokenId` of `Card` or `BankAccount` to attach to a `Recipient`
     -> Maybe CardNumber    -- ^ `CardNumber` to attach to `Card` of `Recipient`
     -> Maybe ExpMonth      -- ^ Expiration Month of `Card`
     -> Maybe ExpYear       -- ^ Expiration Year of `Card`
@@ -415,23 +416,23 @@ updateRecipientTokenID
 -- >     year   = ExpYear 2018
 -- >     cvc    = 117
 --
-updateRecipientCard
-    :: RecipientId -- ^ The 'RecipientId' of the 'Recipient' to be updated
-    -> CardNumber  -- ^ 'CardNumber' to attach to 'Card' of 'Recipient'
-    -> ExpMonth    -- ^ Expiration Month of 'Card'
-    -> ExpYear     -- ^ Expiration Year of 'Card'
-    -> CVC         -- ^ CVC of Card
-    -> Stripe Recipient
-updateRecipientCard
-    recipientid
-    cardNumber
-    expMonth
-    expYear
-    cvc = updateRecipientBase
-          recipientid Nothing Nothing Nothing
-          Nothing Nothing Nothing Nothing Nothing (Just cardNumber)
-          (Just expMonth) (Just expYear) (Just cvc)
-          Nothing Nothing Nothing []
+-- updateRecipientDefaultCard
+--     :: RecipientId -- ^ The 'RecipientId' of the 'Recipient' to be updated
+--     -> CardNumber  -- ^ 'CardNumber' to attach to 'Card' of 'Recipient'
+--     -> ExpMonth    -- ^ Expiration Month of 'Card'
+--     -> ExpYear     -- ^ Expiration Year of 'Card'
+--     -> CVC         -- ^ CVC of Card
+--     -> Stripe Recipient
+-- updateRecipientCard
+--     recipientid
+--     cardNumber
+--     expMonth
+--     expYear
+--     cvc = updateRecipientBase
+--           recipientid Nothing Nothing Nothing
+--           Nothing Nothing Nothing Nothing Nothing (Just cardNumber)
+--           (Just expMonth) (Just expYear) (Just cvc)
+--           Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update default 'Card' of 'Recipient'
@@ -508,7 +509,7 @@ updateRecipientMetaData
 --
 deleteRecipient
     :: RecipientId
-    -> Stripe Recipient
+    -> Stripe StripeDeleteResult
 deleteRecipient
    recipientid = callAPI request
   where request =  StripeRequest DELETE url params

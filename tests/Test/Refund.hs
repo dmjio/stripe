@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Test.Refund where
 
 import           Control.Monad
@@ -28,6 +29,7 @@ cvc = CVC "123"
 -- | Refund Tests
 refundTests :: Spec
 refundTests = do
+    describe "Refund Tests" $ do
       it "Creates a refund succesfully" $ do
         config <- getConfig
         result <- stripe config $ do
