@@ -70,7 +70,7 @@ stripe config requests = do
 ------------------------------------------------------------------------------
 -- | Debug Helper
 debug :: Bool
-debug = False
+debug = True
 
 ------------------------------------------------------------------------------
 -- | API Request to be issued

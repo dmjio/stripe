@@ -162,10 +162,10 @@ data Customer = Customer {
     , customerId             :: CustomerId
     , customerLiveMode       :: Bool
     , customerDescription    :: Maybe Text
-    , customerEmail          :: Maybe Text
+    , customerEmail          :: Maybe Email
     , customerDelinquent     :: Bool
     , customerSubscriptions  :: StripeList Subscription
-    , customerDiscount       :: Maybe Text
+    , customerDiscount       :: Maybe Discount
     , customerAccountBalance :: Int
     , customerCards          :: StripeList Card
     , customerCurrency       :: Maybe Currency
@@ -186,7 +186,7 @@ instance FromJSON Customer where
            <*> (CustomerId <$> o .: "id")
            <*> o .: "livemode"
            <*> o .:? "description"
-           <*> o .:? "email"
+           <*> (fmap Email <$> o .:? "email")
            <*> o .: "delinquent"
            <*> o .: "subscriptions"
            <*> o .:? "discount"
@@ -422,7 +422,9 @@ data Subscription = Subscription {
     , subscriptionCanceledAt            :: Maybe UTCTime
     , subscriptionQuantity              :: Quantity
     , subscriptionApplicationFeePercent :: Maybe Double
-    , subscriptionDiscount              :: Maybe Text
+    , subscriptionDiscount              :: Maybe Discount
+    , subscriptionMetaData              :: MetaData
+
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -446,6 +448,7 @@ instance FromJSON Subscription where
                     <*> (Quantity <$> o .:  "quantity")
                     <*> o .:? "application_fee_percent"
                     <*> o .:? "discount"
+                    <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -636,11 +639,11 @@ type Amount = Int
 -- | `Discount` for `Coupon`
 data Discount = Discount {
       discountCoupon       :: Coupon
-    , discountStart        :: Int
-    , discountEnd          :: Int
+    , discountStart        :: UTCTime
+    , discountEnd          :: Maybe UTCTime
     , discountCustomer     :: CustomerId
     , discountObject       :: Text
-    , discountSubscription :: Subscription
+    , discountSubscription :: Maybe Subscription
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -648,12 +651,12 @@ data Discount = Discount {
 instance FromJSON Discount where
     parseJSON (Object o) =
         Discount <$> o .: "coupon"
-                 <*> o .: "start"
-                 <*> o .: "end"
+                 <*> (fromSeconds <$> o .: "start")
+                 <*> (fmap fromSeconds <$> o .:? "end")
                  <*> ((CustomerId <$> o .: "customer")
                  <|> (ExpandedCustomer <$> o .: "customer"))
                  <*> o .: "object"
-                 <*> o .: "subscription"
+                 <*> o .:? "subscription"
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1562,7 +1565,7 @@ type EndingBefore a = Maybe a
 -- | JSON returned from a `Stripe` deletion request
 data StripeDeleteResult = StripeDeleteResult {
       deleted   :: Bool
-    , deletedId :: Text
+    , deletedId :: Maybe Text
     } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1570,7 +1573,7 @@ data StripeDeleteResult = StripeDeleteResult {
 instance FromJSON StripeDeleteResult where
    parseJSON (Object o) =
        StripeDeleteResult <$> o .: "deleted"
-                          <*> o .: "id"
+                          <*> o .:? "id"  
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------

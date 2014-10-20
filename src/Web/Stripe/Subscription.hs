@@ -8,6 +8,7 @@
 module Web.Stripe.Subscription
     ( -- * Types
       CustomerId         (..)
+    , CouponId           (..)
     , PlanId             (..)
     , Subscription       (..)
     , SubscriptionId     (..)
@@ -29,7 +30,7 @@ import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
                                              toMetaData, toText, (</>))
 import           Web.Stripe.Types           (CustomerId (..), EndingBefore,
                                              ExpandParams, Limit, MetaData,
-                                             PlanId (..), StartingAfter,
+                                             PlanId (..), StartingAfter, CouponId(..),
                                              Subscription (..), StripeList(..),
                                              SubscriptionId (..),
                                              SubscriptionStatus (..))
@@ -121,15 +122,19 @@ getSubscriptionsExpandable
 updateSubscription
     :: CustomerId
     -> SubscriptionId
+    -> Maybe CouponId
     -> MetaData
     -> Stripe Subscription
 updateSubscription
     customerid
     (SubscriptionId subscriptionid)
+    couponid
     metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
-        params  = toMetaData metadata
+        params  = toMetaData metadata ++ getParams [
+           ("coupon", (\(CouponId x) -> x) `fmap` couponid)
+          ]
 
 ------------------------------------------------------------------------------
 -- | Delete a `Subscription` by `CustomerId` and `SubscriptionId`

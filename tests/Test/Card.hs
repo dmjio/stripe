@@ -136,7 +136,7 @@ cardTests = do
           void $ deleteRecipient rid
           return rcard
         result `shouldSatisfy` isRight
-      it "Can create a RecipientCard by BankAccount TokenId" $ do
+      it "Fails to create a RecipientCard by BankAccount TokenId" $ do
         config <- getConfig
         result <- stripe config $ do
           Token { tokenId = tkid } <- createBankAccountToken country routingnumber accountnumber
