@@ -1,3 +1,2 @@
 language: haskell
-env:
- - GHCVER=7.8.3 CABALVER=1.20
+ghc: 7.8.3
