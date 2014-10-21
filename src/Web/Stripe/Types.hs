@@ -998,22 +998,22 @@ instance FromJSON TransferStatus where
 -- | `Transfer` Object
 data Transfer = Transfer {
       transferId                   :: TransferId
-    , transferObject               :: Text
-    , transferCreated              :: UTCTime
-    , transferDate                 :: UTCTime
-    , transferLiveMode             :: Bool
-    , transferAmount               :: Int
-    , transferCurrency             :: Text
-    , transferStatus               :: TransferStatus
-    , transferType                 :: TransferType
-    , transferBalanceTransaction   :: TransactionId
-    , transferDescription          :: Text
-    , transferBankAccount          :: Account
-    , transferFailureMessage       :: Maybe Text
-    , transferFailureCode          :: Maybe Text
-    , transferStatementDescription :: Maybe Text
-    , transferRecipient            :: Maybe RecipientId
-    , transferMetaData             :: MetaData
+     , transferObject               :: Text
+     , transferCreated              :: UTCTime
+     , transferDate                 :: UTCTime
+     , transferLiveMode             :: Bool
+     , transferAmount               :: Int
+     , transferCurrency             :: Currency
+     , transferStatus               :: TransferStatus
+     , transferType                 :: TransferType
+     , transferBalanceTransaction   :: TransactionId
+     , transferDescription          :: Maybe Text
+     , transferBankAccount          :: Maybe BankAccount
+     , transferFailureMessage       :: Maybe Text
+     , transferFailureCode          :: Maybe Text
+     , transferStatementDescription :: Maybe Text
+     , transferRecipient            :: Maybe RecipientId
+     , transferMetaData             :: MetaData
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1021,26 +1021,25 @@ data Transfer = Transfer {
 instance FromJSON Transfer where
     parseJSON (Object o) =
         Transfer <$> (TransferId <$> o .: "id")
-                 <*> o .: "object"
-                 <*> (fromSeconds <$> o .: "created")
-                 <*> (fromSeconds <$> o .: "date")
-                 <*> o .: "livemode"
-                 <*> o .: "amount"
-                 <*> o .: "currency"
-                 <*> o .: "status"
-                 <*> o .: "type"
-                 <*> ((TransactionId <$> o .: "balance_transaction")
-                 <|> (ExpandedTransaction <$> o .: "balance_transaction"))
-                 <*> o .: "description"
-                 <*> o .: "account"
-                 <*> o .:? "failure_message"
-                 <*> o .:? "failure_code"
-                 <*> o .:? "statement_description"
-                 <*> ((fmap RecipientId <$> o .:? "recipient")
-                 <|> (fmap ExpandedRecipient <$> o .:? "recipient"))
-                 <*> (H.toList <$> o .: "metadata")
+                    <*> o .: "object"
+                    <*> (fromSeconds <$> o .: "created")
+                    <*> (fromSeconds <$> o .: "date")
+                    <*> o .: "livemode"
+                    <*> o .: "amount"
+                    <*> (Currency <$> o .: "currency")
+                    <*> o .: "status"
+                    <*> o .: "type"
+                    <*> ((TransactionId <$> o .: "balance_transaction")
+                    <|> (ExpandedTransaction <$> o .: "balance_transaction"))
+                    <*> o .:? "description"
+                    <*> o .:? "bank_account"
+                    <*> o .:? "failure_message"
+                    <*> o .:? "failure_code"
+                    <*> o .:? "statement_description"
+                    <*> ((fmap RecipientId <$> o .:? "recipient")
+                    <|> (fmap ExpandedRecipient <$> o .:? "recipient"))
+                    <*> (H.toList <$> o .: "metadata")
     parseJSON _ = mzero
-
 
 ------------------------------------------------------------------------------
 -- | `BankAccount` Object

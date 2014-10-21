@@ -22,7 +22,7 @@ module Web.Stripe.Transfer
     , RecipientId     (..)
     , StripeList      (..)
     , Amount
-    , Currency
+    , Currency       (..)
     , Limit
     ) where
 
@@ -35,7 +35,7 @@ import           Web.Stripe.Types           (Amount, Currency, Currency (..),
                                              MetaData, RecipientId (..),
                                              StartingAfter, StripeList (..),
                                              Transfer (..), TransferId (..),
-                                             TransferStatus (..),
+                                             TransferStatus (..),Description,
                                              TransferType (..))
 import           Web.Stripe.Types.Util      (getRecipientId)
 
@@ -119,14 +119,18 @@ getTransfersExpandable
 -- | Update a `Transfer`
 updateTransfer
     :: TransferId
+    -> Maybe Description
     -> MetaData
     -> Stripe Transfer
 updateTransfer
     (TransferId transferid)
+    description
     metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "transfers" </> transferid
-        params  = toMetaData metadata
+        params  = toMetaData metadata ++ getParams [
+           ("description", description)
+          ]  
 
 ------------------------------------------------------------------------------
 -- | Cancel a `Transfer`

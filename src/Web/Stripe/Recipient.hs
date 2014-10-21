@@ -39,12 +39,21 @@ module Web.Stripe.Recipient
     , TokenId
     , CardNumber
     , ExpMonth
+    , Email (..)
     , ExpYear
     , CVC
-    , Email
     , Description
     , Limit
     , StripeDeleteResult (..)
+    , RoutingNumber  (..)
+    , AccountNumber  (..)
+    , Country        (..)
+    , AddressCity    (..)
+    , AddressCountry (..)
+    , AddressLine1   (..)
+    , AddressLine2   (..)
+    , AddressState   (..)
+    , AddressZip     (..)
     ) where
 
 import           Data.Monoid                ((<>))
@@ -57,8 +66,12 @@ import           Web.Stripe.Types           (AccountNumber (..),
                                              CardNumber (..), Country (..),
                                              Description, Email, Email (..),
                                              ExpMonth, ExpMonth (..), ExpYear,
-                                             ExpYear (..), FirstName (..),
-                                             LastName (..), Limit,
+                                             RoutingNumber  (..), AccountNumber  (..),
+                                             Country        (..), AddressCity    (..),
+                                             AddressCountry (..), AddressLine1   (..),
+                                             AddressLine2   (..), AddressState   (..),
+                                             AddressZip     (..), ExpYear (..),
+                                             FirstName (..), LastName (..), Limit,
                                              MiddleInitial, Recipient (..),
                                              RecipientId (..), ExpandParams,
                                              RecipientType (..), StripeDeleteResult(..),
@@ -505,7 +518,7 @@ updateRecipientMetaData
 ------------------------------------------------------------------------------
 -- | Delete a 'Recipient'
 --
--- > runStripe config $ deleteRecipient (RecipientId "rp_4lpjaLFB5ecSks")
+-- >>> runStripe config $ deleteRecipient (RecipientId "rp_4lpjaLFB5ecSks")
 --
 deleteRecipient
     :: RecipientId
