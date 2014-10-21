@@ -23,8 +23,10 @@ import           Control.Monad              (when)
 import           Control.Monad.IO.Class     (MonadIO (liftIO))
 import           Control.Monad.Reader       (ask, runReaderT)
 import           Control.Monad.Trans.Either (left, runEitherT, right)
-import           Data.Aeson                 (FromJSON, Value, decodeStrict)
+import           Data.Aeson                 (FromJSON (parseJSON), Value(..), eitherDecodeStrict)
 import           Data.Monoid                (mempty, (<>))
+import qualified Data.Text as T
+import           Data.Text    (Text)
 import           Network.Http.Client        (Connection, Method (..),
                                              baselineContextSSL, buildRequest,
                                              closeConnection, concatHandler, 
@@ -94,26 +96,25 @@ callAPI StripeRequest{..} = do
       setHeader "Connection" "Keep-Alive"
     body <- Streams.fromByteString reqBody
     sendRequest conn req $ inputStreamBody body
-    receiveResponse conn $ do
-      \response inputStream -> do
-        when debug $ print response
-        concatHandler response inputStream >>= \result -> do
-          when debug $ do
-            print result
-            print (decodeStrict result :: Maybe Value)
-          return (response, result))
+    receiveResponse conn $ \response inputStream ->
+      do when debug $ print response
+         result <- concatHandler response inputStream
+         return (response, result))
   where
-    parseFail   = left $ StripeError ParseFailure "could not parse response" Nothing Nothing Nothing
+    parseFail errorMessage  = 
+      left $ StripeError ParseFailure (T.pack errorMessage) Nothing Nothing Nothing
     unknownCode = left $ StripeError UnknownErrorType mempty Nothing Nothing Nothing
     handleStream (p,x) =
           case getStatusCode p of
-            200 -> case decodeStrict x of
-                     Nothing -> parseFail
-                     Just json -> right json
+            200 -> case eitherDecodeStrict x of
+                     Left message -> do
+                       when debug $ liftIO $ print (eitherDecodeStrict x :: Either String Value)
+                       parseFail message
+                     Right json   -> right json
             code | code >= 400 ->
-                    case decodeStrict x :: Maybe StripeError of
-                      Nothing -> parseFail
-                      Just json ->
+                    case eitherDecodeStrict x :: Either String StripeError of
+                      Left message -> parseFail message
+                      Right json ->
                           left $ case code of
                              400 -> json { errorHTTP = Just BadRequest        }
                              401 -> json { errorHTTP = Just UnAuthorized      }
