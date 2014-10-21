@@ -172,7 +172,7 @@ data Customer = Customer {
     , customerDefaultCard    :: Maybe CardId
     , customerMetaData       :: MetaData
     } | DeletedCustomer {
-      deletedCustomer   :: Bool
+      deletedCustomer   :: Maybe Bool
     , deletedCustomerId :: CustomerId
   } deriving (Show, Eq)
 
@@ -194,13 +194,13 @@ instance FromJSON Customer where
            <*> o .: "cards"
            <*> (fmap Currency <$> o .:? "currency")
            <*> ((fmap CardId <$> o .:? "default_card")
-           <|> (fmap ExpandedCard <$> o.:? "default_card"))
+           <|> (fmap ExpandedCard <$> o .:? "default_card"))
            <*> (H.toList <$> o .: "metadata")
            <|> DeletedCustomer
            <$> o .: "deleted"
            <*> (CustomerId <$> o .: "id"))
            <|> DeletedCustomer
-           <$> o .: "deleted"
+           <$> o .:? "deleted"
            <*> (CustomerId <$> o .: "id")
     parseJSON _ = mzero
 
@@ -643,7 +643,7 @@ data Discount = Discount {
     , discountEnd          :: Maybe UTCTime
     , discountCustomer     :: CustomerId
     , discountObject       :: Text
-    , discountSubscription :: Maybe Subscription
+    , discountSubscription :: Maybe SubscriptionId
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -656,7 +656,7 @@ instance FromJSON Discount where
                  <*> ((CustomerId <$> o .: "customer")
                  <|> (ExpandedCustomer <$> o .: "customer"))
                  <*> o .: "object"
-                 <*> o .:? "subscription"
+                 <*> (fmap SubscriptionId <$> o .:? "subscription")
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
