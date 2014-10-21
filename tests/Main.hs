@@ -12,14 +12,14 @@ import           Test.Charge                (chargeTests)
 import           Test.Card                  (cardTests)
 import           Test.Coupon                (couponTests)
 import           Test.Customer              (customerTests)
---import           Test.Discount              (discountTests)
--- import           Test.Dispute               (disputeTests)
+import           Test.Discount              (discountTests)
+import           Test.Dispute               (disputeTests)
 -- import           Test.Invoice               (invoiceTests)
 -- import           Test.InvoiceItem           (invoiceItemTests)
 import           Test.Plan                  (planTests)
 import           Test.Recipient             (recipientTests)
 import           Test.Refund                (refundTests)
--- import           Test.Subscription          (subscriptionTests)
+import           Test.Subscription          (subscriptionTests)
 import           Test.Token                 (tokenTests)
 import           Test.Transfer              (transferTests)
 -- import           Test.Event                 (eventTests)
@@ -33,13 +33,13 @@ main = hspec $ do
   refundTests
   customerTests
   cardTests
-  -- subscriptionTests
+  subscriptionTests
   planTests
   couponTests
-  -- discountTests
-  -- invoiceTests
+  discountTests
+--  invoiceTests
   -- invoiceItemTests
-  -- disputeTests
+  disputeTests
   transferTests
   recipientTests
   applicationFeeTests

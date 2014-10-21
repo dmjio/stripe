@@ -1,17 +1,107 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Test.Dispute where
 
-import           Data.Either
-import           Test.Config        (getConfig)
+import           Data.Either           (isRight)
+import           Data.Maybe            (isJust)
+import           Test.Config           (getConfig)
 import           Test.Hspec
+import           Control.Monad          (void)
+import           Control.Concurrent     (threadDelay)
+import           Control.Monad.IO.Class (liftIO)
+
 import           Web.Stripe
-import           Web.Stripe.Account
+import           Web.Stripe.Dispute
+import           Web.Stripe.Charge
+import           Web.Stripe.Customer
+
+secs :: Int -> Int
+secs = (*1000000)
 
 disputeTests :: Spec
 disputeTests = do
-  describe "Dispute tests" $ do
-    it "Succesfully retrieves account information" $ do
+  describe "Dispute Tests" $ do
+    it "Creates a Dispute" $ do
       config <- getConfig
-      result <- stripe config getAccountDetails
+      result <- stripe config $ do
+        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
+        Charge   { chargeId = chid  } <- chargeCustomer cid (Currency "usd") 100 Nothing
+        liftIO $ threadDelay (secs 10) -- Sleep to allow the thread to dispute to happen
+        Charge { chargeDispute = cd } <- getCharge chid
+        void $ deleteCustomer cid
+        return cd
       result `shouldSatisfy` isRight
+      let Right (Just Dispute{..}) = result 
+      disputeStatus `shouldBe` NeedsResponse
+    it "Makes Dispute Under Review" $ do
+      config <- getConfig
+      result <- stripe config $ do
+        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
+        Charge   { chargeId = chid  } <- chargeCustomer cid (Currency "usd") 100 Nothing
+        liftIO $ threadDelay (secs 10)
+        void $ updateDispute chid evi meta
+        liftIO $ threadDelay (secs 10)
+        Charge { chargeDispute = Just dispute } <- getCharge chid
+        void $ deleteCustomer cid
+        return dispute
+      result `shouldSatisfy` isRight
+      let Right Dispute {..} = result 
+      disputeMetaData `shouldBe` meta
+      disputeEvidence `shouldBe` evi
+      disputeStatus `shouldBe` UnderReview
+    it "Wins a Dispute" $ do
+      config <- getConfig
+      result <- stripe config $ do
+        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
+        Charge   { chargeId = chid  } <- chargeCustomer cid (Currency "usd") 100 Nothing
+        liftIO $ threadDelay (secs 10)
+        void $ updateDispute chid win meta
+        liftIO $ threadDelay (secs 10)
+        Charge { chargeDispute = Just dispute } <- getCharge chid
+        void $ deleteCustomer cid
+        return dispute
+      result `shouldSatisfy` isRight
+      let Right Dispute {..} = result 
+      disputeMetaData `shouldBe` meta
+      disputeEvidence `shouldBe` win
+      disputeStatus `shouldBe` Won
+    it "Loses a Dispute" $ do
+      config <- getConfig
+      result <- stripe config $ do
+        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
+        Charge   { chargeId = chid  } <- chargeCustomer cid (Currency "usd") 100 Nothing
+        liftIO $ threadDelay (secs 10) -- Sleep to allow the thread to dispute to happen
+        void $ updateDispute chid lose meta
+        liftIO $ threadDelay (secs 10)
+        Charge { chargeDispute = Just dispute } <- getCharge chid
+        void $ deleteCustomer cid
+        return dispute
+      result `shouldSatisfy` isRight
+      let Right Dispute {..} = result 
+      disputeMetaData `shouldBe` meta
+      disputeEvidence `shouldBe` lose
+      disputeStatus `shouldBe` Lost
+    it "Closes a Dispute" $ do
+      config <- getConfig
+      result <- stripe config $ do
+        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
+        Charge   { chargeId = chid  } <- chargeCustomer cid (Currency "usd") 100 Nothing
+        liftIO $ threadDelay (secs 10) -- Sleep to allow the thread to dispute to happen
+        dispute <- closeDispute chid
+        void $ deleteCustomer cid
+        return dispute
+      result `shouldSatisfy` isRight
+      let Right Dispute {..} = result 
+      disputeStatus `shouldBe` Lost
+  where
+    cn  = CardNumber "4000000000000259"
+    em  = ExpMonth 12
+    ey  = ExpYear 2015
+    cvc = CVC "123"
+    win  = Just $ Evidence "winning_evidence"
+    lose = Just $ Evidence "losing_evidence"
+    evi = Just $ Evidence "some evidence"
+    meta = [ ("some", "metadata") ]
+
+
 

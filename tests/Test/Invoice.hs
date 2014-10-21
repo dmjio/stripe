@@ -10,7 +10,7 @@ import           Web.Stripe.Account
 invoiceTests :: Spec
 invoiceTests = do
   describe "Invoice tests" $ do
-    it "Succesfully retrieves account information" $ do
+    it "Succesfully creates an Invoice" $ do
       config <- getConfig
       result <- stripe config getAccountDetails
       result `shouldSatisfy` isRight
