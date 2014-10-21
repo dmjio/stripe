@@ -58,7 +58,7 @@ data Charge = Charge {
     , chargeCustomerId           :: Maybe CustomerId
     , chargeInvoice              :: Maybe InvoiceId
     , chargeDescription          :: Maybe Text
-    , chargeDispute              :: Maybe Text
+    , chargeDispute              :: Maybe Dispute
     , chargeMetaData             :: MetaData
     , chargeStatementDescription :: Maybe Text
     , chargeReceiptEmail         :: Maybe Text
@@ -922,12 +922,12 @@ data Dispute = Dispute {
     , disputeStatus              :: DisputeStatus
     , disputeLiveMode            :: Bool
     , disputeCurrency            :: Currency
-    , disputeObject              :: DisputeReason
-    , disputeReason              :: Text
+    , disputeObject              :: Text
+    , disputeReason              :: DisputeReason
     , disputeIsChargeRefundable  :: Bool
-    , disputeBalanceTransactions :: [Text]
+    , disputeBalanceTransactions :: [BalanceTransaction]
     , disputeEvidenceDueBy       :: UTCTime
-    , disputeEvidence            :: Maybe Text
+    , disputeEvidence            :: Maybe Evidence
     , disputeMetaData            :: MetaData
     } deriving (Show, Eq)
 
@@ -944,14 +944,14 @@ instance FromJSON Dispute where
                 <*> o .: "amount"
                 <*> (fromSeconds <$> o .: "created")
                 <*> o .: "status"
-                <*> o .: "live_mode"
+                <*> o .: "livemode"
                 <*> (Currency <$> o .: "currency")
                 <*> o .: "object"
                 <*> o .: "reason"
                 <*> o .: "is_charge_refundable"
                 <*> o .: "balance_transactions"
                 <*> (fromSeconds <$> o .: "evidence_due_by")
-                <*> o .:? "evidence"
+                <*> (fmap Evidence <$> o .:? "evidence")
                 <*> (H.toList <$> o .: "metadata")
     parseJSON _ = mzero
 
@@ -1378,8 +1378,8 @@ instance FromJSON BalanceAmount where
 data BalanceTransaction = BalanceTransaction {
       balanceTransactionId             :: TransactionId
     , balanceTransactionObject         :: Text
-    , balanceTransactionAmount         :: Int
-    , balanceTransactionCurrency       :: Text
+    , balanceTransactionAmount         :: Amount
+    , balanceTransactionCurrency       :: Currency
     , balanceTransactionNet            :: Int
     , balanceTransactionType           :: Text
     , balanceTransactionCreated        :: UTCTime
@@ -1398,7 +1398,7 @@ instance FromJSON BalanceTransaction where
        BalanceTransaction <$> (TransactionId <$> o .: "id")
                           <*> o .: "object"
                           <*> o .: "amount"
-                          <*> o .: "currency"
+                          <*> (Currency <$> o .: "currency")
                           <*> o .: "net"
                           <*> o .: "type"
                           <*> (fromSeconds <$> o .: "created")
@@ -1428,9 +1428,9 @@ instance FromJSON TransactionId where
 -- | `FeeDetails` Object
 data FeeDetails = FeeDetails {
       feeDetailsAmount   :: Int
-    , feeDetailsCurrency :: Text
+    , feeDetailsCurrency :: Currency
     , feeType            :: Text
-    , feeDescription     :: Text
+    , feeDescription     :: Maybe Text
     , feeApplication     :: Maybe Text
 } deriving (Show, Eq)
 
@@ -1439,7 +1439,7 @@ data FeeDetails = FeeDetails {
 instance FromJSON FeeDetails where
    parseJSON (Object o) =
        FeeDetails <$> o .: "amount"
-                  <*> o .: "currency"
+                  <*> (Currency <$> o .: "currency")
                   <*> o .: "type"
                   <*> o .: "description"
                   <*> o .:? "application"
