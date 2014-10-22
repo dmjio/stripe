@@ -8,6 +8,7 @@
 module Web.Stripe.Client.Util
     ( -- * Utils
       fromSeconds
+    , toSeconds
     , paramsToByteString
     , toText
     , getParams
@@ -25,7 +26,7 @@ import           Data.Text             (Text)
 import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as T
 import           Data.Time.Clock       (UTCTime)
-import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import           Data.Time.Clock.POSIX (posixSecondsToUTCTime, utcTimeToPOSIXSeconds)
 
 ------------------------------------------------------------------------------
 -- | Conversion from a `Show` constrained type to `Text`
@@ -62,6 +63,13 @@ fromSeconds
     :: Integer
     -> UTCTime
 fromSeconds = posixSecondsToUTCTime . fromInteger
+
+------------------------------------------------------------------------------
+-- | Convert a `UTCTime` to a `Integer`
+toSeconds
+    :: UTCTime
+    -> Integer 
+toSeconds = read . takeWhile (/='.') . show . utcTimeToPOSIXSeconds
 
 ------------------------------------------------------------------------------
 -- | Retrieve and encode the optional parameters

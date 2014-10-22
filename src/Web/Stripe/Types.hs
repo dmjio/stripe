@@ -1380,7 +1380,7 @@ data BalanceTransaction = BalanceTransaction {
     , balanceTransactionObject         :: Text
     , balanceTransactionAmount         :: Amount
     , balanceTransactionCurrency       :: Currency
-    , balanceTransactionNet            :: Int
+   , balanceTransactionNet            :: Int
     , balanceTransactionType           :: Text
     , balanceTransactionCreated        :: UTCTime
     , balanceTransactionAvailableOn    :: UTCTime
@@ -1501,6 +1501,7 @@ data EventType =
   | TransferPaidEvent
   | TransferFailedEvent
   | PingEvent
+  | UnknownEvent
   deriving (Show, Eq)
 
 
@@ -1555,30 +1556,61 @@ instance FromJSON EventType where
    parseJSON (String "transfer.canceled") = pure TransferCanceledEvent
    parseJSON (String "transfer.paid") = pure TransferPaidEvent
    parseJSON (String "transfer.failed") = pure TransferFailedEvent
-   parseJSON _ = mzero
+   parseJSON (String "ping") = pure PingEvent
+   parseJSON _ = pure UnknownEvent
 
 ------------------------------------------------------------------------------
 -- | `EventId` of an `Event`
 newtype EventId = EventId Text deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
+-- | EventData
+
+data EventData =
+    TransferEvent Transfer
+  | AccountEvent Account
+  | ApplicationFeeEvent ApplicationFee
+  | InvoiceEvent Invoice
+  | PlanEvent Plan
+  | RecipientEvent Recipient
+  | CouponEvent Coupon
+  | BalanceEvent Balance
+  | ChargeEvent Charge
+  | DisputeEvent Dispute
+  | CustomerEvent Customer
+  | CardEvent Card
+  | SubscriptionEvent Subscription
+  | DiscountEvent Discount
+  | InvoiceItemEvent InvoiceItem
+  | Ping 
+  deriving (Show, Eq)
+
+------------------------------------------------------------------------------
 -- | `Event` Object
-data Event = Event {
-      eventId       :: EventId
-    , eventCreated  :: UTCTime
-    , eventLiveMode :: Text
-    , eventType     :: Text
+data Event a = Event {
+      eventId              :: EventId
+    , eventCreated         :: UTCTime
+    , eventLiveMode        :: Text
+    , eventType            :: EventType
+    , eventData            :: EventData
+    , eventObject          :: Text
+    , eventPendingWebHooks :: Int
+    , eventRequest         :: Text
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Event`
-instance FromJSON Event where
-   parseJSON (Object o) =
-       Event <$> (EventId <$> o .: "id")
-             <*> (fromSeconds <$> o .: "created")
-             <*> o .: "livemode"
-             <*> o .: "type"
-   parseJSON _ = mzero
+-- instance FromJSON a => FromJSON (Event a) where
+--    parseJSON (Object o) = do
+--      eventId <- EventId <$> o .: "id"
+--      eventCreated <- fromSeconds <$> o .: "created"
+--      eventLiveMode <- o .: "livemode"
+--      -- fix                   
+--      eventObject <- o .: "object"
+--      eventPendingWebHooks <- o .: "pending_webhooks"
+--      eventRequest <- o .: "request"
+--      return Event {..}
+--    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | Token
