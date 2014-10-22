@@ -30,7 +30,7 @@ module Web.Stripe.InvoiceItem
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
                                              StripeRequest (..), callAPI, toMetaData, toExpandable,
-                                             getParams, toText, (</>))
+                                             getParams, toText, (</>), toTextLower)
 import           Web.Stripe.Types           (Amount, Currency (..), StripeList(..),
                                              CustomerId (..), Description,
                                              InvoiceId (..), InvoiceItem (..), Invoice(..),
@@ -53,7 +53,7 @@ createInvoiceItem
 createInvoiceItem
     customerid
     amount
-    (Currency currency)
+    currency
     invoiceid
     subscriptionId
     description
@@ -63,7 +63,7 @@ createInvoiceItem
         params  = toMetaData metadata ++ getParams [
                     ("customer", Just $ getCustomerId customerid)
                   , ("amount", toText `fmap` Just amount)
-                  , ("currency", Just currency)
+                  , ("currency", toTextLower `fmap` Just currency)
                   , ("invoice", (\(InvoiceId x) -> x) `fmap` invoiceid)
                   , ("subscription", (\(SubscriptionId x) -> x) `fmap` subscriptionId)
                   , ("description", description)

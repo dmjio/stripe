@@ -25,7 +25,7 @@ planTests = do
       result <- stripe config $ do
         p <- createPlan (PlanId planid)
                         0 -- free plan
-                        (Currency "usd")
+                        USD
                         Month
                         "sample plan"
                         []
@@ -39,7 +39,7 @@ planTests = do
         Plan { planId = pid } <-
           createPlan (PlanId planid)
           0 -- free plan
-          (Currency "usd")
+          USD
           Month
           "sample plan"
           []
@@ -52,7 +52,7 @@ planTests = do
         Plan { planId = pid } <-
           createPlan (PlanId planid)
           0 -- free plan
-          (Currency "usd")
+          USD
           Month
           "sample plan"
           []
@@ -77,7 +77,7 @@ planTests = do
         Plan { planId = pid } <-
           createPlan (PlanId planid)
           0 -- free plan
-          (Currency "usd")
+          USD
           Month
           "sample plan"
           []

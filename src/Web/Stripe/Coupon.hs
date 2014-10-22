@@ -28,7 +28,7 @@ module Web.Stripe.Coupon
 
 import           Web.Stripe.Client.Internal (Method (POST, DELETE, GET), Stripe,
                                              StripeRequest (..), callAPI, toMetaData,
-                                             getParams, toText, (</>))
+                                             getParams, toText, (</>), toTextLower)
 import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
                                              CouponId (..), Currency (..),
                                              Duration(..), DurationInMonths (..),
@@ -68,7 +68,7 @@ createCoupon
                     ("id", (\(CouponId x) -> x) `fmap` couponid )
                   , ("duration", toText `fmap` Just duration )
                   , ("amount_off", (\(AmountOff x) -> toText x) `fmap` amountOff )
-                  , ("currency", (\(Currency x) -> x) `fmap` currency)
+                  , ("currency", toTextLower `fmap` currency)
                   , ("duration_in_months", (\(DurationInMonths x) -> toText x) `fmap` durationInMonths )
                   , ("max_redemptions", (\(MaxRedemptions x) -> toText x) `fmap` maxRedemptions )
                   , ("percent_off", (\(PercentOff x) -> toText x) `fmap` percentOff )

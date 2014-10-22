@@ -27,7 +27,7 @@ transferTests = do
             country
             routingnumber
             accountnumber
-        transfer <- createTransfer rid (100 :: Amount) (Currency "usd") []
+        transfer <- createTransfer rid (100 :: Amount) USD []
         void $ deleteRecipient rid
         return transfer
       result `shouldSatisfy` isRight
@@ -44,7 +44,7 @@ transferTests = do
             routingnumber
             accountnumber
         Transfer { transferId = tid }
-           <- createTransfer rid (100 :: Amount) (Currency "usd") []
+           <- createTransfer rid (100 :: Amount) USD []
         t <- getTransfer tid
         void $ deleteRecipient rid
         return t
@@ -62,7 +62,7 @@ transferTests = do
             routingnumber
             accountnumber
         Transfer { transferId = tid }
-           <- createTransfer rid (100 :: Amount) (Currency "usd") []
+           <- createTransfer rid (100 :: Amount) USD []
         t <- getTransferExpandable tid ["recipient", "balance_transaction"]
         void $ deleteRecipient rid
         return t
@@ -91,7 +91,7 @@ transferTests = do
             routingnumber
             accountnumber
         Transfer { transferId = tid }
-           <- createTransfer rid (100 :: Amount) (Currency "usd") []
+           <- createTransfer rid (100 :: Amount) USD []
         t <- updateTransfer tid (Just "hey there") [("hey", "there")]
         void $ deleteRecipient rid
         return t
@@ -112,7 +112,7 @@ transferTests = do
             routingnumber
             accountnumber
         Transfer { transferId = tid }
-           <- createTransfer rid (100 :: Amount) (Currency "usd") []
+           <- createTransfer rid (100 :: Amount) USD []
         t <- cancelTransfer tid 
         void $ deleteRecipient rid
         return t

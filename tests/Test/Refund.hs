@@ -35,7 +35,7 @@ refundTests = do
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid }  <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid (Currency "usd") 100 Nothing
+          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           refund <- createRefund chid []
           void $ deleteCustomer cid
           return refund
@@ -44,7 +44,7 @@ refundTests = do
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid (Currency "usd") 100 Nothing
+          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund   { refundId   = rid  } <- createRefund chid []
           void $ deleteCustomer cid
           getRefund chid rid
@@ -53,7 +53,7 @@ refundTests = do
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid (Currency "usd") 100 Nothing
+          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund   { refundId   = rid  } <- createRefund chid []
           r <- getRefundExpandable chid rid  ["balance_transaction"]
           void $ deleteCustomer cid 
@@ -63,7 +63,7 @@ refundTests = do
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid (Currency "usd") 100 Nothing
+          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund   { refundId   = rid  } <- createRefund chid []
           ref <- updateRefund chid rid [("hello","there")]
           void $ deleteCustomer cid
@@ -75,7 +75,7 @@ refundTests = do
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid (Currency "usd") 100 Nothing
+          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund { } <- createRefund chid []
           r <- getRefunds chid Nothing Nothing Nothing
           void $ deleteCustomer cid
@@ -87,7 +87,7 @@ refundTests = do
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid (Currency "usd") 100 Nothing
+          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund { } <- createRefund chid []
           r <- getRefundsExpandable chid Nothing Nothing Nothing ["data.balance_transaction"]
           void $ deleteCustomer cid

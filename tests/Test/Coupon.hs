@@ -28,7 +28,7 @@ couponTests = do
              (Just $ CouponId couponName)
              Once
              (Just $ AmountOff 1)
-             (Just $ Currency "usd")
+             (Just USD)
              Nothing
              Nothing
              Nothing
@@ -45,7 +45,7 @@ couponTests = do
                                   (Just $ CouponId couponName)
                                   Once
                                   (Just $ AmountOff 1)
-                                  (Just $ Currency "usd")
+                                  (Just USD)
                                   Nothing
                                   Nothing
                                   Nothing
@@ -63,7 +63,7 @@ couponTests = do
                                   (Just $ CouponId couponName)
                                   Once
                                   (Just $ AmountOff 1)
-                                  (Just $ Currency "usd")
+                                  (Just USD)
                                   Nothing
                                   Nothing
                                   Nothing
@@ -79,7 +79,7 @@ couponTests = do
                                   (Just $ CouponId couponName)
                                   Once
                                   (Just $ AmountOff 1)
-                                  (Just $ Currency "usd")
+                                  (Just USD)
                                   Nothing
                                   Nothing
                                   Nothing

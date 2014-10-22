@@ -11,6 +11,7 @@ module Web.Stripe.Client.Util
     , toSeconds
     , paramsToByteString
     , toText
+    , toTextLower
     , getParams
     , toBytestring
     , (</>)
@@ -35,6 +36,14 @@ toText
     => a    
     -> Text 
 toText = T.pack . show
+
+------------------------------------------------------------------------------
+-- | Conversion from a `Show` constrained type to lowercase `Text`
+toTextLower
+    :: Show a
+    => a    
+    -> Text 
+toTextLower = T.toLower . T.pack . show
 
 ------------------------------------------------------------------------------
 -- | Conversion of a key value pair to a query parameterized string
@@ -96,4 +105,3 @@ toExpandable :: [Text] -> [(ByteString, ByteString)]
 toExpandable = map toKV
   where
     toKV v = ("expand[]",  T.encodeUtf8 v)
-

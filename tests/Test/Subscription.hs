@@ -29,7 +29,7 @@ subscriptionTests = do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
-                        (Currency "usd")
+                        USD
                         Month
                         "sample plan"
                         []
@@ -45,7 +45,7 @@ subscriptionTests = do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
-                        (Currency "usd")
+                        USD
                         Month
                         "sample plan"
                         []
@@ -62,7 +62,7 @@ subscriptionTests = do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
-                        (Currency "usd")
+                        USD
                         Month
                         "sample plan"
                         []
@@ -79,7 +79,7 @@ subscriptionTests = do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
-                        (Currency "usd")
+                        USD
                         Month
                         "sample plan"
                         []
@@ -96,7 +96,7 @@ subscriptionTests = do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
-                        (Currency "usd")
+                        USD
                         Month
                         "sample plan"
                         []
@@ -116,7 +116,7 @@ subscriptionTests = do
              (Just couponid)
              Once
              (Just $ AmountOff 1)
-             (Just $ Currency "usd")
+             (Just USD)
              Nothing
              Nothing
              Nothing
@@ -125,7 +125,7 @@ subscriptionTests = do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
-                        (Currency "usd")
+                        USD
                         Month
                         "sample plan"
                         []
@@ -145,7 +145,7 @@ subscriptionTests = do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
-                        (Currency "usd")
+                        USD
                         Month
                         "sample plan"
                         []

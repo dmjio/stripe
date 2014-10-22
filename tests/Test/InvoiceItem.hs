@@ -16,7 +16,7 @@ invoiceItemTests = do
       config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
-        ii <- createInvoiceItem cid 100 (Currency "usd") Nothing Nothing (Just "hey") []
+        ii <- createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
         _ <- deleteCustomer cid
         return ii
       result `shouldSatisfy` isRight
@@ -25,7 +25,7 @@ invoiceItemTests = do
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
-           createInvoiceItem cid 100 (Currency "usd") Nothing Nothing (Just "hey") []
+           createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
         ii <- getInvoiceItem iid
         _ <- deleteCustomer cid
         return ii 
@@ -35,7 +35,7 @@ invoiceItemTests = do
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
-           createInvoiceItem cid 100 (Currency "usd") Nothing Nothing (Just "hey") []
+           createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
         ii <- getInvoiceItemExpandable iid ["customer"]
         _ <- deleteCustomer cid
         return ii
@@ -45,7 +45,7 @@ invoiceItemTests = do
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem {  } <-
-           createInvoiceItem cid 100 (Currency "usd") Nothing Nothing (Just "hey") []
+           createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
         ii <- getInvoiceItems Nothing Nothing Nothing Nothing 
         _ <- deleteCustomer cid
         return ii
@@ -55,7 +55,7 @@ invoiceItemTests = do
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem {  } <-
-           createInvoiceItem cid 100 (Currency "usd") Nothing Nothing (Just "hey") []
+           createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
         ii <- getInvoiceItemsExpandable Nothing Nothing Nothing Nothing ["data.customer"]
         _ <- deleteCustomer cid
         return ii
@@ -65,7 +65,7 @@ invoiceItemTests = do
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
-           createInvoiceItem cid 100 (Currency "usd") Nothing Nothing (Just "hey") []
+           createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
         ii <- updateInvoiceItem iid (Just 200) (Just "description") [("some","thing")]
         _  <- deleteCustomer cid
         return ii
@@ -79,7 +79,7 @@ invoiceItemTests = do
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
-           createInvoiceItem cid 100 (Currency "usd") Nothing Nothing (Just "hey") []
+           createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
         result <- deleteInvoiceItem iid
         _ <- deleteCustomer cid
         return result

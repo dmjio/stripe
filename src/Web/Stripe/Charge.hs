@@ -45,7 +45,7 @@ module Web.Stripe.Charge
 import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              StripeRequest (..), callAPI,
                                              getParams, toMetaData, toText, toExpandable,
-                                             (</>))
+                                             toTextLower, (</>))
 
 import           Web.Stripe.Types           (Amount, CVC (..), Capture,
                                              CardNumber (..), Charge (..),
@@ -139,7 +139,7 @@ chargeBase
     -> Stripe Charge
 chargeBase
     amount
-    (Currency currency)
+    currency
     description
     customerid
     tokenId
@@ -156,7 +156,7 @@ chargeBase
         params  = toMetaData metadata ++ getParams [
                      ("amount", toText `fmap` Just amount)
                    , ("customer", (\(CustomerId cid) -> cid) `fmap` customerid)
-                   , ("currency", Just currency)
+                   , ("currency", toTextLower `fmap` Just currency)
                    , ("card", (\(TokenId tokenid) -> tokenid) `fmap` tokenId)
                    , ("description", description)
                    , ("statement_description", (\(StatementDescription x) -> x) `fmap` statementDescription)

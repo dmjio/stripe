@@ -44,7 +44,7 @@ import           Web.Stripe.Client.Types    (APIVersion (..), Stripe,
 import           Web.Stripe.Client.Util     (fromSeconds, getParams,
                                              paramsToByteString, toBytestring,
                                              toExpandable, toMetaData, toText,
-                                             (</>))
+                                             toTextLower, (</>))
 
 import qualified Data.ByteString            as S
 import qualified Data.Text.Encoding         as T

@@ -30,7 +30,7 @@ chargeTests =
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-          charge <- chargeCustomer cid (Currency "usd") 100 Nothing
+          charge <- chargeCustomer cid USD 100 Nothing
           void $ deleteCustomer cid
           return charge
         result `shouldSatisfy` isRight
@@ -39,7 +39,7 @@ chargeTests =
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-          Charge { chargeId = chid } <- chargeCustomer cid (Currency "usd") 100 Nothing
+          Charge { chargeId = chid } <- chargeCustomer cid USD 100 Nothing
           result <- getCharge chid
           void $ deleteCustomer cid
           return result
@@ -49,21 +49,21 @@ chargeTests =
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-          Charge { chargeId = chid } <- chargeCustomer cid (Currency "usd") 100 Nothing
+          Charge { chargeId = chid } <- chargeCustomer cid USD 100 Nothing
           _ <- updateCharge chid "Cool" [("hi", "there")]
           result <- getCharge chid
           void $ deleteCustomer cid
           return result
         result `shouldSatisfy` isRight
         let Right Charge { chargeMetaData = cmd, chargeDescription = desc } = result
-        cmd `shouldSatisfy` (\x -> ("hi", "there") `elem` x)
+        cmd `shouldBe` [("hi", "there")]
         desc `shouldSatisfy` (==(Just "Cool" :: Maybe Text))
     retrieveExpandedChargeTest =
       it "Retrieves an expanded charge succesfully" $ do
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-          Charge { chargeId = chid } <- chargeCustomer cid (Currency "usd") 100 Nothing
+          Charge { chargeId = chid } <- chargeCustomer cid USD 100 Nothing
           result <- getChargeExpandable chid ["balance_transaction", "customer", "invoice"]
           void $ deleteCustomer cid
           return result
@@ -78,7 +78,7 @@ chargeTests =
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-          Charge { chargeId = chid } <- chargeBase 100 (Currency "usd") Nothing (Just cid)
+          Charge { chargeId = chid } <- chargeBase 100 USD Nothing (Just cid)
                                         Nothing Nothing Nothing False 
                                         Nothing Nothing Nothing Nothing []
           result <- captureCharge chid Nothing Nothing

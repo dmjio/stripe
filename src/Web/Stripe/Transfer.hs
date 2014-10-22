@@ -28,9 +28,9 @@ module Web.Stripe.Transfer
 
 import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              StripeRequest (..), callAPI,
-                                             getParams, toExpandable,
+                                             getParams, toExpandable, toTextLower,
                                              toMetaData, toText, (</>))
-import           Web.Stripe.Types           (Amount, Currency, Currency (..),
+import           Web.Stripe.Types           (Amount, Currency (..),
                                              EndingBefore, ExpandParams, Limit,
                                              MetaData, RecipientId (..),
                                              StartingAfter, StripeList (..),
@@ -50,13 +50,13 @@ createTransfer
 createTransfer
     recipientid
     amount
-    (Currency currency)
+    currency
     metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "transfers"
         params  = toMetaData metadata ++ getParams [
                    ("amount", toText `fmap` Just amount)
-                 , ("currency",  Just currency)
+                 , ("currency",  toTextLower `fmap` Just currency)
                  , ("recipient", getRecipientId `fmap` Just recipientid)
                  ]
 

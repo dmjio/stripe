@@ -33,7 +33,7 @@ discountTests = do
              (Just $ CouponId coupon)
              Once
              (Just $ AmountOff 1)
-             (Just $ Currency "usd")
+             (Just USD)
              Nothing
              Nothing
              Nothing
@@ -70,7 +70,7 @@ discountTests = do
         Plan { planId = planid } <-
           createPlan (PlanId plan)
           0 -- free plan
-          (Currency "usd")
+          USD
           Month
           "sample plan"
           []
@@ -79,7 +79,7 @@ discountTests = do
              (Just $ CouponId coupon)
              Once
              (Just $ AmountOff 1)
-             (Just $ Currency "usd")
+             (Just USD)
              Nothing
              Nothing
              Nothing

@@ -47,7 +47,7 @@ createPlanBase
 createPlanBase
     (PlanId planid)
     amount
-    (Currency currency)
+    currency
     interval
     name
     intervalCount
@@ -59,7 +59,7 @@ createPlanBase
         params  = toMetaData metadata ++ getParams [
                      ("id", Just planid) 
                    , ("amount", toText `fmap` Just amount) 
-                   , ("currency", Just currency)
+                   , ("currency", toTextLower `fmap` Just currency)
                    , ("interval", toText `fmap` Just interval) 
                    , ("name", Just name) 
                    , ("interval_count", (\(IntervalCount x) -> toText x) `fmap` intervalCount )

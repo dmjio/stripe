@@ -24,7 +24,7 @@ balanceTests = do
       result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
           Charge { chargeBalanceTransaction = Just txid } <-
-            chargeCustomer cid (Currency "usd") 100 Nothing
+            chargeCustomer cid USD 100 Nothing
           balance <- getBalanceTransaction txid
           void $ deleteCustomer cid
           return balance
@@ -35,7 +35,7 @@ balanceTests = do
        result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
           Charge   { chargeBalanceTransaction = Just txid
-                   } <- chargeCustomer cid (Currency "usd") 100 Nothing
+                   } <- chargeCustomer cid USD 100 Nothing
           result <- getBalanceTransactionExpandable txid ["source"]
           void $ deleteCustomer cid
           return result
