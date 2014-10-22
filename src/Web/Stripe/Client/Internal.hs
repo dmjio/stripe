@@ -23,10 +23,9 @@ import           Control.Monad              (when)
 import           Control.Monad.IO.Class     (MonadIO (liftIO))
 import           Control.Monad.Reader       (ask, runReaderT)
 import           Control.Monad.Trans.Either (left, runEitherT, right)
-import           Data.Aeson                 (FromJSON (parseJSON), Value(..), eitherDecodeStrict)
+import           Data.Aeson                 (FromJSON, Value(..), eitherDecodeStrict)
 import           Data.Monoid                (mempty, (<>))
 import qualified Data.Text as T
-import           Data.Text    (Text)
 import           Network.Http.Client        (Connection, Method (..),
                                              baselineContextSSL, buildRequest,
                                              closeConnection, concatHandler, 

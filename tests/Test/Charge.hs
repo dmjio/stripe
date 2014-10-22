@@ -74,7 +74,7 @@ chargeTests =
         result <- stripe config $ getCharges Nothing Nothing Nothing
         result `shouldSatisfy` isRight
     captureChargeTest = 
-      it "Captures a charge" $ do
+      it "Captures a charge - 2 Step Payment Flow" $ do
         config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
@@ -85,5 +85,5 @@ chargeTests =
           void $ deleteCustomer cid
           return result
         result `shouldSatisfy` isRight
-        let Right (Charge { chargeCaptured = captured }) = result
-        captured `shouldSatisfy` (==True)
+        let Right Charge { chargeCaptured = captured } = result
+        captured `shouldBe` True
