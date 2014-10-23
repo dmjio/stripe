@@ -72,7 +72,7 @@ invoiceItemTests = do
       result `shouldSatisfy` isRight
       let Right InvoiceItem{..} = result
       invoiceItemMetaData `shouldBe` [("some","thing")]
-      invoiceItemDescription `shouldBe` "description"
+      invoiceItemDescription `shouldBe` Just "description"
       invoiceItemAmount `shouldBe` 200
     it "Succesfully deletes an invoice item" $ do
       config <- getConfig
