@@ -682,7 +682,7 @@ instance FromJSON InvoiceId where
 -- | `Invoice` Object
 data Invoice = Invoice {
       invoiceDate                 :: UTCTime
-    , invoiceId                   :: InvoiceId
+    , invoiceId                   :: Maybe InvoiceId -- ^ If upcoming no ID will exist
     , invoicePeriodStart          :: UTCTime
     , invoicePeriodEnd            :: UTCTime
     , invoiceLineItems            :: StripeList InvoiceLineItem
@@ -716,7 +716,7 @@ data Invoice = Invoice {
 instance FromJSON Invoice where
    parseJSON (Object o) =
        Invoice <$> (fromSeconds <$> o .: "date")
-               <*> (InvoiceId <$> o .: "id")
+               <*> (fmap InvoiceId <$> o .:? "id")
                <*> (fromSeconds <$> o .: "period_start")
                <*> (fromSeconds <$> o .: "period_end")
                <*> o .: "lines"
