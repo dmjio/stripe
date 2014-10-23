@@ -519,11 +519,12 @@ type TrialPeriod = UTCTime
 
 ------------------------------------------------------------------------------
 -- | Interval for `Plan`s
-data Interval = Week | Month | Year deriving Eq
+data Interval = Day | Week | Month | Year deriving Eq
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Interval`
 instance FromJSON Interval where
+   parseJSON (String "day") = pure Day
    parseJSON (String "week") = pure Week
    parseJSON (String "month") = pure Month
    parseJSON (String "year") = pure Year
@@ -532,6 +533,7 @@ instance FromJSON Interval where
 ------------------------------------------------------------------------------
 -- | `Show` instance for `Interval`
 instance Show Interval where
+    show Day   = "day"
     show Week  = "week"
     show Month = "month"
     show Year  = "year"
@@ -698,7 +700,7 @@ data Invoice = Invoice {
     , invoiceCurrency             :: Currency
     , invoiceStartingBalance      :: Int
     , invoiceEndingBalance        :: Maybe Int
-    , invoiceNextPaymentAttempt   :: UTCTime
+    , invoiceNextPaymentAttempt   :: Maybe UTCTime
     , invoiceWebHooksDeliveredAt  :: Maybe UTCTime
     , invoiceCharge               :: Maybe ChargeId
     , invoiceDiscount             :: Maybe Discount
@@ -733,7 +735,7 @@ instance FromJSON Invoice where
                <*> o .: "currency"
                <*> o .: "starting_balance"
                <*> o .:? "ending_balance"
-               <*> (fromSeconds <$> o .: "next_payment_attempt")
+               <*> (fmap fromSeconds <$> o .:? "next_payment_attempt")
                <*> (fmap fromSeconds <$> o .: "webhooks_delivered_at")
                <*> ((fmap ChargeId <$> o .:? "charge")
                <|> (fmap ExpandedCharge <$> o .:? "charge"))
@@ -766,8 +768,9 @@ data InvoiceItem = InvoiceItem {
     , invoiceItemProration    :: Bool
     , invoiceItemCurrency     :: Currency
     , invoiceItemCustomer     :: CustomerId
-    , invoiceItemDescription  :: Text
+    , invoiceItemDescription  :: Maybe Description
     , invoiceItemInvoice      :: Maybe InvoiceId
+    , invoiceItemQuantity     :: Maybe Quantity
     , invoiceItemSubscription :: Maybe Subscription
     , invoiceItemMetaData     :: MetaData
     } deriving (Show, Eq)
@@ -785,9 +788,10 @@ instance FromJSON InvoiceItem where
                    <*> o .: "currency"
                    <*> ((CustomerId <$> o .: "customer")
                    <|> (ExpandedCustomer <$> o .: "customer"))
-                   <*> o .: "description"
+                   <*> o .:? "description"
                    <*> ((fmap InvoiceId <$> o .:? "invoice")
                    <|> (fmap ExpandedInvoice <$> o .:? "invoice"))
+                   <*> (fmap Quantity <$> o .:? "quantity")
                    <*> o .:? "subscription"
                    <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
