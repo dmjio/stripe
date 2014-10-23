@@ -37,7 +37,7 @@ main = hspec $ do
   planTests
   couponTests
   discountTests
---  invoiceTests
+  invoiceTests
   invoiceItemTests
   disputeTests
   transferTests
