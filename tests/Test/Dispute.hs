@@ -3,7 +3,6 @@
 module Test.Dispute where
 
 import           Data.Either           (isRight)
-import           Data.Maybe            (isJust)
 import           Test.Config           (getConfig)
 import           Test.Hspec
 import           Control.Monad          (void)

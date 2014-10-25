@@ -5,9 +5,6 @@ module Test.Subscription where
 import           Data.Either
 import           Control.Monad
 import           Data.Maybe
-import           Control.Applicative
-import qualified Data.Text as T
-import           System.Random
 
 import           Test.Config        (getConfig)
 import           Test.Hspec

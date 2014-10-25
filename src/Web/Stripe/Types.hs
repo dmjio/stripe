@@ -14,7 +14,7 @@ import           Data.Aeson                 (FromJSON (parseJSON),
                                              Value (String, Object, Bool), (.:),
                                              (.:?))
 import qualified Data.HashMap.Strict        as H
-import           Data.Text                  (Text)
+import           Data.Text                  (Text, breakOn)
 import           Data.Time                  (UTCTime)
 import           Web.Stripe.Client.Internal (fromSeconds)
 
@@ -1573,6 +1573,7 @@ newtype EventId = EventId Text deriving (Show, Eq)
 data EventData =
     TransferEvent Transfer
   | AccountEvent Account
+  | AccountApplicationEvent ConnectApp
   | ApplicationFeeEvent ApplicationFee
   | InvoiceEvent Invoice
   | PlanEvent Plan
@@ -1586,35 +1587,107 @@ data EventData =
   | SubscriptionEvent Subscription
   | DiscountEvent Discount
   | InvoiceItemEvent InvoiceItem
+  | UnknownEventData
   | Ping 
   deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
 -- | `Event` Object
-data Event a = Event {
+data Event = Event {
       eventId              :: EventId
     , eventCreated         :: UTCTime
-    , eventLiveMode        :: Text
+    , eventLiveMode        :: Bool
     , eventType            :: EventType
     , eventData            :: EventData
     , eventObject          :: Text
     , eventPendingWebHooks :: Int
-    , eventRequest         :: Text
+    , eventRequest         :: Maybe Text
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
+-- | Connect Application
+data ConnectApp = ConnectApp {
+      connectAppId     :: Text
+    , connectAppObject :: Text
+    , connectAppName   :: Text
+  } deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | Connect Application JSON instance
+instance FromJSON ConnectApp where
+   parseJSON (Object o) =
+     ConnectApp <$> o .: "id"
+                <*> o .: "object"
+                <*> o .: "name"
+   parseJSON _  = mzero
+
+------------------------------------------------------------------------------
 -- | JSON Instance for `Event`
--- instance FromJSON a => FromJSON (Event a) where
---    parseJSON (Object o) = do
---      eventId <- EventId <$> o .: "id"
---      eventCreated <- fromSeconds <$> o .: "created"
---      eventLiveMode <- o .: "livemode"
---      -- fix                   
---      eventObject <- o .: "object"
---      eventPendingWebHooks <- o .: "pending_webhooks"
---      eventRequest <- o .: "request"
---      return Event {..}
---    parseJSON _ = mzero
+instance FromJSON Event where
+   parseJSON (Object o) = do
+     eventId <- EventId <$> o .: "id"
+     eventCreated <- fromSeconds <$> o .: "created"
+     eventLiveMode <- o .: "livemode"
+     eventType <- o .: "type"
+     String etype <- o .: "type"
+     eventData <- 
+       case etype of
+        "account.updated" -> AccountEvent <$> o .: "data" 
+        "account.application.deauthorized" -> AccountApplicationEvent <$> o .: "data" 
+        "application_fee.created" -> ApplicationFeeEvent <$> o .: "data" 
+        "application_fee.refunded" -> ApplicationFeeEvent <$> o .: "data" 
+        "balance.available" -> BalanceEvent <$> o .: "data" 
+        "charge.succeeded" -> ChargeEvent <$> o .: "data" 
+        "charge.failed" -> ChargeEvent <$> o .: "data" 
+        "charge.refunded" -> ChargeEvent <$> o .: "data" 
+        "charge.captured" -> ChargeEvent <$> o .: "data" 
+        "charge.updated" -> ChargeEvent <$> o .: "data" 
+        "charge.dispute.created" -> DisputeEvent <$> o .: "data" 
+        "charge.dispute.updated" -> DisputeEvent <$> o .: "data" 
+        "charge.dispute.closed" -> DisputeEvent <$> o .: "data" 
+        "charge.dispute.funds_withdrawn" -> DisputeEvent <$> o .: "data" 
+        "charge.dispute.funds_reinstated" -> DisputeEvent <$> o .: "data" 
+        "customer.created" -> CustomerEvent <$> o .: "data" 
+        "customer.updated" -> CustomerEvent <$> o .: "data" 
+        "customer.deleted" -> CustomerEvent <$> o .: "data" 
+        "customer.card.created" -> CardEvent <$> o .: "data" 
+        "customer.card.updated" -> CardEvent <$> o .: "data" 
+        "customer.card.deleted" -> CardEvent <$> o .: "data" 
+        "customer.subscription.created" -> SubscriptionEvent <$> o .: "data" 
+        "customer.subscription.updated" -> SubscriptionEvent <$> o .: "data" 
+        "customer.subscription.deleted" -> SubscriptionEvent <$> o .: "data" 
+        "customer.subscription.trial_will_end" -> SubscriptionEvent <$> o .: "data" 
+        "customer.discount.created" -> DiscountEvent <$> o .: "data" 
+        "customer.discount.updated" -> DiscountEvent <$> o .: "data" 
+        "customer.discount.deleted" -> DiscountEvent <$> o .: "data" 
+        "invoice.created" -> InvoiceEvent <$> o .: "data" 
+        "invoice.updated" -> InvoiceEvent <$> o .: "data" 
+        "invoice.payment_succeeded" -> InvoiceEvent <$> o .: "data" 
+        "invoice.payment_failed" -> InvoiceEvent <$> o .: "data" 
+        "invoiceitem.created" -> InvoiceItemEvent <$> o .: "data" 
+        "invoiceitem.updated" -> InvoiceItemEvent <$> o .: "data" 
+        "invoiceitem.deleted" -> InvoiceItemEvent <$> o .: "data" 
+        "plan.created" -> PlanEvent <$> o .: "data" 
+        "plan.updated" -> PlanEvent <$> o .: "data" 
+        "plan.deleted" -> PlanEvent <$> o .: "data" 
+        "coupon.created" -> CouponEvent <$> o .: "data" 
+        "coupon.updated" -> CouponEvent <$> o .: "data" 
+        "coupon.deleted" -> CouponEvent <$> o .: "data" 
+        "recipient.created" -> RecipientEvent <$> o .: "data" 
+        "recipient.updated" -> RecipientEvent <$> o .: "data" 
+        "recipient.deleted" -> RecipientEvent <$> o .: "data" 
+        "transfer.created" -> TransferEvent <$> o .: "data" 
+        "transfer.updated" -> TransferEvent <$> o .: "data" 
+        "transfer.canceled" -> TransferEvent <$> o .: "data" 
+        "transfer.paid" -> TransferEvent <$> o .: "data" 
+        "transfer.failed" -> TransferEvent <$> o .: "data" 
+        "ping" -> pure Ping
+        _        -> pure UnknownEventData
+     eventObject <- o .: "object"
+     eventPendingWebHooks <- o .: "pending_webhooks"
+     eventRequest <- o .:? "request"
+     return Event {..}
+   parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | Token

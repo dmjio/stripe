@@ -73,7 +73,8 @@ getChargeId _ = ""
 -- | Helper for retrieving `InvoiceId`
 getInvoiceId :: InvoiceId -> Text
 getInvoiceId (InvoiceId x) = x
-getInvoiceId (ExpandedInvoice Invoice { invoiceId = InvoiceId x }) = x
+getInvoiceId (ExpandedInvoice Invoice { invoiceId = Nothing }) = ""
+getInvoiceId (ExpandedInvoice Invoice { invoiceId = Just (InvoiceId x) }) = x
 getInvoiceId _ = ""
 
 ------------------------------------------------------------------------------
