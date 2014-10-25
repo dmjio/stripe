@@ -22,7 +22,7 @@ import           Test.Refund                (refundTests)
 import           Test.Subscription          (subscriptionTests)
 import           Test.Token                 (tokenTests)
 import           Test.Transfer              (transferTests)
--- import           Test.Event                 (eventTests)
+import           Test.Event                 (eventTests)
 
 
 ------------------------------------------------------------------------------
@@ -47,5 +47,6 @@ main = hspec $ do
   accountTests
   balanceTests
   tokenTests
+  eventTests
 
 
