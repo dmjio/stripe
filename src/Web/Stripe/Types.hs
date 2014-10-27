@@ -1142,13 +1142,16 @@ data Recipient = Recipient {
     , recipientActiveAccount :: Maybe BankAccount
     , recipientCards         :: StripeList RecipientCard
     , recipientDefaultCard   :: Maybe RecipientCardId
-} deriving (Show, Eq)
+ } | DeletedRecipient {
+    deletedRecipient   :: Maybe Bool
+  , deletedRecipientId :: RecipientId
+ } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Recipient`
 instance FromJSON Recipient where
    parseJSON (Object o) =
-       Recipient <$> (RecipientId <$> o .: "id")
+      (Recipient <$> (RecipientId <$> o .: "id")
                  <*> o .: "object"
                  <*> (fromSeconds <$> o .: "created")
                  <*> o .: "livemode"
@@ -1160,7 +1163,11 @@ instance FromJSON Recipient where
                  <*> o .:? "active_account"
                  <*> o .: "cards"
                  <*> ((fmap RecipientCardId <$> o .:? "default_card")
-                 <|> (fmap ExpandedRecipientCard <$> o .:? "default_card"))
+                 <|> (fmap ExpandedRecipientCard <$> o .:? "default_card")))
+                 <|> DeletedRecipient
+                 <$> o .:? "deleted"
+                 <*> (RecipientId <$> o .: "id")
+                 
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1558,6 +1565,75 @@ data Event = Event {
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
+-- | JSON Instance for `Event`
+instance FromJSON Event where
+   parseJSON (Object o) = do
+     eventId <- fmap EventId <$> o .:? "id"
+     eventCreated <- fromSeconds <$> o .: "created"
+     eventLiveMode <- o .: "livemode"
+     eventType <- o .: "type"
+     String etype <- o .: "type"     
+     obj <- o .: "data"
+     eventData <- 
+       case etype of
+        "account.updated" -> AccountEvent <$> obj .: "object" 
+        "account.application.deauthorized" -> AccountApplicationEvent <$> obj .: "object" 
+        "application_fee.created" -> ApplicationFeeEvent <$> obj .: "object" 
+        "application_fee.refunded" -> ApplicationFeeEvent <$> obj .: "object" 
+        "balance.available" -> BalanceEvent <$> obj .: "object" 
+        "charge.succeeded" -> ChargeEvent <$> obj .: "object" 
+        "charge.failed" -> ChargeEvent <$> obj .: "object" 
+        "charge.refunded" -> ChargeEvent <$> obj .: "object" 
+        "charge.captured" -> ChargeEvent <$> obj .: "object" 
+        "charge.updated" -> ChargeEvent <$> obj .: "object" 
+        "charge.dispute.created" -> DisputeEvent <$> obj .: "object" 
+        "charge.dispute.updated" -> DisputeEvent <$> obj .: "object" 
+        "charge.dispute.closed" -> DisputeEvent <$> obj .: "object" 
+        "charge.dispute.funds_withdrawn" -> DisputeEvent <$> obj .: "object" 
+        "charge.dispute.funds_reinstated" -> DisputeEvent <$> obj .: "object" 
+        "customer.created" -> CustomerEvent <$> obj .: "object" 
+        "customer.updated" -> CustomerEvent <$> obj .: "object" 
+        "customer.deleted" -> CustomerEvent <$> obj .: "object" 
+        "customer.card.created" -> CardEvent <$> obj .: "object" 
+        "customer.card.updated" -> CardEvent <$> obj .: "object" 
+        "customer.card.deleted" -> CardEvent <$> obj .: "object" 
+        "customer.subscription.created" -> SubscriptionEvent <$> obj .: "object" 
+        "customer.subscription.updated" -> SubscriptionEvent <$> obj .: "object" 
+        "customer.subscription.deleted" -> SubscriptionEvent <$> obj .: "object" 
+        "customer.subscription.trial_will_end" -> SubscriptionEvent <$> obj .: "object" 
+        "customer.discount.created" -> DiscountEvent <$> obj .: "object" 
+        "customer.discount.updated" -> DiscountEvent <$> obj .: "object" 
+        "customer.discount.deleted" -> DiscountEvent <$> obj .: "object" 
+        "invoice.created" -> InvoiceEvent <$> obj .: "object" 
+        "invoice.updated" -> InvoiceEvent <$> obj .: "object" 
+        "invoice.payment_succeeded" -> InvoiceEvent <$> obj .: "object" 
+        "invoice.payment_failed" -> InvoiceEvent <$> obj .: "object" 
+        "invoiceitem.created" -> InvoiceItemEvent <$> obj .: "object" 
+        "invoiceitem.updated" -> InvoiceItemEvent <$> obj .: "object" 
+        "invoiceitem.deleted" -> InvoiceItemEvent <$> obj .: "object" 
+        "plan.created" -> PlanEvent <$> obj .: "object" 
+        "plan.updated" -> PlanEvent <$> obj .: "object" 
+        "plan.deleted" -> PlanEvent <$> obj .: "object" 
+        "coupon.created" -> CouponEvent <$> obj .: "object" 
+        "coupon.updated" -> CouponEvent <$> obj .: "object" 
+        "coupon.deleted" -> CouponEvent <$> obj .: "object" 
+        "recipient.created" -> RecipientEvent <$> obj .: "object" 
+        "recipient.updated" -> RecipientEvent <$> obj .: "object" 
+        "recipient.deleted" -> RecipientEvent <$> obj .: "object" 
+        "transfer.created" -> TransferEvent <$> obj .: "object" 
+        "transfer.updated" -> TransferEvent <$> obj .: "object" 
+        "transfer.canceled" -> TransferEvent <$> obj .: "object" 
+        "transfer.paid" -> TransferEvent <$> obj .: "object" 
+        "transfer.failed" -> TransferEvent <$> obj .: "object" 
+        "ping" -> pure Ping
+        _        -> pure UnknownEventData
+     eventObject <- o .: "object"
+     eventPendingWebHooks <- o .: "pending_webhooks"
+     eventRequest <- o .:? "request"
+     return Event {..}
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
 -- | Connect Application
 data ConnectApp = ConnectApp {
       connectAppId     :: Maybe Text
@@ -1573,74 +1649,6 @@ instance FromJSON ConnectApp where
                 <*> o .: "object"
                 <*> o .: "name"
    parseJSON _  = mzero
-
-------------------------------------------------------------------------------
--- | JSON Instance for `Event`
-instance FromJSON Event where
-   parseJSON (Object o) = do
-     eventId <- fmap EventId <$> o .:? "id"
-     eventCreated <- fromSeconds <$> o .: "created"
-     eventLiveMode <- o .: "livemode"
-     eventType <- o .: "type"
-     String etype <- o .: "type"
-     eventData <- 
-       case etype of
-        "account.updated" -> AccountEvent <$> o .: "data" 
-        "account.application.deauthorized" -> AccountApplicationEvent <$> o .: "data" 
-        "application_fee.created" -> ApplicationFeeEvent <$> o .: "data" 
-        "application_fee.refunded" -> ApplicationFeeEvent <$> o .: "data" 
-        "balance.available" -> BalanceEvent <$> o .: "data" 
-        "charge.succeeded" -> ChargeEvent <$> o .: "data" 
-        "charge.failed" -> ChargeEvent <$> o .: "data" 
-        "charge.refunded" -> ChargeEvent <$> o .: "data" 
-        "charge.captured" -> ChargeEvent <$> o .: "data" 
-        "charge.updated" -> ChargeEvent <$> o .: "data" 
-        "charge.dispute.created" -> DisputeEvent <$> o .: "data" 
-        "charge.dispute.updated" -> DisputeEvent <$> o .: "data" 
-        "charge.dispute.closed" -> DisputeEvent <$> o .: "data" 
-        "charge.dispute.funds_withdrawn" -> DisputeEvent <$> o .: "data" 
-        "charge.dispute.funds_reinstated" -> DisputeEvent <$> o .: "data" 
-        "customer.created" -> CustomerEvent <$> o .: "data" 
-        "customer.updated" -> CustomerEvent <$> o .: "data" 
-        "customer.deleted" -> CustomerEvent <$> o .: "data" 
-        "customer.card.created" -> CardEvent <$> o .: "data" 
-        "customer.card.updated" -> CardEvent <$> o .: "data" 
-        "customer.card.deleted" -> CardEvent <$> o .: "data" 
-        "customer.subscription.created" -> SubscriptionEvent <$> o .: "data" 
-        "customer.subscription.updated" -> SubscriptionEvent <$> o .: "data" 
-        "customer.subscription.deleted" -> SubscriptionEvent <$> o .: "data" 
-        "customer.subscription.trial_will_end" -> SubscriptionEvent <$> o .: "data" 
-        "customer.discount.created" -> DiscountEvent <$> o .: "data" 
-        "customer.discount.updated" -> DiscountEvent <$> o .: "data" 
-        "customer.discount.deleted" -> DiscountEvent <$> o .: "data" 
-        "invoice.created" -> InvoiceEvent <$> o .: "data" 
-        "invoice.updated" -> InvoiceEvent <$> o .: "data" 
-        "invoice.payment_succeeded" -> InvoiceEvent <$> o .: "data" 
-        "invoice.payment_failed" -> InvoiceEvent <$> o .: "data" 
-        "invoiceitem.created" -> InvoiceItemEvent <$> o .: "data" 
-        "invoiceitem.updated" -> InvoiceItemEvent <$> o .: "data" 
-        "invoiceitem.deleted" -> InvoiceItemEvent <$> o .: "data" 
-        "plan.created" -> PlanEvent <$> o .: "data" 
-        "plan.updated" -> PlanEvent <$> o .: "data" 
-        "plan.deleted" -> PlanEvent <$> o .: "data" 
-        "coupon.created" -> CouponEvent <$> o .: "data" 
-        "coupon.updated" -> CouponEvent <$> o .: "data" 
-        "coupon.deleted" -> CouponEvent <$> o .: "data" 
-        "recipient.created" -> RecipientEvent <$> o .: "data" 
-        "recipient.updated" -> RecipientEvent <$> o .: "data" 
-        "recipient.deleted" -> RecipientEvent <$> o .: "data" 
-        "transfer.created" -> TransferEvent <$> o .: "data" 
-        "transfer.updated" -> TransferEvent <$> o .: "data" 
-        "transfer.canceled" -> TransferEvent <$> o .: "data" 
-        "transfer.paid" -> TransferEvent <$> o .: "data" 
-        "transfer.failed" -> TransferEvent <$> o .: "data" 
-        "ping" -> pure Ping
-        _        -> pure UnknownEventData
-     eventObject <- o .: "object"
-     eventPendingWebHooks <- o .: "pending_webhooks"
-     eventRequest <- o .:? "request"
-     return Event {..}
-   parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | `TokenId` of a `Token`
