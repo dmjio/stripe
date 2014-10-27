@@ -6,22 +6,23 @@
 -- Stability   : experimental
 -- Portability : POSIX
 module Web.Stripe.Subscription
-    ( -- * Types
-      CustomerId         (..)
-    , CouponId           (..)
-    , PlanId             (..)
-    , Subscription       (..)
-    , SubscriptionId     (..)
-    , SubscriptionStatus (..)
-    , StripeList         (..)
-      -- * API
-    , createSubscription
+    ( -- * API
+      createSubscription
     , getSubscription
     , getSubscriptionExpandable
     , getSubscriptions
     , getSubscriptionsExpandable
     , updateSubscription
     , cancelSubscription
+      -- * Types
+    , Subscription       (..)
+    , SubscriptionId     (..)
+    , SubscriptionStatus (..)
+    , CustomerId         (..)
+    , CouponId           (..)
+    , Coupon             (..)
+    , PlanId             (..)
+    , StripeList         (..)
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
@@ -32,16 +33,16 @@ import           Web.Stripe.Types           (CustomerId (..), EndingBefore,
                                              ExpandParams, Limit, MetaData,
                                              PlanId (..), StartingAfter, CouponId(..),
                                              Subscription (..), StripeList(..),
-                                             SubscriptionId (..),
+                                             SubscriptionId (..), Coupon(..),
                                              SubscriptionStatus (..))
-import           Web.Stripe.Types.Util
+import           Web.Stripe.Types.Util      (getCustomerId)
 
 ------------------------------------------------------------------------------
 -- | Create a `Subscription` by `CustomerId` and `PlanId`
 createSubscription
-    :: CustomerId
-    -> PlanId
-    -> MetaData
+    :: CustomerId -- ^ The `CustomerId` upon which to create the `Subscription`
+    -> PlanId     -- ^ The `PlanId` to associate the `Subscription` with
+    -> MetaData   -- ^ The `MetaData` associated with the `Subscription`
     -> Stripe Subscription
 createSubscription
     customerid
@@ -54,8 +55,8 @@ createSubscription
 ------------------------------------------------------------------------------
 -- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId`
 getSubscription
-    :: CustomerId
-    -> SubscriptionId
+    :: CustomerId       -- ^ The `CustomerId` of the `Subscription`
+    -> SubscriptionId   -- ^ The `SubscriptionId` of the `Subscription` to retrieve
     -> Stripe Subscription
 getSubscription
     customerid
@@ -66,9 +67,9 @@ getSubscription
 ------------------------------------------------------------------------------
 -- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId` with `ExpandParams`
 getSubscriptionExpandable
-    :: CustomerId
-    -> SubscriptionId
-    -> ExpandParams
+    :: CustomerId      -- ^ The `CustomerId` of the `Subscription` to retrieve
+    -> SubscriptionId  -- ^ The `SubscriptionId` of the `Subscription` to retrieve
+    -> ExpandParams    -- ^ The `ExpandParams` of the object to expand
     -> Stripe Subscription
 getSubscriptionExpandable
     customerid
@@ -81,7 +82,7 @@ getSubscriptionExpandable
 ------------------------------------------------------------------------------
 -- | Retrieve active `Subscription`s
 getSubscriptions
-    :: CustomerId
+    :: CustomerId                   -- ^ The `CustomerId` of the `Subscription`s to retrieve
     -> Limit                        -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter SubscriptionId -- ^ Paginate starting after the following `CustomerId`
     -> EndingBefore SubscriptionId  -- ^ Paginate ending before the following `CustomerId`
@@ -97,11 +98,11 @@ getSubscriptions
 ------------------------------------------------------------------------------
 -- | Retrieve active `Subscription`s
 getSubscriptionsExpandable
-    :: CustomerId
+    :: CustomerId                   -- ^ The `CustomerId` of the `Subscription`s to retrieve
     -> Limit                        -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter SubscriptionId -- ^ Paginate starting after the following `CustomerId`
     -> EndingBefore SubscriptionId  -- ^ Paginate ending before the following `CustomerId`
-    -> ExpandParams
+    -> ExpandParams                 -- ^ The `ExpandParams` of the object to expand
     -> Stripe (StripeList Subscription)
 getSubscriptionsExpandable
     customerid
@@ -120,9 +121,9 @@ getSubscriptionsExpandable
 ------------------------------------------------------------------------------
 -- | Update a `Subscription` by `CustomerId` and `SubscriptionId`
 updateSubscription
-    :: CustomerId
-    -> SubscriptionId
-    -> Maybe CouponId
+    :: CustomerId      -- ^ The `CustomerId` of the `Subscription` to update
+    -> SubscriptionId  -- ^ The `SubscriptionId` of the `Subscription` to update
+    -> Maybe CouponId  -- ^ Optional: The `Coupon` of the `Subscription` to update
     -> MetaData
     -> Stripe Subscription
 updateSubscription
@@ -139,9 +140,9 @@ updateSubscription
 ------------------------------------------------------------------------------
 -- | Delete a `Subscription` by `CustomerId` and `SubscriptionId`
 cancelSubscription
-    :: CustomerId
-    -> SubscriptionId
-    -> Bool -- ^ Flag set to true will delay cancellation until end of current period, default `False`
+    :: CustomerId     -- ^ The `CustomerId` of the `Subscription` to cancel
+    -> SubscriptionId -- ^ The `SubscriptionId` of the `Subscription` to cancel
+    -> Bool           -- ^ Flag set to true will delay cancellation until end of current period, default `False`
     -> Stripe Subscription
 cancelSubscription
     customerid

@@ -40,17 +40,17 @@ import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
                                              StripeList (..))
 
 ------------------------------------------------------------------------------
--- | 'Coupon' creation function
+-- | `Coupon` creation
 createCoupon
-  :: Maybe CouponId
-  -> Duration
-  -> Maybe AmountOff
-  -> Maybe Currency
-  -> Maybe DurationInMonths
-  -> Maybe MaxRedemptions
-  -> Maybe PercentOff
-  -> Maybe RedeemBy
-  -> MetaData
+  :: Maybe CouponId         -- ^  Name of the `Coupon` 
+  -> Duration               -- ^ `Duration` of the `Coupon`
+  -> Maybe AmountOff        -- ^ `AmountOff` of the `Coupon`
+  -> Maybe Currency         -- ^ `Currency` of the `Coupon`
+  -> Maybe DurationInMonths -- ^ `DurationInMonths` of the `Coupon`
+  -> Maybe MaxRedemptions   -- ^ `MaxRedemptions` of the `Coupon`
+  -> Maybe PercentOff       -- ^ `PercentOff` of the `Coupon`
+  -> Maybe RedeemBy         -- ^ `RedeemBy` date of the `Coupon`
+  -> MetaData               -- ^ `MetaData` of the `Coupon`
   -> Stripe Coupon
 createCoupon
     couponid
@@ -76,9 +76,9 @@ createCoupon
                  ]
 
 ------------------------------------------------------------------------------
--- | Retrieve a 'Coupon' by 'CouponId'
+-- | Retrieve a `Coupon` by `CouponId`
 getCoupon
-    :: CouponId
+    :: CouponId -- ^ `CouponId` of the `Coupon` to retrieve
     -> Stripe Coupon
 getCoupon
     (CouponId couponid) = callAPI request
@@ -107,7 +107,7 @@ getCoupons
           ]
 
 ------------------------------------------------------------------------------
--- | Update a 'Coupon'
+-- | Update 'Coupon'
 updateCoupon
     :: CouponId -- ^ The `CoupondId` of the `Coupon` to update
     -> MetaData -- ^ The `MetaData` for the `Coupon`
@@ -120,7 +120,7 @@ updateCoupon
         params  = toMetaData metadata
 
 ------------------------------------------------------------------------------
--- | Delete a 'Coupon" by 'CouponId'
+-- | Delete 'Coupon" by 'CouponId'
 deleteCoupon
     :: CouponId -- ^ The `CoupondId` of the `Coupon` to update
     -> Stripe StripeDeleteResult

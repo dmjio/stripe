@@ -34,7 +34,7 @@ import           Web.Stripe.Types           (Balance (..), BalanceAmount,
 import           Web.Stripe.Types.Util      (getTransactionId)
 
 ------------------------------------------------------------------------------
--- | Retrieve the current 'Balance' for your Stripe account
+-- | Retrieve the current `Balance` for your Stripe account
 getBalance :: Stripe Balance
 getBalance = callAPI request
   where request = StripeRequest GET url params
@@ -44,16 +44,16 @@ getBalance = callAPI request
 ------------------------------------------------------------------------------
 -- | Retrieve a 'BalanceTransaction' by 'TransactionId'
 getBalanceTransaction
-    :: TransactionId
+    :: TransactionId  -- ^ The `TransactionId` of the `Transaction` to retrieve
     -> Stripe BalanceTransaction
 getBalanceTransaction
     transactionid = getBalanceTransactionExpandable transactionid []
 
 ------------------------------------------------------------------------------
--- | Retrieve a 'BalanceTransaction' by 'TransactionId' with `ExpandParams`
+-- | Retrieve a `BalanceTransaction` by `TransactionId` with `ExpandParams`
 getBalanceTransactionExpandable
-    :: TransactionId
-    -> ExpandParams
+    :: TransactionId -- ^ The `TransactionId` of the `Transaction` to retrieve
+    -> ExpandParams  -- ^ The `ExpandParams` of the object to be expanded
     -> Stripe BalanceTransaction
 getBalanceTransactionExpandable
     transactionid expandParams = callAPI request
@@ -62,7 +62,7 @@ getBalanceTransactionExpandable
         params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
--- | Retrieve the history of 'BalanceTransaction's
+-- | Retrieve the history of `BalanceTransaction`s
 getBalanceTransactionHistory
     :: Limit                       -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter TransactionId -- ^ Paginate starting after the following `TransactionId`

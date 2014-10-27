@@ -5,11 +5,11 @@
 -- Stability   : experimental
 -- Portability : POSIX
 module Web.Stripe.Client
-    ( -- * Run a `Stripe` action
+    ( -- * Execute a `Stripe` action
       stripe
-      -- * Base type for `Stripe` API
+      -- * `Stripe` Monad
     , Stripe
-      -- * Encapsulates `Stripe` Secret Key 
+      -- * `Stripe` Secret Key 
     , StripeConfig       (..)
       -- * Error type for Request
     , module Web.Stripe.Client.Error

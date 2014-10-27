@@ -35,12 +35,12 @@ import           Web.Stripe.Types           (Account(..), AccountNumber (..),
                                              Token (..), TokenId (..), TokenType(..))
 
 ------------------------------------------------------------------------------
--- | Create a `Token` by specifiy Credit `Card` information
+-- | Create a `Token` by specifiying Credit `Card` information
 createCardToken
-    :: CardNumber -- ^ Credit Card Number
-    -> ExpMonth   -- ^ Credit Card Expiration Month
-    -> ExpYear    -- ^ Credit Card Expiration Year
-    -> CVC        -- ^ Credit Card CVC
+    :: CardNumber -- ^ Card Number
+    -> ExpMonth   -- ^ Card Expiration Month
+    -> ExpYear    -- ^ Card Expiration Year
+    -> CVC        -- ^ Card CVC
     -> Stripe (Token Card)
 createCardToken
       (CardNumber number)
@@ -58,10 +58,10 @@ createCardToken
                   ]
 
 ------------------------------------------------------------------------------
--- | Create a `Token` for a specific BankAccount
+-- | Create a `Token` for a specific `BankAccount`
 createBankAccountToken
-    :: Country        -- ^ Country of the TokenId to retrieve
-    -> RoutingNumber  -- ^ Bank Account routing number
+    :: Country        -- ^ Country of the `BankAccount` `Token` to retrieve
+    -> RoutingNumber  -- ^ Routing Number
     -> AccountNumber  -- ^ Account Number
     -> Stripe (Token BankAccount)
 createBankAccountToken
@@ -80,7 +80,7 @@ createBankAccountToken
 ------------------------------------------------------------------------------
 -- | Retrieve a `Token` by `TokenId`
 getCardToken 
-    :: TokenId -- ^ The ID of the TokenId to retrieve
+    :: TokenId -- ^ The `TokenId` of the `Card` `Token` to retrieve
     -> Stripe (Token Card)
 getCardToken (TokenId token) = callAPI request
   where request = StripeRequest GET url params
@@ -90,7 +90,7 @@ getCardToken (TokenId token) = callAPI request
 ------------------------------------------------------------------------------
 -- | Retrieve a `Token` by `TokenId`
 getBankAccountToken
-    :: TokenId -- ^ The ID of the TokenId to retrieve
+    :: TokenId -- ^ The `TokenId` of the `BankAccount` `Token` to retrieve
     -> Stripe (Token BankAccount)
 getBankAccountToken (TokenId token) = callAPI request
   where request = StripeRequest GET url params

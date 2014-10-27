@@ -112,7 +112,7 @@ createCustomerBase
 ------------------------------------------------------------------------------
 -- | Creates a customer by his/her email
 createCustomerByEmail
-    :: Email
+    :: Email -- ^ The `Email` of the `Customer` to create
     -> Stripe Customer
 createCustomerByEmail e =
     createCustomerBase Nothing Nothing Nothing Nothing
@@ -131,7 +131,7 @@ createEmptyCustomer =
 ------------------------------------------------------------------------------
 -- | Creates a customer by a Token created from stripe.js or the stripe API.
 createCustomerByToken
-    :: TokenId
+    :: TokenId -- ^ The `TokenId` of the `Customer` to create
     -> Stripe Customer
 createCustomerByToken t =
     createCustomerBase Nothing (Just t) Nothing Nothing
@@ -144,7 +144,7 @@ createCustomerByCard
     :: CardNumber     -- ^ Card Number
     -> ExpMonth       -- ^ Card Expiration Month
     -> ExpYear        -- ^ Card Expiration Year
-    -> CVC            -- ^ Card CVC
+    -> CVC            -- ^ Card `CVC`
     -> Stripe Customer
 createCustomerByCard
     cardNumber
@@ -229,7 +229,7 @@ updateCustomerDefaultCard
 ------------------------------------------------------------------------------
 -- | Deletes the specified customer
 deleteCustomer
-    :: CustomerId
+    :: CustomerId -- ^ The `CustomerId` of the `Customer` to delete
     -> Stripe StripeDeleteResult
 deleteCustomer customerid = callAPI request
   where request = StripeRequest DELETE url params
@@ -239,7 +239,7 @@ deleteCustomer customerid = callAPI request
 ------------------------------------------------------------------------------
 -- | Retrieves a customer by his/her ID.
 getCustomer
-    :: CustomerId
+    :: CustomerId -- ^ The `CustomerId` of the `Customer` to retrieve
     -> Stripe Customer
 getCustomer customerid =
   getCustomerExpandable customerid []
@@ -247,8 +247,8 @@ getCustomer customerid =
 ------------------------------------------------------------------------------
 -- | Retrieves a customer by his/her `CustomerID` with `ExpandParams`
 getCustomerExpandable
-    :: CustomerId  -- ^ The `CustomerId` of the `Customer` to retrieve
-    -> ExpandParams -- ^ Retrieve a `Customer` with expansion
+    :: CustomerId   -- ^ The `CustomerId` of the `Customer` to retrieve
+    -> ExpandParams -- ^ The `ExpandParams` of the object to expand
     -> Stripe Customer
 getCustomerExpandable
     customerid

@@ -19,17 +19,31 @@ module Web.Stripe.Plan
     , updatePlanBase
     , deletePlan
       -- * Types
-    , PlanId          (..)
-    , Plan            (..)
-    , Interval        (..)
-    , IntervalCount   (..)
-    , TrialPeriodDays (..)
-    , Currency        (..)
+    , PlanId             (..)
+    , Plan               (..)
+    , Interval           (..)
+    , StripeList         (..)
+    , IntervalCount      (..)
+    , TrialPeriodDays    (..)
+    , StripeDeleteResult (..)
+    , Currency           (..)
+    , Limit
+    , StartingAfter
+    , EndingBefore
     , Name
+    , Amount
+    , Description
+    , MetaData
     ) where
 
-import           Web.Stripe.Client.Internal
-import           Web.Stripe.Types
+import           Web.Stripe.Client.Internal (callAPI, Method(POST, GET, DELETE), toText,
+                                             getParams, toMetaData, Stripe,
+                                             StripeRequest(..), toTextLower, (</>))
+
+import           Web.Stripe.Types (PlanId (..) , Plan (..), Interval (..), StripeList(..),
+                                   IntervalCount (..), TrialPeriodDays (..), Limit,
+                                   StartingAfter, EndingBefore, StripeDeleteResult(..),
+                                   Currency (..), Name, Amount, Description, MetaData)
 
 ------------------------------------------------------------------------------
 -- | Base Request for creating a 'Plan', useful for making custom `Plan` creation requests
@@ -42,7 +56,7 @@ createPlanBase
     -> Maybe IntervalCount   -- ^ Number of intervals between each `Subscription` billing, default 1
     -> Maybe TrialPeriodDays -- ^ Integer number of days a trial will have
     -> Maybe Description     -- ^ An arbitrary string to be displayed on `Customer` credit card statements
-    -> MetaData              -- ^ MetaData for the Plan
+    -> MetaData              -- ^ `MetaData` for the `Plan`
     -> Stripe Plan
 createPlanBase
     (PlanId planid)

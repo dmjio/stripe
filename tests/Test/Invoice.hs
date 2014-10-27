@@ -5,7 +5,7 @@ module Test.Invoice where
 import           Data.Either
 
 import           Test.Config            (getConfig)
-import           Control.Monad
+import           Control.Monad          (void)
 import           Test.Util        
 import           Test.Hspec
 

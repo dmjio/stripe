@@ -98,7 +98,7 @@ getInvoiceItemsExpandable
     -> Limit                       -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter InvoiceItemId -- ^ Paginate starting after the following `InvoiceItemId`
     -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `InvoiceItemId`
-    -> ExpandParams
+    -> ExpandParams                -- ^ `ExpandParams` of the objects for expansion
     -> Stripe (StripeList InvoiceItem)
 getInvoiceItemsExpandable
     customerid
@@ -129,7 +129,7 @@ getInvoiceItem
 -- | Retrieve an `InvoiceItem` by `InvoiceItemId`
 getInvoiceItemExpandable
     :: InvoiceItemId -- ^ `InvoiceItemId` of `InvoiceItem` to retrieve
-    -> ExpandParams
+    -> ExpandParams  -- ^ `ExpandParams` of the objects for expansion
     -> Stripe InvoiceItem
 getInvoiceItemExpandable
     invoiceitemid

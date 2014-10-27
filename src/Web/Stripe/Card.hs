@@ -317,11 +317,11 @@ getRecipientCardExpandable
 ------------------------------------------------------------------------------
 -- | Base Request for retrieving `Customer` cards
 getCustomerCardsBase
-    :: CustomerId -- ^ `CustomerId` of the `Card` to retrieve
-    -> Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
+    :: CustomerId           -- ^ `CustomerId` of the `Card` to retrieve
+    -> Maybe Limit          -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter CardId -- ^ Paginate starting after the following `CardId`
     -> EndingBefore CardId  -- ^ Paginate ending before the following `CardId`
-    -> ExpandParams  -- ^ Expansion on `Card`
+    -> ExpandParams         -- ^ Expansion on `Card`
     -> Stripe (StripeList Card)
 getCustomerCardsBase
     customerid
@@ -340,11 +340,11 @@ getCustomerCardsBase
 ------------------------------------------------------------------------------
 -- | Base Request for retrieving `Customer` or `Recipient` cards
 getRecipientCardsBase
-    :: RecipientId -- ^ `RecipientId` of the `Card` to retrieve
-    -> Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
+    :: RecipientId                   -- ^ `RecipientId` of the `Card` to retrieve
+    -> Maybe Limit                   -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter RecipientCardId -- ^ Paginate starting after the following `CardId`
     -> EndingBefore RecipientCardId  -- ^ Paginate ending before the following `CardId`
-    -> ExpandParams  -- ^ Expansion on `Card`
+    -> ExpandParams                  -- ^ Expansion on `Card`
     -> Stripe (StripeList RecipientCard)
 getRecipientCardsBase
     recipientid
@@ -397,8 +397,8 @@ getCustomerCardsExpandable
 ------------------------------------------------------------------------------
 -- | Retrieve all cards associated with a `Recipient`
 getRecipientCards
-    :: RecipientId -- ^ The `RecipientId` associated with the cards
-    -> Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
+    :: RecipientId                   -- ^ The `RecipientId` associated with the cards
+    -> Maybe Limit                   -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter RecipientCardId -- ^ Paginate starting after the following `CardId`
     -> EndingBefore RecipientCardId  -- ^ Paginate ending before the following `CardId`
     -> Stripe (StripeList RecipientCard)
@@ -413,11 +413,11 @@ getRecipientCards
 ------------------------------------------------------------------------------
 -- | Retrieve all cards associated with a `Recipient`
 getRecipientCardsExpandable
-    :: RecipientId -- ^ The `RecipientId` associated with the cards
-    -> Maybe Limit -- ^ Defaults to 10 if `Nothing` specified
+    :: RecipientId                   -- ^ The `RecipientId` associated with the cards
+    -> Maybe Limit                   -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter RecipientCardId -- ^ Paginate starting after the following `CardId`
-    -> EndingBefore RecipientCardId -- ^ Paginate ending before the following `CardId`
-    -> ExpandParams -- ^ Expansion on `Card`
+    -> EndingBefore RecipientCardId  -- ^ Paginate ending before the following `CardId`
+    -> ExpandParams                  -- ^ The `ExpandParams` of the object to be expanded
     -> Stripe (StripeList RecipientCard)
 getRecipientCardsExpandable
     recipientid

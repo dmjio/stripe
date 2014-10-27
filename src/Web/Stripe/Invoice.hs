@@ -58,7 +58,7 @@ getInvoice
 -- | Retrieve an `Invoice` by `InvoiceId` with `ExpandParams`
 getInvoiceExpandable
     :: InvoiceId    -- ^ Get an `Invoice` by `InvoiceId`
-    -> ExpandParams -- ^ `ExpandParams`
+    -> ExpandParams -- ^ `ExpandParams` of the objects for expansion
     -> Stripe Invoice
 getInvoiceExpandable
     invoiceid
@@ -86,7 +86,7 @@ getInvoicesExpandable
     :: Maybe Limit                 -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter InvoiceItemId -- ^ Paginate starting after the following `Customer`
     -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `CustomerID`
-    -> ExpandParams
+    -> ExpandParams                -- ^ `ExpandParams` of the objects for expansion
     -> Stripe (StripeList Invoice)
 getInvoicesExpandable
     limit
@@ -138,7 +138,7 @@ payInvoice
 -- | Update `Invoice` by `InvoiceId`
 updateInvoice
     :: InvoiceId -- ^ The `InvoiceId` of the `Invoice` to update
-    -> MetaData   -- ^ `MetaData` of `Customer` to `Invoice`
+    -> MetaData  -- ^ `MetaData` of `Customer` to `Invoice`
     -> Stripe Invoice
 updateInvoice
     invoiceid

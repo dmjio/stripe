@@ -36,7 +36,7 @@ import           Web.Stripe.Types.Util      (getChargeId)
 ------------------------------------------------------------------------------
 -- | `Refund` a `Charge`
 createRefund
-    :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be refunded
+    :: ChargeId -- ^ `ChargeId` associated with the `Charge` to be refunded
     -> MetaData -- ^ `MetaData` associated with a `Refund`
     -> Stripe Refund
 createRefund
@@ -49,8 +49,8 @@ createRefund
 ------------------------------------------------------------------------------
 -- | Retrieve a `Refund` by `ChargeId` and `RefundId`
 getRefund
-    :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be retrieved
-    -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
+    :: ChargeId -- ^ `ChargeId` associated with the `Refund` to be retrieved
+    -> RefundId -- ^ `RefundId` associated with the `Refund` to be retrieved
     -> Stripe Refund
 getRefund
     chargeid
@@ -62,9 +62,9 @@ getRefund
 ------------------------------------------------------------------------------
 -- | Retrieve a `Refund` by `ChargeId` and `RefundId` with `ExpandParams`
 getRefundExpandable
-    :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be retrieved
-    -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
-    -> ExpandParams
+    :: ChargeId     -- ^ `ChargeId` associated with the `Charge` to be retrieved
+    -> RefundId     -- ^ `RefundId` associated with the `Refund` to be retrieved
+    -> ExpandParams -- ^ `ExpandParams` of object for expansion
     -> Stripe Refund
 getRefundExpandable
     chargeid
@@ -77,8 +77,8 @@ getRefundExpandable
 ------------------------------------------------------------------------------
 -- | Update a `Refund` by `ChargeId` and `RefundId`
 updateRefund
-    :: ChargeId -- ^ 'ChargeId' associated with the 'Charge' to be updated
-    -> RefundId -- ^ 'RefundId' associated with the 'Refund' to be retrieved
+    :: ChargeId -- ^ `ChargeId` associated with the `Charge` to be updated
+    -> RefundId -- ^ `RefundId` associated with the `Refund` to be retrieved
     -> MetaData -- ^ `MetaData` associated with a `Refund`
     -> Stripe Refund
 updateRefund
@@ -92,7 +92,7 @@ updateRefund
 ------------------------------------------------------------------------------
 -- | Retrieve a lot of Refunds by `ChargeId`
 getRefunds
-    :: ChargeId               -- ^ 'ChargeId' associated with the 'Charge' to be updated
+    :: ChargeId               -- ^ `ChargeId` associated with the `Charge` to be updated
     -> Limit                  -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter RefundId -- ^ Paginate starting after the following `RefundId`
     -> EndingBefore RefundId  -- ^ Paginate ending before the following `RefundId`
@@ -108,11 +108,11 @@ getRefunds
 ------------------------------------------------------------------------------
 -- | Retrieve a lot of Refunds by `ChargeId` with `ExpandParams`
 getRefundsExpandable
-    :: ChargeId               -- ^ 'ChargeId' associated with the 'Charge' to be updated
+    :: ChargeId               -- ^ `ChargeId` associated with the `Charge` to be updated
     -> Limit                  -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter RefundId -- ^ Paginate starting after the following `RefundId`
     -> EndingBefore RefundId  -- ^ Paginate ending before the following `RefundId`
-    -> ExpandParams
+    -> ExpandParams           -- ^ `MetaData` associated with a `Refund`
     -> Stripe (StripeList Refund)
 getRefundsExpandable
   chargeid

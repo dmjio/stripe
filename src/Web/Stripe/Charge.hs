@@ -35,7 +35,7 @@ module Web.Stripe.Charge
     , ExpMonth     (..)
     , ExpYear      (..)
     , StripeList   (..)
-    , Email (..)
+    , Email        (..)
     , Description
     , StatementDescription
     , Amount
@@ -46,8 +46,7 @@ import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              StripeRequest (..), callAPI,
                                              getParams, toMetaData, toText, toExpandable,
                                              toTextLower, (</>))
-
-import           Web.Stripe.Types           (Amount, CVC (..), Capture,
+import           Web.Stripe.Types           (Amount, CVC (..), Capture, 
                                              CardNumber (..), Charge (..),
                                              ChargeId (..), Currency (..),
                                              CustomerId (..), Description,
@@ -56,12 +55,12 @@ import           Web.Stripe.Types           (Amount, CVC (..), Capture,
                                              Email (..), StartingAfter,
                                              StatementDescription(..), ExpandParams,
                                              StripeList (..), TokenId (..), CardId(..))
-import           Web.Stripe.Types.Util
+import           Web.Stripe.Types.Util      (getCardId, getChargeId, getCustomerId)
 
 ------------------------------------------------------------------------------
 -- | Charge `Customer``s by `CustomerId`, will charge the default `Card` if exists
 chargeCustomer
-    :: CustomerId   -- ^ The ID of the customer to be charged
+    :: CustomerId   -- ^ The `CustomerId` of the `Customer` to be charged
     -> Currency     -- ^ Required, 3-letter ISO Code
     -> Amount       -- ^ Required, Integer value of 100 represents $1
     -> Maybe Description -- ^ Optional, default is null
@@ -74,7 +73,7 @@ chargeCustomer customerId currency amount description =
 ------------------------------------------------------------------------------
 -- | Charge `Customer``s by `CustomerId`
 chargeCustomerByCardId
-    :: CustomerId   -- ^ The ID of the `Customer` to be charged
+    :: CustomerId   -- ^ The `CustomerId` of the `Customer` to be charged
     -> CardId       -- ^ `CardId` of `Customer` to charge
     -> Currency     -- ^ Required, 3-letter ISO Code
     -> Amount       -- ^ Required, Integer value of 100 represents $1
@@ -92,9 +91,9 @@ chargeCustomerByCardId
       Nothing Nothing []
 
 ------------------------------------------------------------------------------
--- | Charge a card by a `Token`
+-- | Charge a card by a `TokenId`
 chargeCardByToken
-    :: TokenId    -- ^ The Token representative of a credit card
+    :: TokenId    -- ^ The `TokenId` representative of a `Card`
     -> Currency   -- ^ Required, 3-letter ISO Code
     -> Amount     -- ^ Required, Integer value of 100 represents $1
     -> Maybe Description -- ^ Optional, default is null
@@ -126,16 +125,16 @@ chargeBase
     :: Amount             -- ^ Required, Integer value of 100 represents $1
     -> Currency           -- ^ Required, 3-letter ISO Code
     -> Maybe Description  -- ^ Optional, default is nullo
-    -> Maybe CustomerId   -- ^ Optional, either CustomerId or TokenId has to be specified
-    -> Maybe TokenId      -- ^ Optional, either CustomerId or TokenId has to be specified
+    -> Maybe CustomerId   -- ^ Optional, either `CustomerId` or `TokenId` has to be specified
+    -> Maybe TokenId      -- ^ Optional, either `CustomerId` or `TokenId` has to be specified
     -> Maybe StatementDescription -- ^ Optional, Arbitrary string to include on CC statements
     -> Maybe Email        -- ^ Optional, Arbitrary string to include on CC statements
     -> Capture            -- ^ Optional, default is True
-    -> Maybe CardNumber
-    -> Maybe ExpMonth
-    -> Maybe ExpYear
-    -> Maybe CVC
-    -> MetaData
+    -> Maybe CardNumber   -- ^ Optional, Credit Card Number
+    -> Maybe ExpMonth     -- ^ `Card` Expiration Month
+    -> Maybe ExpYear      -- ^ `Card` Expiration Year
+    -> Maybe CVC          -- ^ `Card` `CVC`
+    -> MetaData           -- ^ `Card` `MetaData`
     -> Stripe Charge
 chargeBase
     amount
@@ -205,8 +204,8 @@ getCharges
 -- | Retrieve all `Charge`s
 getChargesExpandable
     :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter ChargeId   -- ^ Paginate starting after the following CustomerID
-    -> EndingBefore ChargeId    -- ^ Paginate ending before the following CustomerID
+    -> StartingAfter ChargeId   -- ^ Paginate starting after the following `CustomerId`
+    -> EndingBefore ChargeId    -- ^ Paginate ending before the following `CustomerId`
     -> ExpandParams             -- ^ Get Charges with `ExpandParams`
     -> Stripe (StripeList Charge)
 getChargesExpandable
@@ -228,8 +227,8 @@ getChargesExpandable
 getCustomerCharges
     :: CustomerId
     -> Limit                    -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter ChargeId   -- ^ Paginate starting after the following CustomerID
-    -> EndingBefore ChargeId    -- ^ Paginate ending before the following CustomerID
+    -> StartingAfter ChargeId   -- ^ Paginate starting after the following `CustomerId`
+    -> EndingBefore ChargeId    -- ^ Paginate ending before the following `CustomerId`
     -> Stripe (StripeList Charge)
 getCustomerCharges
     customerid
@@ -244,8 +243,8 @@ getCustomerCharges
 getCustomerChargesExpandable
     :: CustomerId
     -> Limit                    -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter ChargeId   -- ^ Paginate starting after the following CustomerID
-    -> EndingBefore ChargeId    -- ^ Paginate ending before the following CustomerID
+    -> StartingAfter ChargeId   -- ^ Paginate starting after the following `CustomerId`
+    -> EndingBefore ChargeId    -- ^ Paginate ending before the following `CustomerId`
     -> ExpandParams             -- ^ Get `Customer` `Charge`s with `ExpandParams`
     -> Stripe (StripeList Charge)
 getCustomerChargesExpandable
@@ -267,8 +266,8 @@ getCustomerChargesExpandable
 -- | A `Charge` to be updated
 updateCharge
     :: ChargeId    -- ^ The `Charge` to update
-    -> Description -- ^ The `Charge` Description to update
-    -> MetaData    -- ^ The `Charge` MetaData to update
+    -> Description -- ^ The `Charge` `Description` to update
+    -> MetaData    -- ^ The `Charge` `MetaData` to update
     -> Stripe Charge
 updateCharge
     chargeid
@@ -283,9 +282,9 @@ updateCharge
 ------------------------------------------------------------------------------
 -- | a `Charge` to be captured
 captureCharge
-    :: ChargeId           -- ^ The Charge to capture
-    -> Maybe Amount       -- ^ If Nothing the entire charge will be captured, otherwise the remaining will be refunded
-    -> Maybe Email -- ^ Email address to send this charge's receipt to
+    :: ChargeId     -- ^ The `ChargeId` of the `Charge` to capture
+    -> Maybe Amount -- ^ If Nothing the entire charge will be captured, otherwise the remaining will be refunded
+    -> Maybe Email  -- ^ `Email` to send `Charge` receipt
     -> Stripe Charge
 captureCharge
     chargeid

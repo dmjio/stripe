@@ -39,11 +39,11 @@ import           Web.Stripe.Types           (Amount, ApplicationFee (..),
                                              StripeList (..))
 
 ------------------------------------------------------------------------------
--- | Create a new 'ApplicationFeeRefund'
+-- | Create a new `ApplicationFeeRefund`
 createApplicationFeeRefund
-    :: FeeId        -- ^ The FeeID associated with the application
-    -> Maybe Amount -- ^ The Amount associated with the Fee (optional)
-    -> MetaData     -- ^ The MetaData associated with the Fee (optional)
+    :: FeeId        -- ^ The `FeeID` associated with the `ApplicationFee`
+    -> Maybe Amount -- ^ The `Amount` associated with the `ApplicationFee` (optional)
+    -> MetaData     -- ^ The `MetaData` associated with the `ApplicationFee` (optional)
     -> Stripe ApplicationFeeRefund
 createApplicationFeeRefund
     (FeeId feeid)
@@ -58,8 +58,8 @@ createApplicationFeeRefund
 ------------------------------------------------------------------------------
 -- | Retrieve an existing 'ApplicationFeeRefund'
 getApplicationFeeRefund
-    :: FeeId
-    -> RefundId
+    :: FeeId     -- ^ The `FeeID` associated with the `ApplicationFee`
+    -> RefundId  -- ^ The `ReufndId` associated with the `ApplicationFeeRefund`
     -> Stripe ApplicationFeeRefund
 getApplicationFeeRefund feeid refundid =
   getApplicationFeeRefundExpandable feeid refundid []
@@ -67,9 +67,9 @@ getApplicationFeeRefund feeid refundid =
 ------------------------------------------------------------------------------
 -- | Retrieve an existing 'ApplicationFeeRefund'
 getApplicationFeeRefundExpandable
-    :: FeeId
-    -> RefundId
-    -> ExpandParams
+    :: FeeId          -- ^ The `FeeID` associated with the `ApplicationFee`
+    -> RefundId       -- ^ The `ReufndId` associated with the `ApplicationFeeRefund`
+    -> ExpandParams   -- ^ The `ExpandParams` to be used for object expansion
     -> Stripe ApplicationFeeRefund
 getApplicationFeeRefundExpandable (FeeId feeid) (RefundId refundid) expansion
     = callAPI request
@@ -81,9 +81,9 @@ getApplicationFeeRefundExpandable (FeeId feeid) (RefundId refundid) expansion
 -- | Retrieve a list of all 'ApplicationFeeRefund's for a given Application 'FeeId'
 getApplicationFeeRefunds
     :: FeeId               -- ^ The `FeeID` associated with the application
-    -> Limit               -- ^ Limit on how many Refunds to return (max 100, default 10)
-    -> StartingAfter FeeId -- ^ Lower bound on how many Refunds to return
-    -> EndingBefore FeeId  -- ^ Upper bound on how many Refunds to return
+    -> Limit               -- ^ `Limit` on how many `Refund`s to return (max 100, default 10)
+    -> StartingAfter FeeId -- ^ Lower bound on how many `Refund`s to return
+    -> EndingBefore FeeId  -- ^ Upper bound on how many `Refund`s to return
     -> Stripe (StripeList ApplicationFeeRefund)
 getApplicationFeeRefunds
    feeid
@@ -96,11 +96,11 @@ getApplicationFeeRefunds
 ------------------------------------------------------------------------------
 -- | Retrieve a list of all 'ApplicationFeeRefund's for a given Application 'FeeId'
 getApplicationFeeRefundsExpandable
-    :: FeeId   -- ^ The `FeeID` associated with the application
-    -> Limit   -- ^ Limit on how many Refunds to return (max 100, default 10)
+    :: FeeId               -- ^ The `FeeID` associated with the `ApplicationFee`
+    -> Limit               -- ^ Limit on how many Refunds to return (max 100, default 10)
     -> StartingAfter FeeId -- ^ Lower bound on how many Refunds to return
     -> EndingBefore FeeId  -- ^ Upper bound on how many Refunds to return
-    -> ExpandParams
+    -> ExpandParams        -- ^ The `ExpandParams` to be used for object expansion
     -> Stripe (StripeList ApplicationFeeRefund)
 getApplicationFeeRefundsExpandable
   (FeeId feeid)

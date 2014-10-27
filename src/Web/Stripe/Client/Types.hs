@@ -21,11 +21,11 @@ import           Network.Http.Client        (Connection, Method)
 import           Web.Stripe.Client.Error    (StripeError (..))
 
 ------------------------------------------------------------------------------
--- | Base Type we use for Stripe
+-- | The `Stripe` Monad
 type Stripe a = EitherT StripeError (ReaderT (StripeConfig, Connection) IO) a
 
 ------------------------------------------------------------------------------
--- | HTTP Params type
+-- | HTTP Params
 type Params = [(ByteString, ByteString)]
 
 ------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ data StripeRequest = StripeRequest
     } deriving Show
 
 ------------------------------------------------------------------------------
--- | Information for Stripe secret key
+-- | Stripe secret key
 data StripeConfig = StripeConfig
     { secretKey :: ByteString
     } deriving Show

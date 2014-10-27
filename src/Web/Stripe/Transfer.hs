@@ -18,11 +18,12 @@ module Web.Stripe.Transfer
     , Transfer        (..)
     , TransferId      (..)
     , TransferStatus  (..)
-    , TransferType   (..)
+    , TransferType    (..)
     , RecipientId     (..)
+    , Recipient       (..)
     , StripeList      (..)
+    , Currency        (..)
     , Amount
-    , Currency       (..)
     , Limit
     ) where
 
@@ -32,7 +33,7 @@ import           Web.Stripe.Client.Internal (Method (GET, POST), Stripe,
                                              toMetaData, toText, (</>))
 import           Web.Stripe.Types           (Amount, Currency (..),
                                              EndingBefore, ExpandParams, Limit,
-                                             MetaData, RecipientId (..),
+                                             MetaData, RecipientId (..), Recipient(..),
                                              StartingAfter, StripeList (..),
                                              Transfer (..), TransferId (..),
                                              TransferStatus (..),Description,
@@ -42,10 +43,10 @@ import           Web.Stripe.Types.Util      (getRecipientId)
 ------------------------------------------------------------------------------
 -- | Create a `Transfer`
 createTransfer
-    :: RecipientId
-    -> Amount
-    -> Currency
-    -> MetaData
+    :: RecipientId -- ^ The `RecipientId` of the `Recipient` who will receive the `Transfer`
+    -> Amount      -- ^ The `Amount` of money to transfer to the `Recipient`
+    -> Currency    -- ^ The `Currency` in which to perform the `Transfer`
+    -> MetaData    -- ^ The `MetaData` associated with the Transfer
     -> Stripe Transfer
 createTransfer
     recipientid
@@ -71,8 +72,8 @@ getTransfer transferid =
 ------------------------------------------------------------------------------
 -- | Retrieve a `Transfer` with `ExpandParams`
 getTransferExpandable
-    :: TransferId -- ^ `TransferId` associated with the `Transfer` to retrieve
-    -> ExpandParams
+    :: TransferId   -- ^ `TransferId` associated with the `Transfer` to retrieve
+    -> ExpandParams -- ^ The `ExpandParams` of the object to be expanded
     -> Stripe Transfer
 getTransferExpandable
     (TransferId transferid)
@@ -100,7 +101,7 @@ getTransfersExpandable
     :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
     -> StartingAfter TransferId -- ^ Paginate starting after the following `TransferId`
     -> EndingBefore TransferId  -- ^ Paginate ending before the following `TransferId`
-    -> ExpandParams
+    -> ExpandParams             -- ^ The `ExpandParams` of the object to be expanded
     -> Stripe (StripeList Transfer)
 getTransfersExpandable
     limit
@@ -118,9 +119,9 @@ getTransfersExpandable
 ------------------------------------------------------------------------------
 -- | Update a `Transfer`
 updateTransfer
-    :: TransferId
-    -> Maybe Description
-    -> MetaData
+    :: TransferId        -- ^ The `TransferId` of the `Transfer` to update
+    -> Maybe Description -- ^ The `Description` of the `Transfer` to update
+    -> MetaData          -- ^ The `MetaData` of the `Transfer` to update
     -> Stripe Transfer
 updateTransfer
     (TransferId transferid)
@@ -135,7 +136,7 @@ updateTransfer
 ------------------------------------------------------------------------------
 -- | Cancel a `Transfer`
 cancelTransfer
-    :: TransferId
+    :: TransferId        -- ^ The `TransferId` of the `Transfer` to cancel
     -> Stripe Transfer
 cancelTransfer (TransferId transferid) = callAPI request
   where request = StripeRequest POST url params

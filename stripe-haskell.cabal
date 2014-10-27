@@ -1,6 +1,6 @@
 name:                stripe-haskell
 version:             0.1.0.0
-synopsis:            Official Stripe API for Haskell
+synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson

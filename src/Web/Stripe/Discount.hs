@@ -13,12 +13,13 @@ module Web.Stripe.Discount
     , StripeDeleteResult (..)
     , CustomerId         (..)
     , SubscriptionId     (..)
+    , Discount           (..)
     ) where
 
 import           Web.Stripe.Client.Internal (Method (DELETE), Stripe,
                                              StripeRequest (..), callAPI,
                                              (</>))
-import           Web.Stripe.Types           (CustomerId (..),
+import           Web.Stripe.Types           (CustomerId (..), Discount(..),
                                              StripeDeleteResult (..),
                                              SubscriptionId (..))
 import           Web.Stripe.Types.Util      (getCustomerId)
@@ -26,7 +27,7 @@ import           Web.Stripe.Types.Util      (getCustomerId)
 ------------------------------------------------------------------------------
 -- | Delete `Customer` `Discount` by `CustomerId`
 deleteCustomerDiscount
-    :: CustomerId -- ^ The Customer to remove the discount from
+    :: CustomerId -- ^ The `Customer` upon which to remove the `Discount`
     -> Stripe StripeDeleteResult
 deleteCustomerDiscount
     customerId = callAPI request
@@ -37,8 +38,8 @@ deleteCustomerDiscount
 ------------------------------------------------------------------------------
 -- | Delete `Subscription` `Discount` by `CustomerId` and `SubscriptionId`
 deleteSubscriptionDiscount
-  :: CustomerId     -- ^ The Customer to remove the discount from
-  -> SubscriptionId -- ^ The Subscription to remove the discount from
+  :: CustomerId     -- ^ The `Customer` to remove the `Discount` from
+  -> SubscriptionId -- ^ The `Subscription` to remove the `Discount` from
   -> Stripe StripeDeleteResult
 deleteSubscriptionDiscount
     customerId

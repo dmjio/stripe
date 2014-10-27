@@ -12,13 +12,17 @@ module Web.Stripe.Event
       -- * Types
     , EventId    (..)
     , Event      (..)
+    , EventData  (..)
+    , EventType  (..)
     , StripeList (..)
+    , Limit
     ) where
 
-import           Web.Stripe.Client.Internal (Method (GET), Stripe, Stripe,
+import           Web.Stripe.Client.Internal (Method (GET), Stripe, Stripe, 
                                              StripeRequest (..), callAPI, (</>), getParams, toText)
-import           Web.Stripe.Types           (Event (..), EventId (..),
-                                             StripeList (..), Limit, StartingAfter, EndingBefore)
+import           Web.Stripe.Types           (Event (..), EventId (..), Limit, EventData(..),
+                                             EventType(..), StripeList (..), Limit,
+                                             StartingAfter, EndingBefore)
 
 ------------------------------------------------------------------------------
 -- | `Event` to retrieve by `EventId`

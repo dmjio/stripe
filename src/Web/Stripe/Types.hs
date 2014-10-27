@@ -14,7 +14,7 @@ import           Data.Aeson                 (FromJSON (parseJSON),
                                              Value (String, Object, Bool), (.:),
                                              (.:?))
 import qualified Data.HashMap.Strict        as H
-import           Data.Text                  (Text, breakOn)
+import           Data.Text                  (Text)
 import           Data.Time                  (UTCTime)
 import           Web.Stripe.Client.Internal (fromSeconds)
 
@@ -57,10 +57,10 @@ data Charge = Charge {
     , chargeAmountRefunded       :: Int
     , chargeCustomerId           :: Maybe CustomerId
     , chargeInvoice              :: Maybe InvoiceId
-    , chargeDescription          :: Maybe Text
+    , chargeDescription          :: Maybe Description
     , chargeDispute              :: Maybe Dispute
     , chargeMetaData             :: MetaData
-    , chargeStatementDescription :: Maybe Text
+    , chargeStatementDescription :: Maybe Description
     , chargeReceiptEmail         :: Maybe Text
     , chargeReceiptNumber        :: Maybe Text
     } deriving (Show, Eq)
@@ -102,9 +102,6 @@ instance FromJSON Charge where
 type Capture = Bool
 
 ------------------------------------------------------------------------------
--- | Refund
-
-------------------------------------------------------------------------------
 -- | `RefundId` for `Refund`
 newtype RefundId =
   RefundId Text deriving (Eq, Show)
@@ -138,9 +135,6 @@ instance FromJSON Refund where
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | Customer
-
-------------------------------------------------------------------------------
 -- | `CustomerId` for a `Customer`
 data CustomerId =
   CustomerId Text |
@@ -161,7 +155,7 @@ data Customer = Customer {
     , customerCreated        :: UTCTime
     , customerId             :: CustomerId
     , customerLiveMode       :: Bool
-    , customerDescription    :: Maybe Text
+    , customerDescription    :: Maybe Description
     , customerEmail          :: Maybe Email
     , customerDelinquent     :: Bool
     , customerSubscriptions  :: StripeList Subscription
@@ -209,9 +203,6 @@ instance FromJSON Customer where
 type AccountBalance = Int
 
 ------------------------------------------------------------------------------
--- | Card
-
-------------------------------------------------------------------------------
 -- | CardId for a `Customer`
 data CardId = CardId Text
             | ExpandedCard Card
@@ -231,7 +222,7 @@ instance FromJSON CardId where
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | CardNumber associated with a Card
+-- | Number associated with a `Card`
 newtype CardNumber     = CardNumber Text deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -271,7 +262,7 @@ newtype AddressState   = AddressState Text deriving (Show, Eq)
 newtype AddressZip     = AddressZip Text deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
--- | Credit Card Brand
+-- | Credit / Debit Card Brand
 data Brand = Visa
            | AMEX
            | MasterCard
@@ -396,9 +387,6 @@ instance FromJSON RecipientCard where
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | Subscription
-
-------------------------------------------------------------------------------
 -- | `SubscriptionId` for a `Subscription`
 newtype SubscriptionId =
     SubscriptionId Text
@@ -424,7 +412,6 @@ data Subscription = Subscription {
     , subscriptionApplicationFeePercent :: Maybe Double
     , subscriptionDiscount              :: Maybe Discount
     , subscriptionMetaData              :: MetaData
-
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -472,9 +459,6 @@ instance FromJSON SubscriptionStatus where
    parseJSON _                   = mzero
 
 ------------------------------------------------------------------------------
--- | Plans
-
-------------------------------------------------------------------------------
 -- | `PlanId` for a `Plan`
 newtype PlanId = PlanId Text deriving (Show, Eq)
 
@@ -492,7 +476,7 @@ data Plan = Plan {
     , planIntervalCount   :: Maybe Int -- optional, max of 1 year intervals allowed, default 1
     , planTrialPeriodDays :: Maybe Int
     , planMetaData        :: MetaData
-    , planDescription     :: Maybe Text
+    , planDescription     :: Maybe Description
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -537,9 +521,6 @@ instance Show Interval where
     show Week  = "week"
     show Month = "month"
     show Year  = "year"
-
-------------------------------------------------------------------------------
--- | Coupon
 
 ------------------------------------------------------------------------------
 -- | `Coupon` Duration
@@ -631,11 +612,10 @@ newtype IntervalCount   = IntervalCount Int deriving (Show, Eq)
 newtype TrialPeriodDays = TrialPeriodDays Int deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
--- | `Amount` of a `Coupon`
+-- | Amount representing a monetary value.
+-- Stripe represents pennies as whole numbers
+-- i.e. 100 = $1
 type Amount = Int
-
-------------------------------------------------------------------------------
--- | Discount
 
 ------------------------------------------------------------------------------
 -- | `Discount` for `Coupon`
@@ -660,9 +640,6 @@ instance FromJSON Discount where
                  <*> o .: "object"
                  <*> (fmap SubscriptionId <$> o .:? "subscription")
     parseJSON _ = mzero
-
-------------------------------------------------------------------------------
--- | Invoice
 
 ------------------------------------------------------------------------------
 -- | `Invoice` for a `Coupon`
@@ -706,8 +683,8 @@ data Invoice = Invoice {
     , invoiceDiscount             :: Maybe Discount
     , invoiceApplicateFee         :: Maybe FeeId
     , invoiceSubscription         :: Maybe SubscriptionId
-    , invoiceStatementDescription :: Maybe Text
-    , invoiceDescription          :: Maybe Text
+    , invoiceStatementDescription :: Maybe Description
+    , invoiceDescription          :: Maybe Description
     , invoiceMetaData             :: MetaData
 } deriving (Show, Eq)
 
@@ -746,9 +723,6 @@ instance FromJSON Invoice where
                <*> o .:? "description"
                <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
-
-------------------------------------------------------------------------------
--- | Invoice Item
 
 ------------------------------------------------------------------------------
 -- | `InvoiceItemId` for `InvoiceItem`
@@ -828,7 +802,7 @@ data InvoiceLineItem = InvoiceLineItem {
     , invoiceLineItemPeriod      :: Period
     , invoiceLineItemQuantity    :: Maybe Quantity
     , invoiceLineItemPlan        :: Maybe Plan
-    , invoiceLineItemDescription :: Maybe Text
+    , invoiceLineItemDescription :: Maybe Description
     , invoiceLineItemMetaData    :: MetaData
   } deriving (Show, Eq)
 
@@ -864,9 +838,6 @@ instance FromJSON InvoiceLineItem where
                        <*> o .:? "description"
                        <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
-
-------------------------------------------------------------------------------
--- | Dispute
 
 ------------------------------------------------------------------------------
 -- | Status of a `Dispute`
@@ -960,9 +931,6 @@ instance FromJSON Dispute where
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | Transfers
-
-------------------------------------------------------------------------------
 -- | `TransferId`
 newtype TransferId =
   TransferId Text deriving (Show, Eq)
@@ -1011,11 +979,11 @@ data Transfer = Transfer {
      , transferStatus               :: TransferStatus
      , transferType                 :: TransferType
      , transferBalanceTransaction   :: TransactionId
-     , transferDescription          :: Maybe Text
+     , transferDescription          :: Maybe Description
      , transferBankAccount          :: Maybe BankAccount
      , transferFailureMessage       :: Maybe Text
      , transferFailureCode          :: Maybe Text
-     , transferStatementDescription :: Maybe Text
+     , transferStatementDescription :: Maybe Description
      , transferRecipient            :: Maybe RecipientId
      , transferMetaData             :: MetaData
 } deriving (Show, Eq)
@@ -1093,17 +1061,17 @@ instance FromJSON BankAccountStatus where
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | Routing Number for `BankAccount`
+-- | Routing Number for Bank Account
 newtype RoutingNumber =
   RoutingNumber Text deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
--- | Country of `BankAccount`
+-- | Country 
 newtype Country       =
   Country Text deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
--- | AccountNumber of `BankAccount`
+-- | Account Number of a Bank Account
 newtype AccountNumber =
   AccountNumber Text deriving (Show, Eq)
 
@@ -1196,9 +1164,6 @@ instance FromJSON Recipient where
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | Application Fees
-
-------------------------------------------------------------------------------
 -- | ApplicationFee Object
 data ApplicationFee = ApplicationFee {
       applicationFeeId                 :: Text
@@ -1253,7 +1218,6 @@ newtype FeeId =
 
 ------------------------------------------------------------------------------
 -- | Application Fee Refunds
-
 data ApplicationFeeRefund = ApplicationFeeRefund {
        applicationFeeRefundId                 :: RefundId
      , applicationFeeRefundAmount             :: Int
@@ -1281,9 +1245,6 @@ instance FromJSON ApplicationFeeRefund where
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | Account
-
-------------------------------------------------------------------------------
 -- | `AccountId` of an `Account`
 data AccountId
   = AccountId Text
@@ -1300,22 +1261,22 @@ instance FromJSON AccountId where
 ------------------------------------------------------------------------------
 -- | `Account` Object
 data Account = Account {
-       accountId                  :: AccountId
-     , accountEmail               :: Text
-     , accountStatementDescriptor :: Maybe Text
-     , accountDisplayName         :: Text
-     , accountTimeZone            :: Text
-     , accountDetailsSubmitted    :: Bool
-     , accountChargeEnabled       :: Bool
-     , accountTransferEnabled     :: Bool
-     , accountCurrenciesSupported :: [Currency]
-     , accountDefaultCurrency     :: Currency
-     , accountCountry             :: Text
-     , accountObject              :: Text
-     , accountBusinessName        :: Text
-     , accountBusinessURL         :: Text
-     , accountBusinessLogo        :: Text
-     , accountSupportPhone        :: Text
+       accountId                   :: AccountId
+     , accountEmail                :: Email
+     , accountStatementDescription :: Maybe Description
+     , accountDisplayName          :: Text
+     , accountTimeZone             :: Text
+     , accountDetailsSubmitted     :: Bool
+     , accountChargeEnabled        :: Bool
+     , accountTransferEnabled      :: Bool
+     , accountCurrenciesSupported  :: [Currency]
+     , accountDefaultCurrency      :: Currency
+     , accountCountry              :: Text
+     , accountObject               :: Text
+     , accountBusinessName         :: Text
+     , accountBusinessURL          :: Text
+     , accountBusinessLogo         :: Text
+     , accountSupportPhone         :: Text
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1323,7 +1284,7 @@ data Account = Account {
 instance FromJSON Account where
    parseJSON (Object o) =
        Account <$> (AccountId <$> o .:  "id")
-               <*> o .:  "email"
+               <*> (Email <$> o .:  "email")
                <*> o .:? "statement_descriptor"
                <*> o .:  "display_name"
                <*> o .:  "timezone"
@@ -1339,9 +1300,6 @@ instance FromJSON Account where
                <*> o .:  "business_logo"
                <*> o .:  "support_phone"
    parseJSON _ = mzero
-
-------------------------------------------------------------------------------
--- | Balance
 
 ------------------------------------------------------------------------------
 -- | `Balance` Object
@@ -1392,7 +1350,7 @@ data BalanceTransaction = BalanceTransaction {
     , balanceTransactionFee            :: Int
     , balanceTransactionFeeDetails     :: [FeeDetails]
     , balanceTransactionFeeSource      :: ChargeId
-    , balanceTransactionFeeDescription :: Maybe Text
+    , balanceTransactionFeeDescription :: Maybe Description
     } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1434,7 +1392,7 @@ data FeeDetails = FeeDetails {
       feeDetailsAmount   :: Int
     , feeDetailsCurrency :: Currency
     , feeType            :: Text
-    , feeDescription     :: Maybe Text
+    , feeDescription     :: Maybe Description
     , feeApplication     :: Maybe Text
 } deriving (Show, Eq)
 
@@ -1448,9 +1406,6 @@ instance FromJSON FeeDetails where
                   <*> o .: "description"
                   <*> o .:? "application"
    parseJSON _ = mzero
-
-------------------------------------------------------------------------------
--- | Events
 
 ------------------------------------------------------------------------------
 -- | `Event` Types
@@ -1507,7 +1462,6 @@ data EventType =
   | PingEvent
   | UnknownEvent
   deriving (Show, Eq)
-
 
 ------------------------------------------------------------------------------
 -- | Event Types JSON Instance
@@ -1569,7 +1523,6 @@ newtype EventId = EventId Text deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
 -- | EventData
-
 data EventData =
     TransferEvent Transfer
   | AccountEvent Account
@@ -1594,7 +1547,7 @@ data EventData =
 ------------------------------------------------------------------------------
 -- | `Event` Object
 data Event = Event {
-      eventId              :: EventId
+      eventId              :: Maybe EventId
     , eventCreated         :: UTCTime
     , eventLiveMode        :: Bool
     , eventType            :: EventType
@@ -1607,7 +1560,7 @@ data Event = Event {
 ------------------------------------------------------------------------------
 -- | Connect Application
 data ConnectApp = ConnectApp {
-      connectAppId     :: Text
+      connectAppId     :: Maybe Text
     , connectAppObject :: Text
     , connectAppName   :: Text
   } deriving (Show, Eq)
@@ -1616,7 +1569,7 @@ data ConnectApp = ConnectApp {
 -- | Connect Application JSON instance
 instance FromJSON ConnectApp where
    parseJSON (Object o) =
-     ConnectApp <$> o .: "id"
+     ConnectApp <$> o .:? "id"
                 <*> o .: "object"
                 <*> o .: "name"
    parseJSON _  = mzero
@@ -1625,7 +1578,7 @@ instance FromJSON ConnectApp where
 -- | JSON Instance for `Event`
 instance FromJSON Event where
    parseJSON (Object o) = do
-     eventId <- EventId <$> o .: "id"
+     eventId <- fmap EventId <$> o .:? "id"
      eventCreated <- fromSeconds <$> o .: "created"
      eventLiveMode <- o .: "livemode"
      eventType <- o .: "type"
@@ -1690,10 +1643,7 @@ instance FromJSON Event where
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | Token
-
-------------------------------------------------------------------------------
--- | `TokenId` of an `Token`
+-- | `TokenId` of a `Token`
 newtype TokenId =
     TokenId Text
     deriving (Show, Eq)
@@ -1746,7 +1696,7 @@ instance FromJSON a => FromJSON (Token a) where
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | Generic handling of `Stripe` list JSON results
+-- | Generic handling of Stripe JSON arrays
 data StripeList a = StripeList {
       list       :: [a]
     , stripeUrl  :: Text
@@ -1830,12 +1780,12 @@ newtype Email = Email Text deriving (Show, Eq)
 -- | Stripe supports 138 currencies 
 data Currency =
     AED -- ^  United Arab Emirates Dirham 
-  | AFN -- ^  Afghan Afghani  | 
+  | AFN -- ^  Afghan Afghani  
   | ALL -- ^  Albanian Lek 
   | AMD -- ^  Armenian Dram 
   | ANG -- ^  Netherlands Antillean Gulden 
-  | AOA -- ^  Angolan Kwanza  | 
-  | ARS -- ^  Argentine Peso  | 
+  | AOA -- ^  Angolan Kwanza  
+  | ARS -- ^  Argentine Peso  
   | AUD -- ^  Australian Dollar 
   | AWG -- ^  Aruban Florin 
   | AZN -- ^  Azerbaijani Manat 
@@ -1846,45 +1796,45 @@ data Currency =
   | BIF -- ^  Burundian Franc 
   | BMD -- ^  Bermudian Dollar 
   | BND -- ^  Brunei Dollar 
-  | BOB -- ^  Bolivian Boliviano  | 
-  | BRL -- ^  Brazilian Real  | 
+  | BOB -- ^  Bolivian Boliviano
+  | BRL -- ^  Brazilian Real
   | BSD -- ^  Bahamian Dollar 
   | BWP -- ^  Botswana Pula 
   | BZD -- ^  Belize Dollar 
   | CAD -- ^  Canadian Dollar 
   | CDF -- ^  Congolese Franc 
   | CHF -- ^  Swiss Franc 
-  | CLP -- ^  Chilean Peso  | 
+  | CLP -- ^  Chilean Peso  
   | CNY -- ^  Chinese Renminbi Yuan 
-  | COP -- ^  Colombian Peso  | 
-  | CRC -- ^  Costa Rican Colón  | 
-  | CVE -- ^  Cape Verdean Escudo  | 
-  | CZK -- ^  Czech Koruna  | 
-  | DJF -- ^  Djiboutian Franc  | 
+  | COP -- ^  Colombian Peso  
+  | CRC -- ^  Costa Rican Colón 
+  | CVE -- ^  Cape Verdean Escudo
+  | CZK -- ^  Czech Koruna  
+  | DJF -- ^  Djiboutian Franc 
   | DKK -- ^  Danish Krone 
   | DOP -- ^  Dominican Peso 
   | DZD -- ^  Algerian Dinar 
-  | EEK -- ^  Estonian Kroon  | 
+  | EEK -- ^  Estonian Kroon  
   | EGP -- ^  Egyptian Pound 
   | ETB -- ^  Ethiopian Birr 
   | EUR -- ^  Euro 
   | FJD -- ^  Fijian Dollar 
-  | FKP -- ^  Falkland Islands Pound  | 
+  | FKP -- ^  Falkland Islands Pound
   | GBP -- ^  British Pound 
   | GEL -- ^  Georgian Lari 
   | GIP -- ^  Gibraltar Pound 
   | GMD -- ^  Gambian Dalasi 
-  | GNF -- ^  Guinean Franc  | 
-  | GTQ -- ^  Guatemalan Quetzal  | 
+  | GNF -- ^  Guinean Franc   
+  | GTQ -- ^  Guatemalan Quetzal 
   | GYD -- ^  Guyanese Dollar 
   | HKD -- ^  Hong Kong Dollar 
-  | HNL -- ^  Honduran Lempira  | 
+  | HNL -- ^  Honduran Lempira   
   | HRK -- ^  Croatian Kuna 
   | HTG -- ^  Haitian Gourde 
-  | HUF -- ^  Hungarian Forint  | 
+  | HUF -- ^  Hungarian Forint   
   | IDR -- ^  Indonesian Rupiah 
   | ILS -- ^  Israeli New Sheqel 
-  | INR -- ^  Indian Rupee  | 
+  | INR -- ^  Indian Rupee  
   | ISK -- ^  Icelandic Króna 
   | JMD -- ^  Jamaican Dollar 
   | JPY -- ^  Japanese Yen 
@@ -1895,7 +1845,7 @@ data Currency =
   | KRW -- ^  South Korean Won 
   | KYD -- ^  Cayman Islands Dollar 
   | KZT -- ^  Kazakhstani Tenge 
-  | LAK -- ^  Lao Kip  | 
+  | LAK -- ^  Lao Kip  
   | LBP -- ^  Lebanese Pound 
   | LKR -- ^  Sri Lankan Rupee 
   | LRD -- ^  Liberian Dollar 

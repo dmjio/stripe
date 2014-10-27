@@ -4,7 +4,6 @@ module Test.Transfer where
 
 import           Data.Either
 import           Test.Config            (getConfig)
-import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad
 import           Test.Hspec
 
@@ -71,13 +70,13 @@ transferTests = do
       config <- getConfig
       result <- stripe config $ getTransfers Nothing Nothing Nothing 
       result `shouldSatisfy` isRight
-    -- it "Retrieves transfers expandable" $ do
-    --   config <- getConfig
-    --   result <- stripe config $ getTransfersExpandable Nothing Nothing Nothing
-    --               [ "data.recipient"
-    --               , "data.balance_transaction"
-    --               ]
-    --   result `shouldSatisfy` isRight
+    it "Retrieves transfers expandable" $ do
+      config <- getConfig
+      result <- stripe config $ getTransfersExpandable Nothing Nothing Nothing
+                  [ "data.recipient"
+                  , "data.balance_transaction"
+                  ]
+      result `shouldSatisfy` isRight
     it "Updates a transfer" $ do
       config <- getConfig
       result <- stripe config $ do

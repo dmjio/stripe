@@ -2,7 +2,6 @@
 module Test.Config where
 
 import           Data.ByteString (ByteString)
-import qualified Data.ByteString as B
 import           Web.Stripe
 
 getConfig :: IO StripeConfig

@@ -20,13 +20,14 @@ module Web.Stripe.ApplicationFee
     , StartingAfter
     , Limit
     , ExpandParams
+    , ConnectApp     (..)
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET), Stripe,
                                              StripeRequest (..), callAPI,
                                              getParams, toText, (</>), toExpandable)
 import           Web.Stripe.Types           (ApplicationFee (..),
-                                             ApplicationId (..), 
+                                             ApplicationId (..), ConnectApp (..),
                                              EndingBefore, FeeId (..),
                                              Limit, StartingAfter, ExpandParams,
                                              StripeList (..))
@@ -34,7 +35,7 @@ import           Web.Stripe.Types           (ApplicationFee (..),
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee' retrieval
 getApplicationFee
-    :: FeeId -- ^ The FeeID associated with the application
+    :: FeeId        -- ^ The `FeeId` associated with the Application
     -> Stripe ApplicationFee
 getApplicationFee
     feeid = getApplicationFeeExpanded feeid []
@@ -42,7 +43,7 @@ getApplicationFee
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee' retrieval with `ExpandParams`
 getApplicationFeeExpanded
-    :: FeeId        -- ^ The `FeeID` associated with the application
+    :: FeeId        -- ^ The `FeeId` associated with the application
     -> ExpandParams -- ^ The `ExpandParams` for an `ApplicationFee`
     -> Stripe ApplicationFee
 getApplicationFeeExpanded

@@ -51,7 +51,7 @@ import qualified Data.Text.Encoding         as T
 import qualified System.IO.Streams          as Streams
 
 ------------------------------------------------------------------------------
--- | Main entry point for beginning a `Stripe` API request
+-- | Create a request to `Stripe`'s API
 stripe
     :: FromJSON a
     => StripeConfig

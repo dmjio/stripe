@@ -19,13 +19,13 @@ import           Data.Text           (Text)
 import           Control.Monad       (mzero)
 
 ------------------------------------------------------------------------------
--- | Error Codes for Common HTTP Responses
+-- | Error Codes for HTTP Responses
 data StripeErrorHTTPCode = 
           BadRequest        -- ^ 400
         | UnAuthorized      -- ^ 401
         | RequestFailed     -- ^ 402
         | NotFound          -- ^ 404
-        | StripeServerError -- ^ (>500)
+        | StripeServerError -- ^ (>=500)
         | UnknownHTTPCode   -- ^ All other codes
           deriving Show
 
@@ -59,7 +59,7 @@ data StripeErrorCode =
           deriving Show
 
 ------------------------------------------------------------------------------
--- | Stripe Error Type
+-- | Stripe Error
 data StripeError = StripeError {
       errorType  :: StripeErrorType
     , errorMsg   :: Text
@@ -69,7 +69,7 @@ data StripeError = StripeError {
     } deriving Show
 
 ------------------------------------------------------------------------------
--- | Parse an error message into a `StripeErrorType`
+-- | Parses an error message into a `StripeErrorType`
 toErrorType
     :: Text
     -> StripeErrorType
@@ -79,7 +79,7 @@ toErrorType "card_error"            = CardError
 toErrorType _                       = UnknownErrorType
 
 ------------------------------------------------------------------------------
--- | Parse an error message into a `StripeErrorCode`
+-- | Parses an error message into a `StripeErrorCode`
 toErrorCode
     :: Text
     -> StripeErrorCode
