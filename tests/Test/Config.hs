@@ -8,4 +8,4 @@ getConfig :: IO StripeConfig
 getConfig = return $ StripeConfig key
   where
     key :: ByteString
-    key = "sk_test_zvqdM2SSA6WwySqM6KJQrqpH"
+    key = "sk_test_igoYowTqR5IfovOKFKwigRmW"
