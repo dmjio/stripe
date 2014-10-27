@@ -29,6 +29,7 @@ module Web.Stripe.Charge
     , TokenId      (..)
     , ChargeId     (..)
     , CustomerId   (..)
+    , Customer     (..)
     , Currency     (..)
     , CardNumber   (..)
     , CVC          (..)
@@ -52,7 +53,7 @@ import           Web.Stripe.Types           (Amount, CVC (..), Capture,
                                              CustomerId (..), Description,
                                              EndingBefore, ExpMonth (..),
                                              ExpYear (..), Limit, MetaData,
-                                             Email (..), StartingAfter,
+                                             Email (..), StartingAfter, Customer(..),
                                              StatementDescription(..), ExpandParams,
                                              StripeList (..), TokenId (..), CardId(..))
 import           Web.Stripe.Types.Util      (getCardId, getChargeId, getCustomerId)
@@ -65,13 +66,13 @@ chargeCustomer
     -> Amount       -- ^ Required, Integer value of 100 represents $1
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
-chargeCustomer customerId currency amount description =
-    chargeBase amount currency description (Just customerId)
+chargeCustomer customerid currency amount description =
+    chargeBase amount currency description (Just customerid)
     Nothing Nothing Nothing True
     Nothing Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
--- | Charge `Customer``s by `CustomerId`
+-- | Charge `Customer`s by `CustomerId`
 chargeCustomerByCardId
     :: CustomerId   -- ^ The `CustomerId` of the `Customer` to be charged
     -> CardId       -- ^ `CardId` of `Customer` to charge
@@ -80,13 +81,13 @@ chargeCustomerByCardId
     -> Maybe Description -- ^ Optional, default is null
     -> Stripe Charge
 chargeCustomerByCardId
-    customerId
+    customerid
     cardid
     currency
     amount
     description =
       chargeBase amount currency description
-      (Just customerId) (Just $ TokenId $ getCardId cardid)  Nothing
+      (Just customerid) (Just $ TokenId $ getCardId cardid)  Nothing
       Nothing True Nothing Nothing
       Nothing Nothing []
 
