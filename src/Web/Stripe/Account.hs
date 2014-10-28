@@ -11,15 +11,15 @@
 --
 -- @
 -- import Web.Stripe         
--- import Web.Stripe.Account (getAccountDetails)
+-- import Web.Stripe.Account
 --
 -- main :: IO ()
 -- main = do
 --   let config = SecretKey "secret_key"
 --   result <- stripe config getAccountDetails
 --   case result of
---     Right AccountDetails {..} -> print accountId
---     Left stripeError          -> print stripeError
+--     Right accountId  -> print accountId
+--     Left stripeError -> print stripeError
 -- @
 module Web.Stripe.Account
     ( -- * API

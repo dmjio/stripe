@@ -1,10 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Event
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#events >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Event
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ getEvents Nothing Nothing Nothing
+--   case result of
+--     Right events     -> print events
+--     Left stripeError -> print stripeError
+-- @
 module Web.Stripe.Event
     ( -- * API
       getEvent

@@ -1,10 +1,30 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Token
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#tokens >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Token
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--       credit = CardNumber "4242424242424242"
+--       em  = ExpMonth 12
+--       ey  = ExpYear 2015
+--       cvc = CVC "123"
+--   result <- stripe config $ createCardToken cn em ey cvc
+--   case result of
+--     Right token -> print token
+--     Left stripeError -> print stripeError
+-- @
 module Web.Stripe.Token
    ( -- * API
      createCardToken

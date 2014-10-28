@@ -1,10 +1,29 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Transfer
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#transfers >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Transfer
+-- import Web.Stripe.Recipient
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ do
+--     Recipient { recipientId = recipientid } <- getRecipient (RecipientId "recipient_id")
+--     createTransfer recipientid (100 :: Amount) USD ([] :: MetaData)
+--   case result of
+--     Right transfer    -> print transfer
+--     Left  stripeError -> print stripeError
+-- @
 module Web.Stripe.Transfer
     ( -- * API
       createTransfer

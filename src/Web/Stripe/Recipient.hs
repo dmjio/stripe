@@ -1,10 +1,30 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Recipient
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#recipients >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Recipient
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ 
+--       createRecipient (FirstName "simon")
+--                       (LastName "marlow")
+--                       Nothing -- what is Simon Marlow's middle initial?
+--                       (Invidiual :: RecipientType)
+--   case result of
+--     Right recipient  -> print recipient
+--     Left stripeError -> print stripeError
+-- @
 module Web.Stripe.Recipient
     ( -- * API
       createRecipient

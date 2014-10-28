@@ -1,10 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
--- Module      : Web.Stripe.ApplicationFee
+-- Module      : Web.Stripe.AppplicationFee
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#application_fees >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.ApplicationFee
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ getApplicationFee (FeeId "fee_4xtEGZhPNDEt3w")
+--   case result of
+--     Right ApplicationFee {..} -> print accountId
+--     Left stripeError          -> print stripeError
+-- @
 module Web.Stripe.ApplicationFee
     (  -- * API
       getApplicationFee

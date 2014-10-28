@@ -18,16 +18,13 @@ import           Web.Stripe.InvoiceItem
 invoiceTests :: Spec
 invoiceTests = do
   describe "Invoice tests" $ do
-    it "Create an invoice an customer from a line item" $ do
+    it "Create an Invoice via Invoice item on a Customer" $ do
       config <- getConfig
-      planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
-        Plan { } <- createPlan planid 20 USD Day "testplan" []
         InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
         i <- createInvoice cid meta 
         void $ deleteCustomer cid
-        void $ deletePlan planid
         return i
       result `shouldSatisfy` isRight
     it "Retrieve an Invoice" $ do

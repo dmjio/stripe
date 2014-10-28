@@ -1,10 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Balance
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#balance >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Balance (getBalance)
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config getBalance
+--   case result of
+--     Right balance    -> print balance 
+--     Left stripeError -> print stripeError
+-- @
 module Web.Stripe.Balance
     ( -- * API
       getBalance

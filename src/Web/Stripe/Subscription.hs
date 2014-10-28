@@ -1,10 +1,36 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Subscription
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#subscriptions >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Subscription
+-- import Web.Stripe.Customer
+-- import Web.Stripe.Plan
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ do
+--     Customer { customerId = cid } <- createEmptyCustomer
+--     Plan { planId = pid } <- createPlan (PlanId "free plan")
+--                      (0 :: Amount) -- free plan
+--                      (USD :: Currency)
+--                      (Month :: Inteval)
+--                      ("sample plan" :: Name)
+--                      ([] :: MetaData)
+--   createSubscription cid pid ([] :: MetaData)
+--   case result of
+--     Right subscription -> print subscription
+--     Left stripeError -> print stripeError
+-- @
 module Web.Stripe.Subscription
     ( -- * API
       createSubscription

@@ -5,13 +5,99 @@ license:             MIT
 license-file:        LICENSE
 author:              David Johnson
 maintainer:          djohnson.m@gmail.com
+copyright:           Copyright (c) 2014 David M. Johnson
+homepage:            https://github.com/dmjio/stripe-haskell
+bug-reports:         https://github.com/dmjio/stripe-haskell/issues
 category:            Web
+extra-source-files:  CHANGELOG
 build-type:          Simple
 cabal-version:       >=1.10
-description:         
- .
- <<https://stripe.com/img/navigation/logo@2x.png>> 
- .
+Description:    
+    [100% Stripe API Coverage:] 
+    (<https://stripe.com/docs/api>) All Stripe commands are supported,
+    including but not limited to Charges, Refunds, Customers, Cards,
+    Subscriptions, Plans, Coupons, Discounts, Invoices, Invoice Items,
+    Disputes, Transfers, Recipients, Application Fees, Application Fees Refunds,
+    Account, Balance, Events and Tokens
+    .
+    .
+    [100+ Hspec Tests:] Thoroughly unit-tested with hspec.
+    All API commands are unit tested before inclusion into the API (see the tests directory).
+    To run the tests, perform the following:
+    .
+    >  cabal clean && cabal configure --enable-tests && cabal build tests && dist/build/tests/tests
+    .
+
+    [Pagination:] Pagination is possible on all API calls that return a JSON array.
+    (<https://stripe.com/docs/api#pagination>)
+    Any API call that returns a `StripeList` is eligible for pagination.
+    To use in practice do the following.
+    .
+    > import Web.Stripe
+    > import Web.Stripe.Customer
+    >
+    > main :: IO ()
+    > main = do
+    >   let config = StripeConfig "secret key"
+    >   result <- stripe config $ getCustomers 
+    >                                  (Just 30 :: Maybe Limit) -- Defaults to 10 if Nothing, 100 is Max
+    >                                  (StartingAfter $ CustomerId "customer_id0")
+    >                                  (EndingBefore $ CustomerId "customer_id30")
+    >   case result of
+    >     Right (StripeList stripelist)  -> print (list stripelist :: [Customer])
+    >     Left stripeError -> print stripeError
+    >
+    .
+    [Versioning:] All versioning is hard-coded (for safety)
+    (<https://stripe.com/docs/api#versioning>)
+    Stripe API versions specified in the HTTP headers of Stripe requests take precendence 
+    over the API version specified in your Stripe Admin Panel. In an attempt to ensure
+    API consistency and correct parsing of returned JSON, all Stripe versions are hard-coded, and 
+    not accessible to the end users of this library. When a new Stripe API version is released 
+    this library will increment the hard-coded API version.
+    .
+
+    [Expansion:] Object expansion is supported on Stripe objects eligible for expansion though the `ExpandParams` type
+    (<https://stripe.com/docs/api#expansion>)
+    Object expansion allows normal Stripe API calls to return expanded objects inside of other objects. 
+    For example, a `Customer` object contains a card id hash on the default_card field.
+    This default_card hash can be expanded into a full `Card` object inside a `Customer` object.
+    As an example:
+    .
+    > import Web.Stripe
+    > import Web.Stripe.Customer
+    >
+    > main :: IO ()
+    > main = do
+    >   let config = StripeConfig "secret key"
+    >   result <- stripe config $ getCustomerExpandable 
+    >                                  (CustomerId "customerid")
+    >                                  (["default_card"] :: ExpandParams)
+    >   case result of
+    >     Right (Customer customer) -> print (defaultCard customer) -- Will be an `ExpandedCard`
+    >     Left stripeError -> print stripeError
+    >
+    .
+
+    [MetaData:] Stripe objects allow the embedding of arbitrary metadata
+    (<https://stripe.com/docs/api#metadata>)
+    Any Stripe object that supports the embedding of metadata is available via this API.
+    As an example:
+    . 
+    > import Web.Stripe
+    > import Web.Stripe.Coupon
+    >
+    > main :: IO ()
+    > main = do
+    >   let config = StripeConfig "secret key"
+    >   result <- stripe config $ updateCoupon (CouponId "couponid") [("key1", value2"), ("key2", "value2")]
+    >   case result of
+    >     Right (Coupon coupon) -> print (couponMetaData coupon)
+    >     Left stripeError -> print stripeError
+    .
+    [Issues:] Any API recommendations or bugs can be reported here: (<https://github.com/dmjio/stripe-haskell/issues>)
+    Pull requests welcome!
+    .
 
 Test-Suite tests
     type:             exitcode-stdio-1.0
@@ -35,16 +121,6 @@ Test-Suite tests
                     , vector
     default-language: Haskell2010
     ghc-options:      -Wall -threaded -rtsopts
-
-Benchmark benchmarks
-    type:             exitcode-stdio-1.0
-    main-is:          benchmarks/Main.hs
-    build-depends:    base
-                    , criterion
-                    , mtl >= 2.1.3.1
-                    , stripe-haskell
-    default-language: Haskell2010
-    ghc-options:      -Wall 
 
 library 
   hs-source-dirs:      src

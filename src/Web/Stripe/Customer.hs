@@ -1,11 +1,27 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+-------------------------------------------
 -- |
--- Module      : Web.Stripe.Coupon
+-- Module      : Web.Stripe.Customer
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#customers >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Customer
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config createEmptyCustomer
+--   case result of
+--     Right customer    -> print customer
+--     Left  stripeError -> print stripeError
+-- @
 module Web.Stripe.Customer
     ( -- * API
       ---- * Create customer

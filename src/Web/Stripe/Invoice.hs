@@ -1,10 +1,33 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Invoice
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#invoices >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Customer
+-- import Web.Stripe.Invoice
+-- import Web.Stripe.InvoiceItem
+-- import Web.Stripe.Plan
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ do
+--      Customer { customerId = cid } <- createEmptyCustomer
+--      Plan { } <- createPlan (PlanId "planid") 20 USD Day "testplan" []
+--      InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
+--      createInvoice cid []
+--   case result of
+--     Right invoice -> print invoice
+--     Left  stripeError -> print stripeError
+-- @
 module Web.Stripe.Invoice
     ( -- * API
       createInvoice

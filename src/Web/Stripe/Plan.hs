@@ -1,10 +1,32 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Plan
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#plans >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Plan
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ do
+--       createPlan (PlanId "free plan")
+--                  (0 :: Amount) 
+--                  (USD :: Currency)
+--                  (Month :: Interval)
+--                  ("a sample free plan" :: Name)
+--                  ([] :: MetaData)
+--   case result of
+--     Right plan     -> print plan
+--     Left stripeError -> print stripeError
+-- @
 module Web.Stripe.Plan 
     ( -- * API 
       createPlan
@@ -14,7 +36,6 @@ module Web.Stripe.Plan
     , getPlan
     , getPlans
     , updatePlanName
-
     , updatePlanDescription
     , updatePlanBase
     , deletePlan

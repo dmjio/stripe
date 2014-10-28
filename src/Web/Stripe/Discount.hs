@@ -1,10 +1,27 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Discount
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#discounts >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Discount
+-- import Web.Stripe.Customer
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ deleteCustomerDiscount (CustomerId "customer_id")
+--   case result of
+--     Right deleteResult -> print deleteResult
+--     Left  stripeError  -> print stripeError
+-- @
 module Web.Stripe.Discount
     ( -- * API
       deleteCustomerDiscount

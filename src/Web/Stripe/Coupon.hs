@@ -1,10 +1,35 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Coupon
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#coupons >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Coupon
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- createCoupon
+--            (Just $ CouponId "$1 Off!")
+--            Once
+--            (Just $ AmountOff 1)
+--            (Just USD)
+--            Nothing
+--            Nothing
+--            Nothing
+--            Nothing
+--            []
+--   case result of
+--     Right coupon      -> print coupon
+--     Left  stripeError -> print stripeError
+-- @
 module Web.Stripe.Coupon
     ( -- * API
       createCoupon

@@ -1,10 +1,34 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Charge
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#charges >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Customer 
+-- import Web.Stripe.Charge
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--       credit = CardNumber "4242424242424242"
+--       em  = ExpMonth 12
+--       ey  = ExpYear 2015
+--       cvc = CVC "123"
+--   result <- stripe config $ do
+--         Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
+--         charge <- chargeCustomer cid USD 100 Nothing
+--         return charge
+--   case result of
+--     Right charge      -> print charge
+--     Left  stripeError -> print stripeError
+-- @
 module Web.Stripe.Charge
     ( -- * API
       ---- * Create Charges

@@ -1,10 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
--- Module      : Web.Stripe.ApplicationFeeRefund
+-- Module      : Web.Stripe.AppplicationFeeRefund
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#fee_refunds >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.ApplicationFee
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ getApplicationFeeRefund (FeeId "fee_id") (RefundId "refund_id")
+--   case result of
+--     Right ApplicationFeeRefund {..} -> print applicationFeeRefundId
+--     Left stripeError                -> print stripeError
+-- @
 module Web.Stripe.ApplicationFeeRefund
     ( -- * API
       createApplicationFeeRefund

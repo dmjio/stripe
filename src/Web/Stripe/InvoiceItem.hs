@@ -1,10 +1,29 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.InvoiceItem
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#invoiceitems >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Customer
+-- import Web.Stripe.InvoiceItem
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config $ do
+--     Customer { customerId = cid } <- createEmptyCustomer
+--     createInvoiceItem cid 100 USD Nothing Nothing (Just "description") []
+--   case result of
+--     Right invoiceitem -> print invoiceitem
+--     Left  stripeError -> print stripeError
+-- @
 module Web.Stripe.InvoiceItem
     ( -- * API 
       createInvoiceItem
@@ -113,7 +132,6 @@ getInvoiceItemsExpandable
           , ("starting_after", (\(InvoiceItemId x) -> x) `fmap` startingAfter)
           , ("ending_before", (\(InvoiceItemId x) -> x) `fmap` endingBefore)
           , ("customer", (\(CustomerId x) -> x) `fmap` customerid)
---          , ("created", "")
           ] ++ toExpandable expandParams
 
 ------------------------------------------------------------------------------
