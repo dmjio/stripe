@@ -24,8 +24,8 @@ disputeTests = do
       config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-        Charge   { chargeId = chid  } <- chargeCustomer cid USD 100 Nothing
-        liftIO $ threadDelay (secs 10) -- Sleep to allow the thread to dispute to happen
+        Charge   { chargeId = chid } <- chargeCustomer cid USD 100 Nothing
+        liftIO $ threadDelay (secs 20) -- Sleep to allow the thread to dispute to happen
         Charge { chargeDispute = cd } <- getCharge chid
         void $ deleteCustomer cid
         return cd
