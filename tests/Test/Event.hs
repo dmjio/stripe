@@ -15,7 +15,6 @@ eventTests = do
     it "Succesfully retrieves events" $ do
       config <- getConfig
       result <- stripe config $ getEvents Nothing Nothing Nothing
-      print result
       result `shouldSatisfy` isRight
 
 
