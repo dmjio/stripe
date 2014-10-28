@@ -169,7 +169,7 @@ library
                        Web.Stripe.Subscription
                        Web.Stripe.Token
                        Web.Stripe.Transfer
-  ghc-options:        -Wall -threaded -rtsopts
+  ghc-options:        -Wall -rtsopts
 
 source-repository head
   type:     git
