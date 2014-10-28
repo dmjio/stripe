@@ -12,6 +12,9 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
 Description:    
+    .
+    <<https://stripe.com/img/navigation/logo@2x.png>>
+    .
     [100% Stripe API Coverage:] 
     (<https://stripe.com/docs/api>) All Stripe commands are supported,
     including but not limited to Charges, Refunds, Customers, Cards,
