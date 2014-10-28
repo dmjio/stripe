@@ -9,7 +9,6 @@ copyright:           Copyright (c) 2014 David M. Johnson
 homepage:            https://github.com/dmjio/stripe-haskell
 bug-reports:         https://github.com/dmjio/stripe-haskell/issues
 category:            Web
-extra-source-files:  CHANGELOG
 build-type:          Simple
 cabal-version:       >=1.10
 Description:    
