@@ -1,10 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
+-------------------------------------------
 -- |
 -- Module      : Web.Stripe.Account
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+--
+-- < https:/\/\stripe.com/docs/api#account >
+--
+-- @
+-- import Web.Stripe         
+-- import Web.Stripe.Account (getAccountDetails)
+--
+-- main :: IO ()
+-- main = do
+--   let config = SecretKey "secret_key"
+--   result <- stripe config getAccountDetails
+--   case result of
+--     Right AccountDetails {..} -> print accountId
+--     Left stripeError          -> print stripeError
+-- @
 module Web.Stripe.Account
     ( -- * API
       getAccountDetails
