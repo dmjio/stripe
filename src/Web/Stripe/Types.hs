@@ -1270,8 +1270,8 @@ instance FromJSON AccountId where
 data Account = Account {
        accountId                   :: AccountId
      , accountEmail                :: Email
-     , accountStatementDescription :: Maybe Description
-     , accountDisplayName          :: Text
+     , accountStatementDescriptor  :: Maybe Description
+     , accountDisplayName          :: Maybe Text
      , accountTimeZone             :: Text
      , accountDetailsSubmitted     :: Bool
      , accountChargeEnabled        :: Bool
@@ -1280,10 +1280,10 @@ data Account = Account {
      , accountDefaultCurrency      :: Currency
      , accountCountry              :: Text
      , accountObject               :: Text
-     , accountBusinessName         :: Text
-     , accountBusinessURL          :: Text
-     , accountBusinessLogo         :: Text
-     , accountSupportPhone         :: Text
+     , accountBusinessName         :: Maybe Text
+     , accountBusinessURL          :: Maybe Text
+     , accountBusinessLogo         :: Maybe Text
+     , accountSupportPhone         :: Maybe Text
 } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
@@ -1302,10 +1302,10 @@ instance FromJSON Account where
                <*> o .:  "default_currency"
                <*> o .:  "country"
                <*> o .:  "object"
-               <*> o .:  "business_name"
-               <*> o .:  "business_url"
-               <*> o .:  "business_logo"
-               <*> o .:  "support_phone"
+               <*> o .:?  "business_name"
+               <*> o .:?  "business_url"
+               <*> o .:?  "business_logo"
+               <*> o .:?  "support_phone"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
