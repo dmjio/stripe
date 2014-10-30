@@ -1,3 +1,4 @@
+env: STRIPEKEY=sk_test_igoYowTqR5IfovOKFKwigRmW
 language: haskell
 ghc: 7.8.3
 cabal: 1.20.0.3
