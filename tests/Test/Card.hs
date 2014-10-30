@@ -6,7 +6,6 @@ module Test.Card where
 import           Control.Monad
 import           Data.Either
 import           Data.Maybe
-import           Test.Config         (getConfig)
 
 import           Test.Hspec
 
@@ -16,11 +15,10 @@ import           Web.Stripe.Customer
 import           Web.Stripe.Recipient
 import           Web.Stripe.Token
 
-cardTests :: Spec
-cardTests = do
+cardTests :: StripeConfig -> Spec
+cardTests config = do
     describe "Card tests" $ do
       it "Can create a Customer Card by CardNumber" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createEmptyCustomer
           card <- createCustomerCard cid credit em ey cvc
@@ -28,7 +26,6 @@ cardTests = do
           return card
         result `shouldSatisfy` isRight
       it "Can create a Customer Card by TokenId" $ do
-        config <- getConfig
         result <- stripe config $ do
           Token    { tokenId = tkid   } <- createCardToken credit em ey cvc
           Customer { customerId = cid } <- createEmptyCustomer
@@ -37,7 +34,6 @@ cardTests = do
           return card
         result `shouldSatisfy` isRight
       it "Can retrieve a Customer Card" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = customerid
                    , customerCards = StripeList { list = [ Card { cardId = cardid } ] }
@@ -51,7 +47,6 @@ cardTests = do
         cardExpMonth `shouldBe` em
         cardExpYear `shouldBe` ey
       it "Can retrieve a Customer's Card with expansion" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = customerid
                    , customerCards = StripeList { list = [ Card { cardId = cardid } ] }
@@ -65,7 +60,6 @@ cardTests = do
         cardExpMonth `shouldBe` em
         cardExpYear `shouldBe` ey
       it "Can retrieve a Customer's Cards" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = customerid
                    } <- createCustomerByCard credit em ey cvc
@@ -74,7 +68,6 @@ cardTests = do
           return card
         result `shouldSatisfy` isRight
       it "Can retrieve a Customer's Cards with Expansion" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = customerid
                    } <- createCustomerByCard credit em ey cvc
@@ -83,7 +76,6 @@ cardTests = do
           return card
         result `shouldSatisfy` isRight
       it "Can delete a Customer's Cards" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = customerid
                     , customerDefaultCard = Just cardid
@@ -93,7 +85,6 @@ cardTests = do
           return result
         result `shouldSatisfy` isRight
       it "Can update a Customer's Card" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = customerid
                     , customerDefaultCard = Just cardid
@@ -119,7 +110,6 @@ cardTests = do
         cardAddressZip `shouldBe` cardzip
     describe "Recipient Card tests" $ do
       it "Can create a RecipientCard by CardNumber" $ do
-        config <- getConfig
         result <- stripe config $ do
           r@Recipient{..} <- createRecipientByCard firstname lastname Nothing Individual debit em ey cvc
           void $ deleteRecipient recipientId
@@ -128,7 +118,6 @@ cardTests = do
         let Right Recipient {..} = result
         length (list recipientCards) `shouldBe` 1
       it "Can create a RecipientCard by Card TokenId" $ do
-        config <- getConfig
         result <- stripe config $ do
           Token { tokenId = tkid } <- createCardToken debit em ey cvc
           Recipient { recipientId = rid } <- createRecipient firstname lastname (Just 'M') Individual
@@ -137,7 +126,6 @@ cardTests = do
           return rcard
         result `shouldSatisfy` isRight
       it "Fails to create a RecipientCard by BankAccount TokenId" $ do
-        config <- getConfig
         result <- stripe config $ do
           Token { tokenId = tkid } <- createBankAccountToken country routingnumber accountnumber
           Recipient { recipientId = rid } <- createRecipient firstname lastname (Just 'M') Corporation
@@ -146,7 +134,6 @@ cardTests = do
           return rcard
         result `shouldSatisfy` isLeft
       it "Can retrieve a RecipientCard" $ do
-        config <- getConfig
         result <- stripe config $ do
           Recipient{..} <- createRecipientByCard firstname lastname Nothing Individual debit em ey cvc
           rcard <- getRecipientCard recipientId (fromJust recipientDefaultCard)
@@ -154,7 +141,6 @@ cardTests = do
           return rcard
         result `shouldSatisfy` isRight
       it "Can retrieve a RecipientCard Expanded" $ do
-        config <- getConfig
         result <- stripe config $ do
           Recipient{..} <- createRecipientByCard firstname lastname Nothing Individual debit em ey cvc
           rcard <- getRecipientCardExpandable recipientId (fromJust recipientDefaultCard) ["recipient"]
@@ -162,7 +148,6 @@ cardTests = do
           return rcard
         result `shouldSatisfy` isRight
       it "Can retrieve a Recipient's Cards" $ do
-        config <- getConfig
         result <- stripe config $ do
           Recipient{..} <- createRecipientByCard firstname lastname Nothing Individual debit em ey cvc
           rcard <- getRecipientCards recipientId Nothing Nothing Nothing
@@ -170,7 +155,6 @@ cardTests = do
           return rcard
         result `shouldSatisfy` isRight
       it "Can retrieve a Recipient's Cards Expanded" $ do
-        config <- getConfig
         result <- stripe config $ do
           Recipient{..} <- createRecipientByCard firstname lastname Nothing Individual debit em ey cvc
           rcard <- getRecipientCardsExpandable recipientId Nothing Nothing Nothing ["data.recipient"]
@@ -178,7 +162,6 @@ cardTests = do
           return rcard
         result `shouldSatisfy` isRight
       it "Can delete a Recipient Card Expanded" $ do
-        config <- getConfig
         result <- stripe config $ do
           Recipient{..} <- createRecipientByCard firstname lastname Nothing Individual debit em ey cvc
           rcard <- deleteRecipientCard recipientId (fromJust recipientDefaultCard)
@@ -186,7 +169,6 @@ cardTests = do
           return rcard
         result `shouldSatisfy` isRight
       it "Can update a Recipient's Card" $ do
-        config <- getConfig
         result <- stripe config $ do
           Recipient{..} <- createRecipientByCard firstname lastname Nothing Individual debit em ey cvc
           rcard@RecipientCard{..} <-
@@ -213,7 +195,6 @@ cardTests = do
         recipientCardAddressZip `shouldBe` cardzip
 
       it "Fails to add a Credit Card to a Recipient" $ do
-        config <- getConfig
         result <- stripe config $ 
           createRecipientByCard firstname lastname Nothing Individual credit em ey cvc
         result `shouldSatisfy` isLeft

@@ -3,18 +3,16 @@
 module Test.Recipient where
 
 import           Data.Either
-import           Test.Config        (getConfig)
 import           Test.Hspec
 import           Control.Monad
 
 import           Web.Stripe
 import           Web.Stripe.Recipient
 
-recipientTests :: Spec
-recipientTests = do
+recipientTests :: StripeConfig -> Spec
+recipientTests config = do
   describe "Recipient tests" $ do
     it "Succesfully creates an Individual Recipient" $ do
-      config <- getConfig
       result <- stripe config $ do
         recipient@Recipient { recipientId = rid } <- createRecipient
           firstName
@@ -27,7 +25,6 @@ recipientTests = do
       let Right Recipient {..} = result
       recipientType `shouldBe` Individual                            
     it "Succesfully creates a Corporation Recipient" $ do
-      config <- getConfig
       result <- stripe config $ do
         recipient@Recipient { recipientId = rid } <-
            createRecipient
@@ -41,7 +38,6 @@ recipientTests = do
       let Right Recipient {..} = result
       recipientType `shouldBe` Corporation
     it "Succesfully retrieves a Recipient" $ do
-      config <- getConfig
       result <- stripe config $ do
         Recipient { recipientId = rid } <-
           createRecipient
@@ -56,7 +52,6 @@ recipientTests = do
       let Right Recipient {..} = result
       recipientType `shouldBe` Corporation
     it "Succesfully retrieves a Recipient" $ do
-      config <- getConfig
       result <- stripe config $ do
         Recipient { recipientId = rid } <-
           createRecipient
@@ -71,7 +66,6 @@ recipientTests = do
       let Right Recipient {..} = result
       recipientType `shouldBe` Corporation
     it "Succesfully updates a Recipient" $ do
-      config <- getConfig
       result <- stripe config $ do
         Recipient { recipientId = rid } <-
           createRecipient
@@ -98,7 +92,6 @@ recipientTests = do
       recipientDescription `shouldBe` description
       recipientEmail `shouldBe` email
     it "Succesfully deletes a Recipient" $ do
-      config <- getConfig
       result <- stripe config $ do
         Recipient { recipientId = rid } <-
           createRecipient

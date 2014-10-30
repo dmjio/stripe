@@ -3,7 +3,6 @@
 module Test.Transfer where
 
 import           Data.Either
-import           Test.Config            (getConfig)
 import           Control.Monad
 import           Test.Hspec
 
@@ -11,11 +10,10 @@ import           Web.Stripe
 import           Web.Stripe.Recipient
 import           Web.Stripe.Transfer
 
-transferTests :: Spec
-transferTests = do
+transferTests :: StripeConfig -> Spec
+transferTests config = do
   describe "Transfer tests" $ do
     it "Create a new transfer" $ do
-      config <- getConfig
       result <- stripe config $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank
@@ -31,7 +29,6 @@ transferTests = do
         return transfer
       result `shouldSatisfy` isRight
     it "Retrieves a transfer" $ do
-      config <- getConfig
       result <- stripe config $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank
@@ -49,7 +46,6 @@ transferTests = do
         return t
       result `shouldSatisfy` isRight
     it "Retrieves a transfer expandable" $ do
-      config <- getConfig
       result <- stripe config $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank
@@ -67,18 +63,15 @@ transferTests = do
         return t
       result `shouldSatisfy` isRight
     it "Retrieves transfers" $ do
-      config <- getConfig
       result <- stripe config $ getTransfers Nothing Nothing Nothing 
       result `shouldSatisfy` isRight
     it "Retrieves transfers expandable" $ do
-      config <- getConfig
       result <- stripe config $ getTransfersExpandable Nothing Nothing Nothing
                   [ "data.recipient"
                   , "data.balance_transaction"
                   ]
       result `shouldSatisfy` isRight
     it "Updates a transfer" $ do
-      config <- getConfig
       result <- stripe config $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank
@@ -99,7 +92,6 @@ transferTests = do
       transferMetaData `shouldBe` [("hey", "there")]   
       transferDescription `shouldBe` Just "hey there"
     it "Can't Cancel a committed transfer" $ do
-      config <- getConfig
       result <- stripe config $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank

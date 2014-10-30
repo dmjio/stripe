@@ -2,7 +2,8 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Main where
 
-import           Test.Hspec
+import           Test.Hspec                 (hspec)
+import           Test.Config                (getConfig)
 
 import           Test.Account               (accountTests)
 import           Test.ApplicationFee        (applicationFeeTests)
@@ -24,29 +25,30 @@ import           Test.Token                 (tokenTests)
 import           Test.Transfer              (transferTests)
 import           Test.Event                 (eventTests)
 
-
 ------------------------------------------------------------------------------
 -- | Main test function entry point
 main :: IO ()
-main = hspec $ do
-  chargeTests
-  refundTests
-  customerTests
-  cardTests
-  subscriptionTests
-  planTests
-  couponTests
-  discountTests
-  invoiceTests
-  invoiceItemTests
-  disputeTests
-  transferTests
-  recipientTests
-  applicationFeeTests
-  applicationFeeRefundTests
-  accountTests
-  balanceTests
-  tokenTests
-  eventTests
+main = do
+  config <- getConfig
+  hspec $ do
+    chargeTests config
+    refundTests config
+    customerTests config
+    cardTests config
+    subscriptionTests config
+    planTests config
+    couponTests config
+    discountTests config
+    invoiceTests config
+    invoiceItemTests config
+    disputeTests config
+    transferTests config
+    recipientTests config
+    applicationFeeTests config
+    applicationFeeRefundTests config
+    accountTests config
+    balanceTests config
+    tokenTests config
+    eventTests config
 
 

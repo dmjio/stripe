@@ -4,7 +4,7 @@ module Test.Refund where
 
 import           Control.Monad
 import           Data.Either
-import           Test.Config         (getConfig)
+
 import           Test.Hspec
 
 import           Web.Stripe
@@ -28,11 +28,10 @@ cvc = CVC "123"
 
 ------------------------------------------------------------------------------
 -- | Refund Tests
-refundTests :: Spec
-refundTests = do
+refundTests :: StripeConfig -> Spec
+refundTests config = do
     describe "Refund Tests" $ do
       it "Creates a refund succesfully" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid }  <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
@@ -41,7 +40,6 @@ refundTests = do
           return refund
         result `shouldSatisfy` isRight
       it "Retrieves a refund succesfully" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
@@ -50,7 +48,6 @@ refundTests = do
           getRefund chid rid
         result `shouldSatisfy` isRight
       it "Retrieves a refund succesfully with expansion" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
@@ -60,7 +57,6 @@ refundTests = do
           return r
         result `shouldSatisfy` isRight
       it "Updates a refund succesfully" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
@@ -72,7 +68,6 @@ refundTests = do
         let Right Refund{..} = result
         refundMetaData `shouldBe` [("hello","there")]
       it "Retrieves all refunds for a Charge" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
@@ -84,7 +79,6 @@ refundTests = do
         let Right StripeList {..} = result
         length list `shouldBe` 1
       it "Retrieves all refunds for a Charge with expansion" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing

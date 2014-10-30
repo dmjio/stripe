@@ -4,7 +4,6 @@ module Test.Invoice where
 
 import           Data.Either
 
-import           Test.Config            (getConfig)
 import           Control.Monad          (void)
 import           Test.Util        
 import           Test.Hspec
@@ -15,11 +14,10 @@ import           Web.Stripe.Plan
 import           Web.Stripe.Customer
 import           Web.Stripe.InvoiceItem
 
-invoiceTests :: Spec
-invoiceTests = do
+invoiceTests :: StripeConfig -> Spec
+invoiceTests config = do
   describe "Invoice tests" $ do
     it "Create an Invoice via Invoice item on a Customer" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
@@ -28,7 +26,6 @@ invoiceTests = do
         return i
       result `shouldSatisfy` isRight
     it "Retrieve an Invoice" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -38,7 +35,6 @@ invoiceTests = do
         getInvoice iid
       result `shouldSatisfy` isRight
     it "Retrieve an Invoice Expanded" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -48,7 +44,6 @@ invoiceTests = do
         getInvoiceExpandable iid ["customer", "charge"]
       result `shouldSatisfy` isRight
     it "Retrieve an Invoice's Line Items" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -58,16 +53,13 @@ invoiceTests = do
         getInvoiceLineItems iid Nothing Nothing Nothing
       result `shouldSatisfy` isRight
     it "Retrieve Invoices" $ do
-      config <- getConfig
       result <- stripe config $ getInvoices Nothing Nothing Nothing 
       result `shouldSatisfy` isRight
     it "Retrieve Invoices Expandable" $ do
-      config <- getConfig
       result <- stripe config $ getInvoicesExpandable Nothing Nothing Nothing
                 ["data.customer", "data.charge"]
       result `shouldSatisfy` isRight
     it "Updates an Invoice" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -79,7 +71,6 @@ invoiceTests = do
       let Right Invoice {..} = result
       invoiceMetaData `shouldBe` [("some", "thing")]
     it "Retrieve an Upcoming Invoice" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -88,7 +79,6 @@ invoiceTests = do
         getUpcomingInvoice cid
       result `shouldSatisfy` isRight
     it "Pay an Invoice" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createCustomerByCard credit em ey cvc

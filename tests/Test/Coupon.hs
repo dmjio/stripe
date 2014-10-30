@@ -1,31 +1,23 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Test.Coupon where
 
-import           Control.Applicative
 import           Control.Monad
 import           Data.Either
-import qualified Data.Text           as T
-import           Data.Text    (Text)
-import           System.Random
-import           Test.Config         (getConfig)
 import           Test.Hspec
+import           Test.Util
 
 import           Web.Stripe
 import           Web.Stripe.Coupon
 
-makeCouponName :: IO Text
-makeCouponName = T.pack <$> replicateM 10 (randomRIO ('a', 'z'))
-
-couponTests :: Spec
-couponTests = do
+couponTests :: StripeConfig -> Spec
+couponTests config = do
   describe "Coupon tests" $ do
     it "Succesfully create a coupon" $ do
-      config <- getConfig
-      couponName <- makeCouponName
+      couponName <- makeCouponId
       result <- stripe config $ do
         c@(Coupon { couponId = cid }) <-
           createCoupon
-             (Just $ CouponId couponName)
+             (Just couponName)
              Once
              (Just $ AmountOff 1)
              (Just USD)
@@ -38,11 +30,10 @@ couponTests = do
         return c
       result `shouldSatisfy` isRight
     it "Succesfully retrieve a coupon" $ do
-      config <- getConfig
-      couponName <- makeCouponName
+      couponName <- makeCouponId
       result <- stripe config $ do
                 Coupon { couponId = cid } <- createCoupon
-                                  (Just $ CouponId couponName)
+                                  (Just couponName)
                                   Once
                                   (Just $ AmountOff 1)
                                   (Just USD)
@@ -56,11 +47,10 @@ couponTests = do
                 return res
       result `shouldSatisfy` isRight
     it "Succesfully delete a coupon" $ do
-      config <- getConfig
-      couponName <- makeCouponName
+      couponName <- makeCouponId
       result <- stripe config $ do
                 Coupon { couponId = cid } <- createCoupon
-                                  (Just $ CouponId couponName)
+                                  (Just couponName)
                                   Once
                                   (Just $ AmountOff 1)
                                   (Just USD)
@@ -72,11 +62,10 @@ couponTests = do
                 deleteCoupon cid
       result `shouldSatisfy` isRight
     it "Succesfully update a coupon" $ do
-      couponName <- makeCouponName
-      config <- getConfig
+      couponName <- makeCouponId
       result <- stripe config $ do
                 Coupon { couponId = cid } <- createCoupon
-                                  (Just $ CouponId couponName)
+                                  (Just couponName)
                                   Once
                                   (Just $ AmountOff 1)
                                   (Just USD)
@@ -92,7 +81,6 @@ couponTests = do
       let Right (Coupon { couponMetaData = cmd }) = result
       cmd `shouldBe` [("hi", "there")]
     it "Succesfully retrieves all coupons" $ do
-      config <- getConfig
       result <- stripe config $ getCoupons Nothing Nothing Nothing
       result `shouldSatisfy` isRight
 

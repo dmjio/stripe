@@ -6,7 +6,6 @@ import           Data.Either
 import           Control.Monad
 import           Data.Maybe
 
-import           Test.Config        (getConfig)
 import           Test.Hspec
 import           Test.Util
 
@@ -16,11 +15,10 @@ import           Web.Stripe.Customer
 import           Web.Stripe.Plan
 import           Web.Stripe.Coupon
 
-subscriptionTests :: Spec
-subscriptionTests = do
+subscriptionTests :: StripeConfig -> Spec
+subscriptionTests config = do
   describe "Subscription tests" $ do
     it "Succesfully creates a Subscription" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -36,7 +34,6 @@ subscriptionTests = do
         return sub
       result `shouldSatisfy` isRight
     it "Succesfully retrieves a Subscription" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -53,7 +50,6 @@ subscriptionTests = do
         return sub
       result `shouldSatisfy` isRight
     it "Succesfully retrieves a Subscription expanded" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -70,7 +66,6 @@ subscriptionTests = do
         return sub
       result `shouldSatisfy` isRight
     it "Succesfully retrieves a Customer's Subscriptions expanded" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -87,7 +82,6 @@ subscriptionTests = do
         return sub
       result `shouldSatisfy` isRight
     it "Succesfully retrieves a Customer's Subscriptions" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
@@ -104,7 +98,6 @@ subscriptionTests = do
         return sub
       result `shouldSatisfy` isRight
     it "Succesfully updates a Customer's Subscriptions" $ do
-      config <- getConfig
       planid <- makePlanId
       couponid <- makeCouponId
       result <- stripe config $ do
@@ -136,7 +129,6 @@ subscriptionTests = do
       subscriptionMetaData `shouldBe` [("hi", "there")]
       subscriptionDiscount `shouldSatisfy` isJust
     it "Succesfully cancels a Customer's Subscription" $ do
-      config <- getConfig
       planid <- makePlanId
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer

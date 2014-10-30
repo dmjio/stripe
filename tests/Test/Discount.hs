@@ -2,14 +2,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Test.Discount where
 
-import           Control.Applicative
-import           Control.Monad
+import           Control.Monad (void)
 import           Data.Either
-import           Data.Text              (Text)
-import qualified Data.Text              as T
-import           System.Random
-import           Test.Config            (getConfig)
 import           Test.Hspec
+import           Test.Util
 
 import           Web.Stripe
 import           Web.Stripe.Coupon
@@ -18,19 +14,15 @@ import           Web.Stripe.Discount
 import           Web.Stripe.Plan
 import           Web.Stripe.Subscription
 
-makeCouponName :: IO Text
-makeCouponName = T.pack <$> replicateM 10 (randomRIO ('a', 'z'))
-
-discountTests :: Spec
-discountTests = do
+discountTests :: StripeConfig -> Spec
+discountTests config = do
   describe "Discount tests" $ do
     it "Succesfully deletes a discount from a Customer" $ do
-      coupon <- makeCouponName
-      config <- getConfig
+      coupon <- makeCouponId
       result <- stripe config $ do
         Coupon { couponId = couponid } <-
           createCoupon
-             (Just $ CouponId coupon)
+             (Just coupon)
              Once
              (Just $ AmountOff 1)
              (Just USD)
@@ -47,7 +39,7 @@ discountTests = do
             Nothing
             Nothing
             Nothing
-            (Just $ CouponId coupon)
+            (Just coupon)
             Nothing
             Nothing
             Nothing
@@ -63,12 +55,11 @@ discountTests = do
       let Right (_, Customer{..}) = result
       customerDiscount `shouldBe` Nothing
     it "Succesfully deletes a discount from a Subscription" $ do
-      coupon <- makeCouponName
-      plan <- makeCouponName
-      config <- getConfig
+      coupon <- makeCouponId
+      plan <- makePlanId
       result <- stripe config $ do
         Plan { planId = planid } <-
-          createPlan (PlanId plan)
+          createPlan plan
           0 -- free plan
           USD
           Month
@@ -76,7 +67,7 @@ discountTests = do
           []
         Coupon { couponId = couponid } <-
           createCoupon
-             (Just $ CouponId coupon)
+             (Just coupon)
              Once
              (Just $ AmountOff 1)
              (Just USD)
@@ -93,7 +84,7 @@ discountTests = do
             Nothing
             Nothing
             Nothing
-            (Just $ CouponId coupon)
+            (Just coupon)
             Nothing
             Nothing
             Nothing
@@ -101,8 +92,8 @@ discountTests = do
             Nothing
             []
         Subscription { subscriptionId = sid } <-
-          createSubscription customerid (PlanId plan) []
-        void $ updateSubscription customerid sid (Just $ CouponId coupon) []
+          createSubscription customerid plan []
+        void $ updateSubscription customerid sid (Just coupon) []
         result <- deleteSubscriptionDiscount customerid sid
         void $ deletePlan planid
         void $ deleteCustomer customerid

@@ -2,26 +2,23 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Test.Dispute where
 
-import           Data.Either           (isRight)
-import           Test.Config           (getConfig)
-import           Test.Hspec
+import           Data.Either            (isRight)
 import           Control.Monad          (void)
 import           Control.Concurrent     (threadDelay)
 import           Control.Monad.IO.Class (liftIO)
+
+import           Test.Hspec
+import           Test.Util
 
 import           Web.Stripe
 import           Web.Stripe.Dispute
 import           Web.Stripe.Charge
 import           Web.Stripe.Customer
 
-secs :: Int -> Int
-secs = (*1000000)
-
-disputeTests :: Spec
-disputeTests = do
+disputeTests :: StripeConfig -> Spec
+disputeTests config = do
   describe "Dispute Tests" $ do
     it "Creates a Dispute" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
         Charge   { chargeId = chid } <- chargeCustomer cid USD 100 Nothing
@@ -33,7 +30,6 @@ disputeTests = do
       let Right (Just Dispute{..}) = result 
       disputeStatus `shouldBe` NeedsResponse
     it "Makes Dispute Under Review" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
         Charge   { chargeId = chid  } <- chargeCustomer cid USD 100 Nothing
@@ -49,7 +45,6 @@ disputeTests = do
       disputeEvidence `shouldBe` evi
       disputeStatus `shouldBe` UnderReview
     it "Wins a Dispute" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
         Charge   { chargeId = chid  } <- chargeCustomer cid USD 100 Nothing
@@ -65,7 +60,6 @@ disputeTests = do
       disputeEvidence `shouldBe` win
       disputeStatus `shouldBe` Won
     it "Loses a Dispute" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
         Charge   { chargeId = chid  } <- chargeCustomer cid USD 100 Nothing
@@ -81,7 +75,6 @@ disputeTests = do
       disputeEvidence `shouldBe` lose
       disputeStatus `shouldBe` Lost
     it "Closes a Dispute" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
         Charge   { chargeId = chid  } <- chargeCustomer cid USD 100 Nothing

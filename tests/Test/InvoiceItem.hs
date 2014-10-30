@@ -3,17 +3,17 @@
 module Test.InvoiceItem where
 
 import           Data.Either
-import           Test.Config        (getConfig)
+
 import           Test.Hspec
+
 import           Web.Stripe
 import           Web.Stripe.InvoiceItem
 import           Web.Stripe.Customer
 
-invoiceItemTests :: Spec
-invoiceItemTests = do
+invoiceItemTests :: StripeConfig -> Spec
+invoiceItemTests config = do
   describe "Invoice item tests" $ do
     it "Succesfully creates an invoice item" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         ii <- createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
@@ -21,7 +21,6 @@ invoiceItemTests = do
         return ii
       result `shouldSatisfy` isRight
     it "Succesfully retrieves an existing invoice item" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
@@ -31,7 +30,6 @@ invoiceItemTests = do
         return ii 
       result `shouldSatisfy` isRight
     it "Succesfully retrieves an existing invoice item expandable" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
@@ -41,7 +39,6 @@ invoiceItemTests = do
         return ii
       result `shouldSatisfy` isRight
     it "Succesfully retrieves invoice items" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem {  } <-
@@ -51,7 +48,6 @@ invoiceItemTests = do
         return ii
       result `shouldSatisfy` isRight
     it "Succesfully retrieves invoice items with expansion" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem {  } <-
@@ -61,7 +57,6 @@ invoiceItemTests = do
         return ii
       result `shouldSatisfy` isRight
     it "Succesfully updates an existing invoice item" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
@@ -75,7 +70,6 @@ invoiceItemTests = do
       invoiceItemDescription `shouldBe` Just "description"
       invoiceItemAmount `shouldBe` 200
     it "Succesfully deletes an invoice item" $ do
-      config <- getConfig
       result <- stripe config $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-

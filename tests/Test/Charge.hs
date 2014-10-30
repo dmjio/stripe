@@ -5,14 +5,13 @@ module Test.Charge where
 import           Control.Monad
 import           Data.Either
 import           Data.Text              (Text)
-import           Test.Config            (getConfig)
 import           Test.Hspec
 import           Web.Stripe
 import           Web.Stripe.Charge
 import           Web.Stripe.Customer
 
-chargeTests :: Spec
-chargeTests =
+chargeTests :: StripeConfig -> Spec
+chargeTests config =
   describe "Charge tests" $ do
     chargeCustomerTest
     retrieveChargeTest
@@ -27,7 +26,6 @@ chargeTests =
     cvc = CVC "123"
     chargeCustomerTest = 
       it "Charges a customer succesfully" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
           charge <- chargeCustomer cid USD 100 Nothing
@@ -36,7 +34,6 @@ chargeTests =
         result `shouldSatisfy` isRight
     retrieveChargeTest = 
       it "Retrieves a charge succesfully" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
           Charge { chargeId = chid } <- chargeCustomer cid USD 100 Nothing
@@ -46,7 +43,6 @@ chargeTests =
         result `shouldSatisfy` isRight
     updateChargeTest =
       it "Updates a charge succesfully" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
           Charge { chargeId = chid } <- chargeCustomer cid USD 100 Nothing
@@ -60,7 +56,6 @@ chargeTests =
         desc `shouldSatisfy` (==(Just "Cool" :: Maybe Text))
     retrieveExpandedChargeTest =
       it "Retrieves an expanded charge succesfully" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
           Charge { chargeId = chid } <- chargeCustomer cid USD 100 Nothing
@@ -70,12 +65,10 @@ chargeTests =
         result `shouldSatisfy` isRight
     retrieveAllChargesTest =
       it "Retrieves all charges" $ do
-        config <- getConfig
         result <- stripe config $ getCharges Nothing Nothing Nothing
         result `shouldSatisfy` isRight
     captureChargeTest = 
       it "Captures a charge - 2 Step Payment Flow" $ do
-        config <- getConfig
         result <- stripe config $ do
           Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
           Charge { chargeId = chid } <- chargeBase 100 USD Nothing (Just cid)
