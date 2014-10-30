@@ -18,8 +18,8 @@
 --   let config = SecretKey "secret_key"
 --   result <- stripe config $ getApplicationFeeRefund (FeeId "fee_id") (RefundId "refund_id")
 --   case result of
---     Right ApplicationFeeRefund {..} -> print applicationFeeRefundId
---     Left stripeError                -> print stripeError
+--     Right applicationFeeRefund -> print applicationFeeRefund
+--     Left stripeError           -> print stripeError
 -- @
 module Web.Stripe.ApplicationFeeRefund
     ( -- * API

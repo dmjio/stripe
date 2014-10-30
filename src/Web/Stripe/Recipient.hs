@@ -19,7 +19,7 @@
 --   result <- stripe config $ 
 --       createRecipient (FirstName "simon")
 --                       (LastName "marlow")
---                       Nothing -- what is Simon Marlow's middle initial?
+--                       Nothing -- What is Simon Marlow's middle initial?
 --                       (Invidiual :: RecipientType)
 --   case result of
 --     Right recipient  -> print recipient
@@ -40,7 +40,6 @@ module Web.Stripe.Recipient
     , updateRecipientTaxID
     , updateRecipientBankAccount
     , updateRecipientTokenID
---    , updateRecipientCard
     , updateRecipientDefaultCard
     , updateRecipientEmail
     , updateRecipientDescription
@@ -412,9 +411,6 @@ updateRecipientBankAccount
 
 ------------------------------------------------------------------------------
 -- | Update a `Recipient` `TaxID`
---
--- > runStripe config $ updateRecipientTaxID (RecipientId "rp_4lpjaLFB5ecSks") "SampleTaxID"
---
 updateRecipientTaxID
     :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
     -> TaxID         -- ^ `TaxID` of `Recipient` to be updated
@@ -429,9 +425,6 @@ updateRecipientTaxID
 
 ------------------------------------------------------------------------------
 -- | Update a `Recipient` `Card` by `TokenId`
---
--- > runStripe config $ updateRecipientTokenId (RecipientId "rp_4lpjaLFB5ecSks") (TokenId "tok_aksdjfh9823")
---
 updateRecipientTokenID
     :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
     -> TokenId       -- ^ `TaxID` of `Recipient` to be updated
@@ -443,33 +436,6 @@ updateRecipientTokenID
               Nothing Nothing Nothing Nothing (Just tokenId) Nothing
               Nothing Nothing Nothing Nothing Nothing Nothing []
 
-------------------------------------------------------------------------------
--- | Update a 'Recipient' 'Card'
---
--- > runStripe config $ updateRecipientCard (RecipientId "rp_4lpjaLFB5ecSks") number month year cvc
--- >   where
--- >     number = CardNumber "4242424242424242"
--- >     month  = ExpMonth 12
--- >     year   = ExpYear 2018
--- >     cvc    = 117
---
--- updateRecipientDefaultCard
---     :: RecipientId -- ^ The 'RecipientId' of the 'Recipient' to be updated
---     -> CardNumber  -- ^ 'CardNumber' to attach to 'Card' of 'Recipient'
---     -> ExpMonth    -- ^ Expiration Month of 'Card'
---     -> ExpYear     -- ^ Expiration Year of 'Card'
---     -> CVC         -- ^ CVC of Card
---     -> Stripe Recipient
--- updateRecipientCard
---     recipientid
---     cardNumber
---     expMonth
---     expYear
---     cvc = updateRecipientBase
---           recipientid Nothing Nothing Nothing
---           Nothing Nothing Nothing Nothing Nothing (Just cardNumber)
---           (Just expMonth) (Just expYear) (Just cvc)
---           Nothing Nothing Nothing []
 
 ------------------------------------------------------------------------------
 -- | Update default `Card` of `Recipient`
@@ -490,9 +456,6 @@ updateRecipientDefaultCard
 
 ------------------------------------------------------------------------------
 -- | Update a `Recipient` `Email` Address
---
--- > runStripe config $ updateRecipientEmail (RecipientId "rp_4lpjaLFB5ecSks") (Email "name@domain.com")
---
 updateRecipientEmail
     :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
     -> Email         -- ^ `Email` of `Recipient` to be updated
@@ -507,9 +470,6 @@ updateRecipientEmail
 
 ------------------------------------------------------------------------------
 -- | Update a `Recipient` `Description`
---
--- > runStripe config $ updateRecipientDescription (RecipientId "rp_4lpjaLFB5ecSks") (Email "name@domain.com")
---
 updateRecipientDescription
     :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
     -> Description   -- ^ `Description` of `Recipient` to be updated
@@ -524,9 +484,6 @@ updateRecipientDescription
 
 ------------------------------------------------------------------------------
 -- | Update a `Recipient` `MetaData`
---
--- > runStripe config $ updateRecipientMetaData (RecipientId "rp_4lpjaLFB5ecSks") [("key", "value")]
---
 updateRecipientMetaData
     :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
     -> MetaData      -- ^ The `MetaData` associated with the `Recipient`
@@ -541,9 +498,6 @@ updateRecipientMetaData
 
 ------------------------------------------------------------------------------
 -- | Delete a `Recipient`
---
--- >>> runStripe config $ deleteRecipient (RecipientId "rp_4lpjaLFB5ecSks")
---
 deleteRecipient
     :: RecipientId   -- ^ `RecipiendId` of `Recipient` to delete
     -> Stripe StripeDeleteResult

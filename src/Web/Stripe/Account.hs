@@ -18,7 +18,7 @@
 --   let config = SecretKey "secret_key"
 --   result <- stripe config getAccountDetails
 --   case result of
---     Right accountId  -> print accountId
+--     Right account    -> print account
 --     Left stripeError -> print stripeError
 -- @
 module Web.Stripe.Account

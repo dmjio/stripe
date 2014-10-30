@@ -18,8 +18,8 @@
 --   let config = SecretKey "secret_key"
 --   result <- stripe config $ getApplicationFee (FeeId "fee_4xtEGZhPNDEt3w")
 --   case result of
---     Right ApplicationFee {..} -> print accountId
---     Left stripeError          -> print stripeError
+--     Right applicationFee -> print applicationFee
+--     Left stripeError     -> print stripeError
 -- @
 module Web.Stripe.ApplicationFee
     (  -- * API

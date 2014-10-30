@@ -11,7 +11,6 @@ module Web.Stripe.Client
     , Stripe
       -- * `Stripe` Secret Key 
     , StripeConfig       (..)
-      -- * Error type for Request
     , module Web.Stripe.Client.Error
     ) where
 

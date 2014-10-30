@@ -149,7 +149,7 @@ chargeCard cardNumber expMonth expYear cvc currency amount description =
 chargeBase
     :: Amount             -- ^ Required, Integer value of 100 represents $1
     -> Currency           -- ^ Required, 3-letter ISO Code
-    -> Maybe Description  -- ^ Optional, default is nullo
+    -> Maybe Description  -- ^ Optional, default is null
     -> Maybe CustomerId   -- ^ Optional, either `CustomerId` or `TokenId` has to be specified
     -> Maybe TokenId      -- ^ Optional, either `CustomerId` or `TokenId` has to be specified
     -> Maybe StatementDescription -- ^ Optional, Arbitrary string to include on CC statements
