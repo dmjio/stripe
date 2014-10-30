@@ -2,6 +2,7 @@ module Test.Util
        ( -- * Helpers
          makePlanId
        , makeCouponId
+       , secs
        ) where
 
 import           System.Random
@@ -27,4 +28,9 @@ makeCouponId = CouponId <$> makeGuid
 -- | Guid Creation Helper
 makeGuid :: IO Text
 makeGuid = T.pack <$> replicateM 10 (randomRIO ('a', 'z'))
+
+------------------------------------------------------------------------------
+-- | Seconds
+secs :: Int -> Int
+secs = (*1000000)
 
