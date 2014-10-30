@@ -384,13 +384,6 @@ updateRecipientName
 
 ------------------------------------------------------------------------------
 -- | Update a 'Recipient' 'BankAccount'
---
--- > runStripe config $ updateRecipient (RecipientId "rp_4lpjaLFB5ecSks") BankAccount {
--- >     bankAccountCountry = Country "us"
--- >   , bankAccountRoutingNumber = RoutingNumber "071000013"
--- >   , bankAccountNumber = AccountNumber "293058719045"
--- >  }
---
 updateRecipientBankAccount
     :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
     -> Country       -- ^ `Country` of BankAccount to attach to `Recipient`
@@ -439,9 +432,6 @@ updateRecipientTokenID
 
 ------------------------------------------------------------------------------
 -- | Update default `Card` of `Recipient`
---
--- > runStripe config $ updateRecipientDefaultCard (RecipientId "rp_4lpjaLFB5ecSks") (CardId "card_4jQs35jE5wFOor")
---
 updateRecipientDefaultCard
     :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
     -> CardId        -- ^ `CardId` of `Card` to be made default
