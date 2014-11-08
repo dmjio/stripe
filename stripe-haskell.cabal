@@ -113,7 +113,7 @@ Test-Suite tests
                     , bytestring
                     , either
                     , hspec >= 1.11.4
-                    , random >= 1.1
+                    , random
                     , stripe-haskell
                     , text
                     , time
@@ -131,7 +131,7 @@ library
                      , http-streams
                      , io-streams
                      , mtl >= 2.1.3.1
-                     , random >= 1.1
+                     , random
                      , text
                      , time
                      , transformers
