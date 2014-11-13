@@ -63,6 +63,7 @@ Subscription tests
 Plan tests
 ========
   - Succesfully creates a Plan
+  - Succesfully creates a Plan and subscribes a customer with a TrialPeriod
   - Succesfully deletes a Plan
   - Succesfully updates a Plan
   - Succesfully retrieves a Plan

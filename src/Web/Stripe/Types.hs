@@ -17,6 +17,7 @@ import qualified Data.HashMap.Strict        as H
 import           Data.Text                  (Text)
 import           Data.Time                  (UTCTime)
 import           Web.Stripe.Client.Internal (fromSeconds)
+import           Web.Stripe.Client.Util     (toSeconds)
 
 ------------------------------------------------------------------------------
 -- | `ChargeId` associated with a `Charge`
@@ -499,7 +500,10 @@ instance FromJSON Plan where
 
 ------------------------------------------------------------------------------
 -- | `TrialPeriod` for a Plan
-type TrialPeriod = UTCTime
+newtype TrialPeriod = TrialPeriod { trialToUtc :: UTCTime }
+instance Show TrialPeriod where show = show . toSeconds . trialToUtc
+instance FromJSON TrialPeriod where
+    parseJSON j = (TrialPeriod . fromSeconds) <$> parseJSON j
 
 ------------------------------------------------------------------------------
 -- | Interval for `Plan`s
