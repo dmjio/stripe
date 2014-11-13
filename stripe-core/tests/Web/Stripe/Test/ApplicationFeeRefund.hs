@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
 {-# LANGUAGE RecordWildCards   #-}
-module Test.ApplicationFeeRefund where
+module Web.Stripe.Test.ApplicationFeeRefund where
 
 import           Data.Either
 import           Test.Hspec
-import           Test.Prelude
+import           Web.Stripe.Test.Prelude
 import           Web.Stripe.ApplicationFeeRefund
 
 applicationFeeRefundTests :: StripeSpec

@@ -1,11 +1,11 @@
 module Main where
 
-import           AllTests
 import           Control.Monad.Trans.Free (FreeF(..), FreeT(..))
 import           Network.Http.Client        (Connection)
-import           Test.Prelude (StripeF(..), Stripe)
 import           Web.Stripe.Client
 import           Web.Stripe.Client.HttpStreams
+import           Web.Stripe.Test.AllTests
+import           Web.Stripe.Test.Prelude (StripeF(..), Stripe)
 
 main :: IO ()
 main = allTests runStripe

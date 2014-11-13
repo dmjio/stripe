@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Plan where
+module Web.Stripe.Test.Plan where
 
 import           Data.Either   (Either(..), isRight)
 
 import           Test.Hspec
-import           Test.Util     (makePlanId)
-import           Test.Prelude
+import           Web.Stripe.Test.Util     (makePlanId)
+import           Web.Stripe.Test.Prelude
 
 import           Web.Stripe.Plan
 

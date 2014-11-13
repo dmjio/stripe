@@ -1,12 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Invoice where
+module Web.Stripe.Test.Invoice where
 
 import           Data.Either
 import           Test.Hspec
-import           Test.Prelude
-import           Test.Util
+import           Web.Stripe.Test.Prelude
+import           Web.Stripe.Test.Util
 import           Web.Stripe.Invoice
 import           Web.Stripe.Plan
 import           Web.Stripe.Customer

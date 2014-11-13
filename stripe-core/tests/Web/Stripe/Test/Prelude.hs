@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE RankNTypes #-}
-module Test.Prelude
+module Web.Stripe.Test.Prelude
        ( ($)
        , Char
        , Functor

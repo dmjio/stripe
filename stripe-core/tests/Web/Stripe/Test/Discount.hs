@@ -1,12 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Discount where
+module Web.Stripe.Test.Discount where
 
 import           Data.Either
 import           Test.Hspec
-import           Test.Util
-import           Test.Prelude
+import           Web.Stripe.Test.Util
+import           Web.Stripe.Test.Prelude
 
 import           Web.Stripe.Coupon
 import           Web.Stripe.Customer

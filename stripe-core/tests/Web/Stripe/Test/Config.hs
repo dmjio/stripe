@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE RankNTypes #-}
-module Test.Config where
+module Web.Stripe.Test.Config where
 
 import qualified Data.ByteString.Char8 as B8
 import           Control.Applicative ((<$>))
@@ -10,7 +10,7 @@ import           Web.Stripe
 import           Web.Stripe.Balance
 import           System.Exit
 import           System.Environment
-import           Test.Prelude (Stripe, stripeLift)
+import           Web.Stripe.Test.Prelude (Stripe, stripeLift)
 
 getConfig :: (forall a. StripeConfig -> Stripe a -> IO (Either StripeError a)) -> IO StripeConfig
 getConfig stripe = maybe enterKey foundKey =<< lookupEnv "STRIPEKEY"

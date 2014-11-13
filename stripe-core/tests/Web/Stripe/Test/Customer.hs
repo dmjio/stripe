@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Customer where
+module Web.Stripe.Test.Customer where
 import           Data.Either
 import           Data.Maybe
 import           Test.Hspec
-import           Test.Prelude
+import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Customer
 
 customerTests :: StripeSpec

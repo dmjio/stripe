@@ -146,31 +146,31 @@ library
                        Web.Stripe.Subscription
                        Web.Stripe.Token
                        Web.Stripe.Transfer
-                       Test.Account
-                       Test.ApplicationFee
-                       Test.ApplicationFeeRefund
-                       Test.Balance
-                       Test.Card
-                       Test.Charge
-                       Test.Config
-                       Test.Coupon
-                       Test.Customer
-                       Test.Discount
-                       Test.Dispute
-                       Test.Event
-                       Test.Invoice
-                       Test.InvoiceItem
-                       Test.Plan
-                       Test.Prelude
-                       Test.Recipient
-                       Test.Refund
-                       Test.Subscription
-                       Test.Token
-                       Test.Transfer
-                       Test.Util
-                       AllTests
+                       Web.Stripe.Test.Account
+                       Web.Stripe.Test.ApplicationFee
+                       Web.Stripe.Test.ApplicationFeeRefund
+                       Web.Stripe.Test.Balance
+                       Web.Stripe.Test.Card
+                       Web.Stripe.Test.Charge
+                       Web.Stripe.Test.Config
+                       Web.Stripe.Test.Coupon
+                       Web.Stripe.Test.Customer
+                       Web.Stripe.Test.Discount
+                       Web.Stripe.Test.Dispute
+                       Web.Stripe.Test.Event
+                       Web.Stripe.Test.Invoice
+                       Web.Stripe.Test.InvoiceItem
+                       Web.Stripe.Test.Plan
+                       Web.Stripe.Test.Prelude
+                       Web.Stripe.Test.Recipient
+                       Web.Stripe.Test.Refund
+                       Web.Stripe.Test.Subscription
+                       Web.Stripe.Test.Token
+                       Web.Stripe.Test.Transfer
+                       Web.Stripe.Test.Util
+                       Web.Stripe.Test.AllTests
   ghc-options:        -Wall
 
 source-repository head
   type:     git
-  location: git://github.com/dmjio/stripe-haskell.gitn
+  location: git://github.com/dmjio/stripe-haskell.git

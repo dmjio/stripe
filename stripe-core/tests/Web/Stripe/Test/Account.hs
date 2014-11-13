@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
 {-# LANGUAGE RankNTypes #-}
-module Test.Account where
+module Web.Stripe.Test.Account where
 
 import           Data.Either
 import           Test.Hspec
-import           Test.Prelude
+import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Account
 
 accountTests :: StripeSpec

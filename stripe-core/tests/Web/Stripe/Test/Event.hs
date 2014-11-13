@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Event where
+module Web.Stripe.Test.Event where
 
 import           Data.Either
 import           Test.Hspec
-import           Test.Prelude
+import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Event
 
 eventTests :: StripeSpec

@@ -1,12 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Transfer where
+module Web.Stripe.Test.Transfer where
 
 import           Data.Maybe
 import           Data.Either
 import           Data.String
-import           Test.Prelude
+import           Web.Stripe.Test.Prelude
 
 import           Web.Stripe.Recipient
 import           Web.Stripe.Transfer

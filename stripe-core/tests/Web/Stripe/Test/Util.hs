@@ -1,4 +1,4 @@
-module Test.Util
+module Web.Stripe.Test.Util
        ( -- * Helpers
          makePlanId
        , makeCouponId

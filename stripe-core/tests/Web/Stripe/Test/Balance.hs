@@ -1,12 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE RankNTypes #-}
-module Test.Balance where
+module Web.Stripe.Test.Balance where
 
 import           Data.Either
 import           Test.Hspec
-import           Test.Prelude
+import           Web.Stripe.Test.Prelude
 
 import           Web.Stripe.Balance
 import           Web.Stripe.Charge

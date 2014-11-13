@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Charge where
+module Web.Stripe.Test.Charge where
 
 import           Data.Either
 import           Data.Text              (Text)
 import           Test.Hspec
-import           Test.Prelude
+import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Charge
 import           Web.Stripe.Customer
 

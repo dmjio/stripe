@@ -1,14 +1,14 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Dispute where
+module Web.Stripe.Test.Dispute where
 
 import           Data.Either            (Either(Right), isRight)
 import           Control.Concurrent     (threadDelay)
 
 import           Test.Hspec
-import           Test.Prelude
-import           Test.Util
+import           Web.Stripe.Test.Prelude
+import           Web.Stripe.Test.Util
 
 import           Web.Stripe.Dispute
 import           Web.Stripe.Charge

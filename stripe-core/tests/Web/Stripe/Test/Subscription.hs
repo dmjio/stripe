@@ -1,14 +1,14 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Subscription where
+module Web.Stripe.Test.Subscription where
 
 import           Data.Either
 import           Data.Maybe
 
 import           Test.Hspec
-import           Test.Prelude
-import           Test.Util
+import           Web.Stripe.Test.Prelude
+import           Web.Stripe.Test.Util
 
 import           Web.Stripe.Subscription
 import           Web.Stripe.Customer

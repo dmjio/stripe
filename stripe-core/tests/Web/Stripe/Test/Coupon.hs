@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-module Test.Coupon where
+module Web.Stripe.Test.Coupon where
 
 import           Data.Either
 import           Test.Hspec
-import           Test.Prelude
-import           Test.Util
+import           Web.Stripe.Test.Prelude
+import           Web.Stripe.Test.Util
 import           Web.Stripe.Coupon
 
 couponTests :: StripeSpec
