@@ -1,36 +1,37 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RebindableSyntax #-}
 module Test.InvoiceItem where
 
 import           Data.Either
 
 import           Test.Hspec
+import           Test.Prelude
 
-import           Web.Stripe
 import           Web.Stripe.InvoiceItem
 import           Web.Stripe.Customer
 
-invoiceItemTests :: StripeConfig -> Spec
-invoiceItemTests config = do
+invoiceItemTests :: StripeSpec
+invoiceItemTests stripe = do
   describe "Invoice item tests" $ do
     it "Succesfully creates an invoice item" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         ii <- createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
         _ <- deleteCustomer cid
         return ii
       result `shouldSatisfy` isRight
     it "Succesfully retrieves an existing invoice item" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
            createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
         ii <- getInvoiceItem iid
         _ <- deleteCustomer cid
-        return ii 
+        return ii
       result `shouldSatisfy` isRight
     it "Succesfully retrieves an existing invoice item expandable" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
            createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
@@ -39,16 +40,16 @@ invoiceItemTests config = do
         return ii
       result `shouldSatisfy` isRight
     it "Succesfully retrieves invoice items" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem {  } <-
            createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
-        ii <- getInvoiceItems Nothing Nothing Nothing Nothing 
+        ii <- getInvoiceItems Nothing Nothing Nothing Nothing
         _ <- deleteCustomer cid
         return ii
       result `shouldSatisfy` isRight
     it "Succesfully retrieves invoice items with expansion" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem {  } <-
            createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
@@ -57,7 +58,7 @@ invoiceItemTests config = do
         return ii
       result `shouldSatisfy` isRight
     it "Succesfully updates an existing invoice item" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
            createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
@@ -70,7 +71,7 @@ invoiceItemTests config = do
       invoiceItemDescription `shouldBe` Just "description"
       invoiceItemAmount `shouldBe` 200
     it "Succesfully deletes an invoice item" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         InvoiceItem { invoiceItemId = iid } <-
            createInvoiceItem cid 100 USD Nothing Nothing (Just "hey") []
@@ -78,6 +79,3 @@ invoiceItemTests config = do
         _ <- deleteCustomer cid
         return result
       result `shouldSatisfy` isRight
-
-
-

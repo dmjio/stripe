@@ -1,26 +1,26 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RebindableSyntax #-}
 module Test.Subscription where
 
 import           Data.Either
-import           Control.Monad
 import           Data.Maybe
 
 import           Test.Hspec
+import           Test.Prelude
 import           Test.Util
 
-import           Web.Stripe
 import           Web.Stripe.Subscription
 import           Web.Stripe.Customer
 import           Web.Stripe.Plan
 import           Web.Stripe.Coupon
 
-subscriptionTests :: StripeConfig -> Spec
-subscriptionTests config = do
+subscriptionTests :: StripeSpec
+subscriptionTests stripe = do
   describe "Subscription tests" $ do
     it "Succesfully creates a Subscription" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
@@ -35,7 +35,7 @@ subscriptionTests config = do
       result `shouldSatisfy` isRight
     it "Succesfully retrieves a Subscription" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
@@ -51,7 +51,7 @@ subscriptionTests config = do
       result `shouldSatisfy` isRight
     it "Succesfully retrieves a Subscription expanded" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
@@ -67,7 +67,7 @@ subscriptionTests config = do
       result `shouldSatisfy` isRight
     it "Succesfully retrieves a Customer's Subscriptions expanded" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
@@ -83,7 +83,7 @@ subscriptionTests config = do
       result `shouldSatisfy` isRight
     it "Succesfully retrieves a Customer's Subscriptions" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan
@@ -100,7 +100,7 @@ subscriptionTests config = do
     it "Succesfully updates a Customer's Subscriptions" $ do
       planid <- makePlanId
       couponid <- makeCouponId
-      result <- stripe config $ do
+      result <- stripe $ do
         Coupon { } <-
           createCoupon
              (Just couponid)
@@ -130,7 +130,7 @@ subscriptionTests config = do
       subscriptionDiscount `shouldSatisfy` isJust
     it "Succesfully cancels a Customer's Subscription" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         Customer { customerId = cid } <- createEmptyCustomer
         void $ createPlan planid
                         0 -- free plan

@@ -1,74 +1,25 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleInstances #-}
 module Test.Transfer where
 
-import           Control.Applicative
-import qualified Control.Monad as M
-import           Data.Aeson (FromJSON)
 import           Data.Maybe
 import           Data.Either
 import           Data.String
-import           Prelude (($), IO, Char, fromInteger, error, undefined, id)
-import           Test.Hspec
-import           Test.Hspec.Core (SpecM)
+import           Test.Prelude
 
-import           Web.Stripe
-import           Web.Stripe.Client
 import           Web.Stripe.Recipient
 import           Web.Stripe.Transfer
 
 ------------------------------------------------------------------------------
--- hack Monad functions to automatically insert callAPI around StripeRequests
-
-void :: (FromJSON a) => StripeRequest a -> Stripe ()
-void req = M.void (callAPI req)
-
-class StripeLift a where
-  type LiftedType a
-  stripeLift :: a -> (LiftedType a)
-
-(>>=) :: (StripeLift t, M.Monad m, LiftedType t ~ m a) =>
-         t -> (a -> m b) -> m b
-m >>= f = (stripeLift m) M.>>= f
-
-(>>) :: (StripeLift t, M.Monad m, LiftedType t ~ m a) => t -> m b -> m b
-(>>) m n = m >>= \_ -> n
-
-fail :: (M.Monad m) => String -> m a
-fail = M.fail
-
-return :: (M.Monad m) => a -> m a
-return = M.return
-
-instance (FromJSON a) => StripeLift (StripeRequest a) where
-  type LiftedType (StripeRequest a) = Stripe a
-  stripeLift req = callAPI req
-
-instance (FromJSON a) => StripeLift (Stripe a) where
-  type LiftedType (Stripe a) = Stripe a
-  stripeLift = id
-
-instance StripeLift (IO a) where
-  type LiftedType (IO a) = IO a
-  stripeLift = id
-
-instance StripeLift (SpecM a) where
-  type LiftedType (SpecM a) = SpecM a
-  stripeLift = id
-
-------------------------------------------------------------------------------
 -- the tests
 
-transferTests :: StripeConfig -> Spec
-transferTests config =
+transferTests :: StripeSpec
+transferTests stripe =
   describe "Transfer tests" $ do
 
     it "Create a new transfer" $ do
-      result <- stripe' config $ do
+      result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank
             firstname
@@ -83,7 +34,7 @@ transferTests config =
         return transfer
       result `shouldSatisfy` isRight
     it "Retrieves a transfer" $ do
-      result <- stripe' config $ do
+      result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank
             firstname
@@ -100,7 +51,7 @@ transferTests config =
         return t
       result `shouldSatisfy` isRight
     it "Retrieves a transfer expandable" $ do
-      result <- stripe' config $ do
+      result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank
             firstname
@@ -117,16 +68,18 @@ transferTests config =
         return t
       result `shouldSatisfy` isRight
     it "Retrieves transfers" $ do
-      result <- stripe config $ getTransfers Nothing Nothing Nothing
+      result <- stripe $ do t <- getTransfers Nothing Nothing Nothing
+                            return t
       result `shouldSatisfy` isRight
     it "Retrieves transfers expandable" $ do
-      result <- stripe config $ getTransfersExpandable Nothing Nothing Nothing
-                  [ "data.recipient"
-                  , "data.balance_transaction"
-                  ]
+      result <- stripe $ do t <- getTransfersExpandable Nothing Nothing Nothing
+                                   [ "data.recipient"
+                                   , "data.balance_transaction"
+                                   ]
+                            return t
       result `shouldSatisfy` isRight
     it "Updates a transfer" $ do
-      result <- stripe' config $ do
+      result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank
             firstname
@@ -146,7 +99,7 @@ transferTests config =
       transferMetaData `shouldBe` [("hey", "there")]
       transferDescription `shouldBe` Just "hey there"
     it "Can't Cancel a committed transfer" $ do
-      result <- stripe' config $ do
+      result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipientByBank
             firstname

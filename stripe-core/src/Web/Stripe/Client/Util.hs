@@ -33,16 +33,16 @@ import           Data.Time.Clock.POSIX (posixSecondsToUTCTime, utcTimeToPOSIXSec
 -- | Conversion from a `Show` constrained type to `Text`
 toText
     :: Show a
-    => a    
-    -> Text 
+    => a
+    -> Text
 toText = T.pack . show
 
 ------------------------------------------------------------------------------
 -- | Conversion from a `Show` constrained type to lowercase `Text`
 toTextLower
     :: Show a
-    => a    
-    -> Text 
+    => a
+    -> Text
 toTextLower = T.toLower . T.pack . show
 
 ------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ fromSeconds = posixSecondsToUTCTime . fromInteger
 -- | Convert a `UTCTime` to a `Integer`
 toSeconds
     :: UTCTime
-    -> Integer 
+    -> Integer
 toSeconds = read . takeWhile (/='.') . show . utcTimeToPOSIXSeconds
 
 ------------------------------------------------------------------------------

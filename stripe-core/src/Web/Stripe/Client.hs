@@ -12,6 +12,7 @@ module Web.Stripe.Client
     ) where
 
 import           Data.Aeson      (FromJSON, eitherDecodeStrict)
+import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.Monoid     (mempty)
 import qualified Data.Text       as T
@@ -20,13 +21,13 @@ import           Web.Stripe.Client.Error
 import           Web.Stripe.Client.Util
 
 handleStream
-    :: (FromJSON a) =>
-       Int             -- ^ HTTP response code
+    :: (ByteString -> Either String a)
+    -> Int             -- ^ HTTP response code
     -> S.ByteString    -- ^ HTTP request body
     -> Either StripeError a
-handleStream statusCode x =
+handleStream eitherDecodeStrict_a statusCode x =
   case statusCode of
-    200 -> case eitherDecodeStrict x of
+    200 -> case eitherDecodeStrict_a x of
       Left message ->
         -- when debug $ print (eitherDecodeStrict x :: Either String Value)
         parseFail message

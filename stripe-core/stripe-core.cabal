@@ -103,32 +103,16 @@ Description:
     Pull requests welcome!
     .
 
-Test-Suite tests
-    type:             exitcode-stdio-1.0
-    main-is:          Main.hs
-    hs-source-dirs:   tests
-    build-depends:    HsOpenSSL
-                    , aeson
-                    , base >=4.7 && <4.8
-                    , bytestring
-                    , either
-                    , hspec >= 1.11.4
-                    , random >= 1.1
-                    , stripe-core
-                    , text
-                    , time
-                    , transformers
-    default-language: Haskell2010
-    ghc-options:      -Wall -threaded -rtsopts
-
 library
-  hs-source-dirs:      src
+  hs-source-dirs:      src, tests
   build-depends:       aeson
                      , base >=4.7 && <4.8
                      , bytestring
-                     , either
+                     , free
                      , mtl >= 2.1.2
                      , random >= 1.1
+                     , hspec
+                     , template-haskell
                      , text
                      , time
                      , transformers
@@ -162,8 +146,31 @@ library
                        Web.Stripe.Subscription
                        Web.Stripe.Token
                        Web.Stripe.Transfer
+                       Test.Account
+                       Test.ApplicationFee
+                       Test.ApplicationFeeRefund
+                       Test.Balance
+                       Test.Card
+                       Test.Charge
+                       Test.Config
+                       Test.Coupon
+                       Test.Customer
+                       Test.Discount
+                       Test.Dispute
+                       Test.Event
+                       Test.Invoice
+                       Test.InvoiceItem
+                       Test.Plan
+                       Test.Prelude
+                       Test.Recipient
+                       Test.Refund
+                       Test.Subscription
+                       Test.Token
+                       Test.Transfer
+                       Test.Util
+                       AllTests
   ghc-options:        -Wall
 
 source-repository head
   type:     git
-  location: git://github.com/dmjio/stripe-haskell.git
+  location: git://github.com/dmjio/stripe-haskell.gitn

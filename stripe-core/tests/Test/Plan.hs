@@ -1,21 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RebindableSyntax #-}
 module Test.Plan where
 
-import           Control.Monad (void)
-import           Data.Either   (isRight)
+import           Data.Either   (Either(..), isRight)
 
 import           Test.Hspec
 import           Test.Util     (makePlanId)
+import           Test.Prelude
 
-import           Web.Stripe
 import           Web.Stripe.Plan
 
-planTests :: StripeConfig -> Spec
-planTests config = do
+planTests :: StripeSpec
+planTests stripe = do
   describe "Plan tests" $ do
     it "Succesfully creates a Plan" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         p <- createPlan planid
                         0 -- free plan
                         USD
@@ -27,7 +27,7 @@ planTests config = do
       result `shouldSatisfy` isRight
     it "Succesfully deletes a Plan" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         Plan { planId = pid } <-
           createPlan planid
           0 -- free plan
@@ -35,11 +35,11 @@ planTests config = do
           Month
           "sample plan"
           []
-        deletePlan pid
+        void $ deletePlan pid
       result `shouldSatisfy` isRight
     it "Succesfully updates a Plan" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         Plan { planId = pid } <-
           createPlan planid
           0 -- free plan
@@ -63,7 +63,7 @@ planTests config = do
 
     it "Succesfully retrieves a Plan" $ do
       planid <- makePlanId
-      result <- stripe config $ do
+      result <- stripe $ do
         Plan { planId = pid } <-
           createPlan planid
           0 -- free plan
@@ -76,7 +76,7 @@ planTests config = do
         return r
       result `shouldSatisfy` isRight
     it "Succesfully retrieves a list of Plans" $ do
-      result <- stripe config $ getPlans Nothing Nothing Nothing
+      result <- stripe $ void $ getPlans Nothing Nothing Nothing
       result `shouldSatisfy` isRight
 
 

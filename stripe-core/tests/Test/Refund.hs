@@ -1,13 +1,11 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RebindableSyntax #-}
 module Test.Refund where
 
-import           Control.Monad
 import           Data.Either
-
 import           Test.Hspec
-
-import           Web.Stripe
+import           Test.Prelude
 import           Web.Stripe.Charge
 import           Web.Stripe.Customer
 import           Web.Stripe.Refund
@@ -28,11 +26,11 @@ cvc = CVC "123"
 
 ------------------------------------------------------------------------------
 -- | Refund Tests
-refundTests :: StripeConfig -> Spec
-refundTests config = do
+refundTests :: StripeSpec
+refundTests stripe = do
     describe "Refund Tests" $ do
       it "Creates a refund succesfully" $ do
-        result <- stripe config $ do
+        result <- stripe $ do
           Customer { customerId = cid }  <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           refund <- createRefund chid []
@@ -40,24 +38,24 @@ refundTests config = do
           return refund
         result `shouldSatisfy` isRight
       it "Retrieves a refund succesfully" $ do
-        result <- stripe config $ do
+        result <- stripe $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund   { refundId   = rid  } <- createRefund chid []
           void $ deleteCustomer cid
-          getRefund chid rid
+          void $ getRefund chid rid
         result `shouldSatisfy` isRight
       it "Retrieves a refund succesfully with expansion" $ do
-        result <- stripe config $ do
+        result <- stripe $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund   { refundId   = rid  } <- createRefund chid []
           r <- getRefundExpandable chid rid  ["balance_transaction"]
-          void $ deleteCustomer cid 
+          void $ deleteCustomer cid
           return r
         result `shouldSatisfy` isRight
       it "Updates a refund succesfully" $ do
-        result <- stripe config $ do
+        result <- stripe $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund   { refundId   = rid  } <- createRefund chid []
@@ -68,7 +66,7 @@ refundTests config = do
         let Right Refund{..} = result
         refundMetaData `shouldBe` [("hello","there")]
       it "Retrieves all refunds for a Charge" $ do
-        result <- stripe config $ do
+        result <- stripe $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund { } <- createRefund chid []
@@ -79,7 +77,7 @@ refundTests config = do
         let Right StripeList {..} = result
         length list `shouldBe` 1
       it "Retrieves all refunds for a Charge with expansion" $ do
-        result <- stripe config $ do
+        result <- stripe $ do
           Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
           Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
           Refund { } <- createRefund chid []
@@ -89,8 +87,3 @@ refundTests config = do
         result `shouldSatisfy` isRight
         let Right StripeList {..} = result
         length list `shouldBe` 1
-
-
-
-
-

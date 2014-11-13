@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards   #-}
-module Main where
+module AllTests where
 
 import           Test.Hspec                 (hspec)
 import           Test.Config                (getConfig)
@@ -24,31 +25,34 @@ import           Test.Subscription          (subscriptionTests)
 import           Test.Token                 (tokenTests)
 import           Test.Transfer              (transferTests)
 import           Test.Event                 (eventTests)
-
+import           Test.Prelude               (Stripe)
+import           Web.Stripe                 (StripeConfig, StripeError)
 ------------------------------------------------------------------------------
 -- | Main test function entry point
-main :: IO ()
-main = do
-  config <- getConfig
+allTests :: (forall a. StripeConfig -> Stripe a -> IO (Either StripeError a))
+         -> IO ()
+allTests stripe' = do
+  config <- getConfig stripe'
+  let stripe = stripe' config
   hspec $ do
-    chargeTests config
-    refundTests config
-    customerTests config
-    cardTests config
-    subscriptionTests config
-    planTests config
-    couponTests config
-    discountTests config
-    invoiceTests config
-    invoiceItemTests config
-    disputeTests config
-    transferTests config
-    recipientTests config
-    applicationFeeTests config
-    applicationFeeRefundTests config
-    accountTests config
-    balanceTests config
-    tokenTests config
-    eventTests config
+    chargeTests stripe
+    refundTests stripe
+    customerTests stripe
+    cardTests stripe
+    subscriptionTests stripe
+    planTests stripe
+    couponTests stripe
+    discountTests stripe
+    invoiceTests stripe
+    invoiceItemTests stripe
+    disputeTests stripe
+    transferTests stripe
+    recipientTests stripe
+    applicationFeeTests stripe
+    applicationFeeRefundTests stripe
+    accountTests stripe
+    balanceTests stripe
+    tokenTests stripe
+    eventTests stripe
 
 

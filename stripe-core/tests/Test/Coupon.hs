@@ -1,20 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RebindableSyntax #-}
 module Test.Coupon where
 
-import           Control.Monad
 import           Data.Either
 import           Test.Hspec
+import           Test.Prelude
 import           Test.Util
-
-import           Web.Stripe
 import           Web.Stripe.Coupon
 
-couponTests :: StripeConfig -> Spec
-couponTests config = do
+couponTests :: StripeSpec
+couponTests stripe = do
   describe "Coupon tests" $ do
     it "Succesfully create a coupon" $ do
       couponName <- makeCouponId
-      result <- stripe config $ do
+      result <- stripe $ do
         c@(Coupon { couponId = cid }) <-
           createCoupon
              (Just couponName)
@@ -31,7 +30,7 @@ couponTests config = do
       result `shouldSatisfy` isRight
     it "Succesfully retrieve a coupon" $ do
       couponName <- makeCouponId
-      result <- stripe config $ do
+      result <- stripe $ do
                 Coupon { couponId = cid } <- createCoupon
                                   (Just couponName)
                                   Once
@@ -48,7 +47,7 @@ couponTests config = do
       result `shouldSatisfy` isRight
     it "Succesfully delete a coupon" $ do
       couponName <- makeCouponId
-      result <- stripe config $ do
+      result <- stripe $ do
                 Coupon { couponId = cid } <- createCoupon
                                   (Just couponName)
                                   Once
@@ -59,11 +58,11 @@ couponTests config = do
                                   Nothing
                                   Nothing
                                   []
-                deleteCoupon cid
+                void $ deleteCoupon cid
       result `shouldSatisfy` isRight
     it "Succesfully update a coupon" $ do
       couponName <- makeCouponId
-      result <- stripe config $ do
+      result <- stripe $ do
                 Coupon { couponId = cid } <- createCoupon
                                   (Just couponName)
                                   Once
@@ -81,7 +80,7 @@ couponTests config = do
       let Right (Coupon { couponMetaData = cmd }) = result
       cmd `shouldBe` [("hi", "there")]
     it "Succesfully retrieves all coupons" $ do
-      result <- stripe config $ getCoupons Nothing Nothing Nothing
+      result <- stripe $ do void $ getCoupons Nothing Nothing Nothing
       result `shouldSatisfy` isRight
 
 

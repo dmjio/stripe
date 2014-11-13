@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- |
 -- Module      : Web.Stripe.Client.Types
@@ -36,7 +37,7 @@ data StripeRequest a = StripeRequest
     { method      :: Method -- ^ Method of StripeRequest (i.e. `GET`, `PUT`, `POST`, `PUT`)
     , endpoint    :: Text   -- ^ Endpoint of StripeRequest
     , queryParams :: Params -- ^ Query Parameters of StripeRequest
-    } deriving Show
+    } deriving (Functor, Show)
 
 ------------------------------------------------------------------------------
 -- | Stripe secret key

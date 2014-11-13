@@ -1,19 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RebindableSyntax #-}
 module Test.Recipient where
 
 import           Data.Either
 import           Test.Hspec
-import           Control.Monad
-
-import           Web.Stripe
+import           Test.Prelude
 import           Web.Stripe.Recipient
 
-recipientTests :: StripeConfig -> Spec
-recipientTests config = do
+recipientTests :: StripeSpec
+recipientTests stripe = do
   describe "Recipient tests" $ do
     it "Succesfully creates an Individual Recipient" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         recipient@Recipient { recipientId = rid } <- createRecipient
           firstName
           lastName
@@ -23,9 +22,9 @@ recipientTests config = do
         return recipient
       result `shouldSatisfy` isRight
       let Right Recipient {..} = result
-      recipientType `shouldBe` Individual                            
+      recipientType `shouldBe` Individual
     it "Succesfully creates a Corporation Recipient" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         recipient@Recipient { recipientId = rid } <-
            createRecipient
              firstName
@@ -38,7 +37,7 @@ recipientTests config = do
       let Right Recipient {..} = result
       recipientType `shouldBe` Corporation
     it "Succesfully retrieves a Recipient" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipient
             firstName
@@ -52,7 +51,7 @@ recipientTests config = do
       let Right Recipient {..} = result
       recipientType `shouldBe` Corporation
     it "Succesfully retrieves a Recipient" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipient
             firstName
@@ -66,7 +65,7 @@ recipientTests config = do
       let Right Recipient {..} = result
       recipientType `shouldBe` Corporation
     it "Succesfully updates a Recipient" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipient
             firstName
@@ -92,14 +91,14 @@ recipientTests config = do
       recipientDescription `shouldBe` description
       recipientEmail `shouldBe` email
     it "Succesfully deletes a Recipient" $ do
-      result <- stripe config $ do
+      result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipient
             firstName
             lastName
             initial
             Corporation
-        deleteRecipient rid
+        void $ deleteRecipient rid
       result `shouldSatisfy` isRight
 
 
@@ -113,4 +112,3 @@ recipientTests config = do
         routingnumber = Just $ RoutingNumber "110000000"
         accountnumber = Just $ AccountNumber "000123456789"
         taxid = Just "000000000"
-

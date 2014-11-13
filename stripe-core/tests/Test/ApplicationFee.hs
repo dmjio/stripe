@@ -1,17 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RebindableSyntax #-}
 module Test.ApplicationFee where
 
 import Test.Hspec
+import Test.Prelude
 import Web.Stripe.ApplicationFee
-import Web.Stripe
 import Data.Either
 
-applicationFeeTests :: StripeConfig -> Spec 
-applicationFeeTests config = do
+applicationFeeTests :: StripeSpec
+applicationFeeTests stripe = do
   describe "Application Fee tests" $ do
     it "Succesfully fails to retrieve an unknown application fee" $ do
-      result <- stripe config $ getApplicationFee (FeeId "fee_unknown")
+      result <- stripe $ void $ getApplicationFee (FeeId "fee_unknown")
       result `shouldSatisfy` isLeft
     it "Succesfully retrieves all application fees" $ do
-      result <- stripe config $ getApplicationFees Nothing Nothing Nothing
+      result <- stripe $ void $ getApplicationFees Nothing Nothing Nothing
       result `shouldSatisfy` isRight
