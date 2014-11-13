@@ -58,7 +58,7 @@ module Web.Stripe.Customer
     , StripeDeleteResult (..)
     , Description
     , AccountBalance
-    , TrialPeriod
+    , TrialPeriod (..)
     , Limit
     ) where
 
@@ -75,7 +75,7 @@ import           Web.Stripe.Types           (AccountBalance, CVC (..),
                                              StartingAfter,
                                              StripeDeleteResult (..),
                                              StripeList (..), TokenId (..),
-                                             TrialPeriod, ExpandParams)
+                                             TrialPeriod (..), ExpandParams)
 import           Web.Stripe.Types.Util
 
 ------------------------------------------------------------------------------
