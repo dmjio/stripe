@@ -17,7 +17,6 @@ module Web.Stripe.Client.HttpStreams
 
 import           Control.Exception          (SomeException, finally, try)
 import           Control.Monad              (when)
-import           Data.Aeson                 (FromJSON, Value(..), eitherDecodeStrict)
 import           Data.ByteString            (ByteString)
 import qualified Data.ByteString            as S
 import           Data.Monoid                (mempty, (<>))
