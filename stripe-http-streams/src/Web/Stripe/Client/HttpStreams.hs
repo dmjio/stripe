@@ -44,13 +44,12 @@ import           Web.Stripe.Client          (APIVersion (..), Method(..), Stripe
 ------------------------------------------------------------------------------
 -- | Create a request to `Stripe`'s API
 stripe
-    :: FromJSON a
-    => StripeConfig
+    :: StripeConfig
     -> StripeRequest a
     -> IO (Either StripeError a)
 stripe config request =
   withConnection $ \conn -> do
-    callAPI conn eitherDecodeStrict config request
+    callAPI conn config request
 
 ------------------------------------------------------------------------------
 -- | Open a connection to the stripe API server
@@ -81,11 +80,10 @@ m2m DELETE = C.DELETE
 --
 callAPI
   :: Connection                        -- ^ an open connection to the server (`withConnection`)
-    -> (ByteString -> Either String a) -- ^ function to decode the response ByteString
     -> StripeConfig                    -- ^ StripeConfig
     -> StripeRequest a                 -- ^ StripeRequest
     -> IO (Either StripeError a)
-callAPI conn eitherDecodeStrict StripeConfig {..} StripeRequest{..} = do
+callAPI conn StripeConfig {..} StripeRequest{..} = do
   let reqBody | method == GET = mempty
               | otherwise     = paramsToByteString queryParams
       reqURL  | method == GET = S.concat [
@@ -105,4 +103,4 @@ callAPI conn eitherDecodeStrict StripeConfig {..} StripeRequest{..} = do
   receiveResponse conn $ \response inputStream ->
       do when debug $ print response
          result <- concatHandler response inputStream
-         return $ handleStream eitherDecodeStrict (getStatusCode response) result
+         return $ handleStream decodeJson (getStatusCode response) result

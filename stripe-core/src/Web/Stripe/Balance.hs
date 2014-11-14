@@ -38,7 +38,8 @@ module Web.Stripe.Balance
     , BalanceAmount
     ) where
 
-import           Web.Stripe.Client.Types   (Method (GET), StripeRequest (..))
+import           Web.Stripe.Client.Types   (Method (GET), StripeRequest (..),
+                                            mkStripeRequest)
 import           Web.Stripe.Client.Util    (getParams, toExpandable, toText,
                                              (</>))
 import           Web.Stripe.Types           (Balance (..), BalanceAmount,
@@ -52,7 +53,7 @@ import           Web.Stripe.Types.Util      (getTransactionId)
 -- | Retrieve the current `Balance` for your Stripe account
 getBalance :: StripeRequest Balance
 getBalance = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "balance"
         params  = []
 
@@ -72,7 +73,7 @@ getBalanceTransactionExpandable
     -> StripeRequest BalanceTransaction
 getBalanceTransactionExpandable
     transactionid expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "balance" </> "history" </> getTransactionId transactionid
         params  = toExpandable expandParams
 
@@ -87,7 +88,7 @@ getBalanceTransactionHistory
     limit
     startingAfter
     endingBefore = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "balance" </> "history"
         params  = getParams [
              ("limit", toText `fmap` limit )

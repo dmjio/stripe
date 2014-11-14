@@ -30,7 +30,9 @@ module Web.Stripe.Account
     ) where
 
 import           Web.Stripe.Client.Types    ( Method (GET)
-                                            , StripeRequest (..) )
+                                            , StripeRequest (..)
+                                            , mkStripeRequest
+                                            )
 import           Web.Stripe.Types           ( Account   (..)
                                             , AccountId (..) )
 
@@ -38,6 +40,6 @@ import           Web.Stripe.Types           ( Account   (..)
 -- | Retrieve the object that represents your Stripe account
 getAccountDetails :: StripeRequest Account
 getAccountDetails = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "account"
         params  = []

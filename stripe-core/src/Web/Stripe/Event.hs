@@ -34,7 +34,8 @@ module Web.Stripe.Event
     , Limit
     ) where
 
-import           Web.Stripe.Client.Types    (Method (GET), StripeRequest (..))
+import           Web.Stripe.Client.Types    (Method (GET), StripeRequest (..),
+                                             mkStripeRequest)
 import           Web.Stripe.Client.Util     ((</>), getParams, toText)
 import           Web.Stripe.Types           (Event (..), EventId (..), Limit, EventData(..),
                                              EventType(..), StripeList (..), Limit,
@@ -46,7 +47,7 @@ getEvent
     :: EventId -- ^ The ID of the Event to retrieve
     -> StripeRequest Event
 getEvent (EventId eventid) = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "events" </> eventid
         params  = []
 
@@ -61,7 +62,7 @@ getEvents
   limit
   startingAfter
   endingBefore  = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "events"
         params  = getParams [
             ("limit", toText `fmap` limit )

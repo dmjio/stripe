@@ -52,7 +52,7 @@ module Web.Stripe.Coupon
     ) where
 
 import           Web.Stripe.Client.Types    (Method (POST, DELETE, GET),
-                                             StripeRequest (..))
+                                             StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Client.Util     (toMetaData,getParams, toText, (</>),
                                              toTextLower)
 import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
@@ -88,7 +88,7 @@ createCoupon
     percentOff
     redeemBy
     metadata   = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "coupons"
         params  = toMetaData metadata ++ getParams [
                     ("id", (\(CouponId x) -> x) `fmap` couponid )
@@ -108,7 +108,7 @@ getCoupon
     -> StripeRequest Coupon
 getCoupon
     (CouponId couponid) = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "coupons" </> couponid
         params  = []
 
@@ -124,7 +124,7 @@ getCoupons
      startingAfter
      endingBefore
   = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "coupons"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -141,7 +141,7 @@ updateCoupon
 updateCoupon
      (CouponId couponid)
      metadata   = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "coupons" </> couponid
         params  = toMetaData metadata
 
@@ -152,6 +152,6 @@ deleteCoupon
     -> StripeRequest StripeDeleteResult
 deleteCoupon
     (CouponId couponid) = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "coupons" </> couponid
         params  = []

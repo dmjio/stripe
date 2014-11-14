@@ -39,7 +39,7 @@ module Web.Stripe.ApplicationFee
     , ConnectApp     (..)
     ) where
 
-import           Web.Stripe.Client.Types    (Method (GET), StripeRequest (..))
+import           Web.Stripe.Client.Types    (Method (GET), StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Client.Util     (getParams, toText, (</>), toExpandable)
 import           Web.Stripe.Types           (ApplicationFee (..),
                                              ApplicationId (..), ConnectApp (..),
@@ -64,7 +64,7 @@ getApplicationFeeExpanded
 getApplicationFeeExpanded
     (FeeId feeid)
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "application_fees" </> feeid
         params  = toExpandable expandParams
 
@@ -95,7 +95,7 @@ getApplicationFeesExpanded
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "application_fees"
         params  = getParams [
             ("limit", toText `fmap` limit )

@@ -14,6 +14,7 @@ module Web.Stripe.Test.Prelude
        , error
        , module GHC.Num
        , id
+       , (.)
        , length
        , undefined
        , return
@@ -29,12 +30,9 @@ module Web.Stripe.Test.Prelude
        , Bool(..)
        , Maybe(..)
        , Stripe
-       , StripeF(..)
        , StripeSpec
        ) where
 
-import           Data.Aeson
-import           Data.ByteString (ByteString)
 import           Data.Either     (Either)
 import           Data.String     (fromString)
 import           Data.Maybe      (Maybe(..))
@@ -44,22 +42,14 @@ import           Test.Hspec
 import           Test.Hspec.Core (SpecM)
 import qualified Control.Monad   as M
 import qualified Control.Monad.Trans as M
-import           Control.Monad.Trans.Free (Free(..), FreeT(..), liftF)
+import           Control.Monad.Trans.Free (FreeT(..), liftF)
 import           Web.Stripe
 
 ------------------------------------------------------------------------------
 -- Stripe free monad
-
-data StripeF a
-    = StripeF (ByteString -> Either String a) (StripeRequest a)
-    deriving Functor
-
-type Stripe  = FreeT StripeF IO
+type Stripe  = FreeT StripeRequest IO
 
 type StripeSpec = (forall a. Stripe a -> IO (Either StripeError a)) -> Spec
-
-liftStripeRequest :: (FromJSON a) => StripeRequest a -> Stripe a
-liftStripeRequest req = liftF (StripeF eitherDecodeStrict' req)
 
 ------------------------------------------------------------------------------
 -- A class which lifts 'StripeRequest a' to the 'Stripe' monad and
@@ -69,11 +59,11 @@ class StripeLift a where
   type LiftedType a
   stripeLift :: a -> (LiftedType a)
 
-instance (FromJSON a) => StripeLift (StripeRequest a) where
+instance StripeLift (StripeRequest a) where
   type LiftedType (StripeRequest a) = Stripe a
-  stripeLift req = liftStripeRequest req
+  stripeLift req = liftF req
 
-instance (FromJSON a) => StripeLift (Stripe a) where
+instance StripeLift (Stripe a) where
   type LiftedType (Stripe a) = Stripe a
   stripeLift = id
 
@@ -100,8 +90,8 @@ m >>= f = (stripeLift m) M.>>= f
 (>>) :: (StripeLift t, M.Monad m, LiftedType t ~ m a) => t -> m b -> m b
 (>>) m n = m >>= \_ -> n
 
-void :: (FromJSON a) => StripeRequest a -> Stripe ()
-void req = M.void (liftStripeRequest req)
+void :: StripeRequest a -> Stripe ()
+void req = M.void (liftF req)
 
 fail :: (M.Monad m) => String -> m a
 fail = M.fail

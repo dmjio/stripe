@@ -43,7 +43,9 @@ module Web.Stripe.ApplicationFeeRefund
     , Amount
     ) where
 
-import           Web.Stripe.Client.Types    (Method (POST, GET), StripeRequest (..))
+import           Web.Stripe.Client.Types    (Method (POST, GET), StripeRequest (..),
+                                             mkStripeRequest
+                                            )
 import           Web.Stripe.Client.Util     (getParams, toExpandable,
                                              toMetaData, toText, (</>))
 import           Web.Stripe.Types           (Amount, ApplicationFee (..),
@@ -64,7 +66,7 @@ createApplicationFeeRefund
     (FeeId feeid)
     amount
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "application_fees" </> feeid </> "refunds"
         params  = toMetaData metadata ++ getParams [
                    ("amount", fmap toText amount)
@@ -88,7 +90,7 @@ getApplicationFeeRefundExpandable
     -> StripeRequest ApplicationFeeRefund
 getApplicationFeeRefundExpandable (FeeId feeid) (RefundId refundid) expansion
     = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "application_fees" </> feeid </> "refunds" </> refundid
         params  = toExpandable expansion
 
@@ -124,7 +126,7 @@ getApplicationFeeRefundsExpandable
    endingBefore
    expandParams = request
   where
-    request = StripeRequest GET url params
+    request = mkStripeRequest GET url params
     url     = "application_fees" </> feeid </> "refunds"
     params  = getParams [
         ("limit", toText `fmap` limit )
@@ -144,6 +146,6 @@ updateApplicationFeeRefund
     (RefundId refundid)
     metadata = request
   where
-    request = StripeRequest GET url params
+    request = mkStripeRequest GET url params
     url     = "application_fees" </> feeid </> "refunds" </> refundid
     params  = toMetaData metadata

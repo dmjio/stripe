@@ -63,7 +63,7 @@ module Web.Stripe.Customer
     ) where
 
 import           Web.Stripe.Client.Types    (Method (GET, POST, DELETE),
-                                             StripeRequest (..))
+                                             StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Client.Util     (toMetaData, getParams, toText, (</>),
                                              toExpandable)
 import           Web.Stripe.Types           (AccountBalance, CVC (..),
@@ -110,7 +110,7 @@ createCustomerBase
     quantity
     trialEnd
     metadata    = request
-  where request = StripeRequest POST "customers" params
+  where request = mkStripeRequest POST "customers" params
         params  = toMetaData metadata ++ getParams [
                      ("account_balance", toText `fmap` accountBalance)
                    , ("card", (\(TokenId x) -> x) `fmap` cardId)
@@ -200,7 +200,7 @@ updateCustomerBase
     description
     email
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "customers" </> getCustomerId customerid
         params  = toMetaData metadata ++ getParams [
                     ("account_balance", toText `fmap` accountBalance)
@@ -249,7 +249,7 @@ deleteCustomer
     :: CustomerId -- ^ The `CustomerId` of the `Customer` to delete
     -> StripeRequest StripeDeleteResult
 deleteCustomer customerid = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "customers" </> getCustomerId customerid
         params  = []
 
@@ -270,7 +270,7 @@ getCustomerExpandable
 getCustomerExpandable
     customerid
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "customers" </> getCustomerId customerid
         params  = toExpandable expandParams
 
@@ -300,7 +300,7 @@ getCustomersExpandable
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "customers"
         params  = getParams [
             ("limit", toText `fmap` limit )

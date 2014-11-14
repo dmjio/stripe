@@ -37,7 +37,8 @@ module Web.Stripe.Dispute
     , Evidence      (..)
     ) where
 
-import           Web.Stripe.Client.Types    (Method (POST), StripeRequest (..))
+import           Web.Stripe.Client.Types    (Method (POST), StripeRequest (..),
+                                             mkStripeRequest)
 import           Web.Stripe.Client.Util     (getParams, (</>), toMetaData)
 import           Web.Stripe.Types           (ChargeId (..), Dispute (..),
                                              DisputeReason (..),
@@ -56,7 +57,7 @@ updateDispute
     chargeId
     evidence
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "charges" </> getChargeId chargeId </> "dispute"
         params  = toMetaData metadata ++ getParams [
                    ("evidence", (\(Evidence x) -> x) `fmap` evidence)
@@ -68,6 +69,6 @@ closeDispute
     -> StripeRequest Dispute
 closeDispute
     chargeId = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "charges" </> getChargeId chargeId </> "dispute" </> "close"
         params  = []

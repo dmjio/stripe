@@ -5,7 +5,7 @@ import           Network.Http.Client        (Connection)
 import           Web.Stripe.Client
 import           Web.Stripe.Client.HttpStreams
 import           Web.Stripe.Test.AllTests
-import           Web.Stripe.Test.Prelude (StripeF(..), Stripe)
+import           Web.Stripe.Test.Prelude (Stripe)
 
 main :: IO ()
 main = allTests runStripe
@@ -25,8 +25,8 @@ runStripe' conn config (FreeT m) =
   do f <- m
      case f of
        (Pure a) -> return (Right a)
-       (Free (StripeF decode req)) ->
-         do r <- callAPI conn decode config req
+       (Free req) ->
+         do r <- callAPI conn config req
             case r of
               (Left e) ->  return (Left e)
               (Right next) -> runStripe' conn config next

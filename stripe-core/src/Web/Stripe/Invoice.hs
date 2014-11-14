@@ -50,7 +50,8 @@ module Web.Stripe.Invoice
     , Period              (..)
     ) where
 
-import           Web.Stripe.Client.Types (Method(GET, POST), StripeRequest(..))
+import           Web.Stripe.Client.Types (Method(GET, POST), StripeRequest(..),
+                                          mkStripeRequest)
 import           Web.Stripe.Client.Util  ((</>), getParams, toExpandable,
                                           toMetaData, toText)
 import           Web.Stripe.Types        (CustomerId(..), Discount(..), EndingBefore,
@@ -70,7 +71,7 @@ createInvoice
 createInvoice
     customerid
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "invoices"
         params  = toMetaData metadata ++ getParams [
                    ("customer", Just $ getCustomerId customerid)
@@ -93,7 +94,7 @@ getInvoiceExpandable
 getInvoiceExpandable
     invoiceid
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "invoices" </> getInvoiceId invoiceid
         params  = toExpandable expandParams
 
@@ -123,7 +124,7 @@ getInvoicesExpandable
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "invoices"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -144,7 +145,7 @@ getInvoiceLineItems
     limit
     startingAfter
     endingBefore = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "invoices" </> getInvoiceId invoiceid </> "lines"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -160,7 +161,7 @@ payInvoice
     -> StripeRequest Invoice
 payInvoice
     invoiceid   = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "invoices" </> getInvoiceId invoiceid </> "pay"
         params  = []
 
@@ -173,7 +174,7 @@ updateInvoice
 updateInvoice
     invoiceid
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "invoices" </> getInvoiceId invoiceid
         params  = toMetaData metadata
 
@@ -184,7 +185,7 @@ getUpcomingInvoice
     -> StripeRequest Invoice
 getUpcomingInvoice
     customerid = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "invoices" </> "upcoming"
         params  = getParams [
                    ("customer", Just $ getCustomerId customerid)
@@ -197,7 +198,7 @@ getUpcomingInvoices
     -> StripeRequest (StripeList Invoice)
 getUpcomingInvoices
     customerid = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "invoices"
         params  = getParams [
                    ("customer", Just $ getCustomerId customerid)

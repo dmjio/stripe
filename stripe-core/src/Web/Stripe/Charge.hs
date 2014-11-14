@@ -68,7 +68,7 @@ module Web.Stripe.Charge
     ) where
 
 import           Web.Stripe.Client.Types    (Method (GET, POST),
-                                             StripeRequest (..))
+                                             StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Client.Util     (getParams, toMetaData, toText,
                                              toExpandable, toTextLower, (</>))
 import           Web.Stripe.Types           (Amount, CVC (..), Capture,
@@ -175,7 +175,7 @@ chargeBase
     expYear
     cvc'
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "charges"
         params  = toMetaData metadata ++ getParams [
                      ("amount", toText `fmap` Just amount)
@@ -208,7 +208,7 @@ getChargeExpandable
 getChargeExpandable
     chargeid
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "charges" </> getChargeId chargeid
         params  = toExpandable expandParams
 
@@ -238,7 +238,7 @@ getChargesExpandable
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "charges"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -278,7 +278,7 @@ getCustomerChargesExpandable
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "charges"
         params  = getParams [
             ("customer", Just $ getCustomerId customerid )
@@ -298,7 +298,7 @@ updateCharge
     chargeid
     description
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "charges" </> getChargeId chargeid
         params  = toMetaData metadata ++ getParams [
                    ("description", Just description)
@@ -315,7 +315,7 @@ captureCharge
     chargeid
     amount
     receiptEmail = request
-  where request  = StripeRequest POST url params
+  where request  = mkStripeRequest POST url params
         url      = "charges" </> getChargeId chargeid </> "capture"
         params   = getParams [
                      ("amount", toText `fmap` amount)

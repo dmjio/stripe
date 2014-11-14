@@ -58,7 +58,7 @@ module Web.Stripe.Plan
     ) where
 
 import           Web.Stripe.Client.Types   (Method(POST, GET, DELETE),
-                                            StripeRequest(..))
+                                            StripeRequest(..), mkStripeRequest)
 import           Web.Stripe.Client.Util    ( toText, getParams, toMetaData,
                                              toTextLower, (</>))
 import           Web.Stripe.Types (PlanId (..) , Plan (..), Interval (..), StripeList(..),
@@ -89,7 +89,7 @@ createPlanBase
     trialPeriodDays
     description
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "plans"
         params  = toMetaData metadata ++ getParams [
                      ("id", Just planid)
@@ -174,7 +174,7 @@ getPlan
     -> StripeRequest Plan
 getPlan
     (PlanId planid) = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "plans" </> planid
         params  = []
 
@@ -189,7 +189,7 @@ getPlans
     limit
     startingAfter
     endingBefore = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "plans"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -210,7 +210,7 @@ updatePlanBase
     name
     description
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "plans" </> planid
         params  = toMetaData metadata ++ getParams [
                       ("name", name)
@@ -226,7 +226,7 @@ updatePlanDescription
 updatePlanDescription
     (PlanId planid)
     description = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "plans" </> planid
         params  = getParams [
                     ("statement_description", Just description)
@@ -241,7 +241,7 @@ updatePlanName
 updatePlanName
     (PlanId planid)
     name = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "plans" </> planid
         params  = getParams [
                     ("name", Just name)
@@ -254,6 +254,6 @@ deletePlan
     -> StripeRequest StripeDeleteResult
 deletePlan
     (PlanId planid) = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "plans" </> planid
         params  = []

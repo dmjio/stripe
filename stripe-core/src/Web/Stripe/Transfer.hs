@@ -47,7 +47,7 @@ module Web.Stripe.Transfer
     ) where
 
 import           Web.Stripe.Client.Types    (Method (GET, POST),
-                                             StripeRequest (..))
+                                             StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Client.Util     (getParams, toExpandable, toTextLower,
                                              toMetaData, toText, (</>))
 import           Web.Stripe.Types           (Amount, Currency (..),
@@ -72,7 +72,7 @@ createTransfer
     amount
     currency
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "transfers"
         params  = toMetaData metadata ++ getParams [
                    ("amount", toText `fmap` Just amount)
@@ -97,7 +97,7 @@ getTransferExpandable
 getTransferExpandable
     (TransferId transferid)
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "transfers" </> transferid
         params  = toExpandable expandParams
 
@@ -127,7 +127,7 @@ getTransfersExpandable
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "transfers"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -146,7 +146,7 @@ updateTransfer
     (TransferId transferid)
     description
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "transfers" </> transferid
         params  = toMetaData metadata ++ getParams [
            ("description", description)
@@ -158,6 +158,6 @@ cancelTransfer
     :: TransferId        -- ^ The `TransferId` of the `Transfer` to cancel
     -> StripeRequest Transfer
 cancelTransfer (TransferId transferid) = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "transfers" </> transferid </> "cancel"
         params  = []

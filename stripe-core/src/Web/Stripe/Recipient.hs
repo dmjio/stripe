@@ -81,7 +81,7 @@ import           Data.Monoid                ((<>))
 import qualified Data.Text                  as T
 
 import           Web.Stripe.Client.Types    (Method(POST,GET,DELETE),
-                                             StripeRequest(..))
+                                             StripeRequest(..), mkStripeRequest)
 import           Web.Stripe.Client.Util     (toMetaData, getParams,
                                              toText, toExpandable, (</>))
 import           Web.Stripe.Types           (AccountNumber (..),
@@ -141,7 +141,7 @@ createRecipientBase
     email
     description
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "recipients"
         params  =
             let name   = firstName <> middle <> lastName
@@ -261,7 +261,7 @@ getRecipientExpandable
 getRecipientExpandable
     recipientid
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "recipients" </> getRecipientId recipientid
         params  = toExpandable expandParams
 
@@ -292,7 +292,7 @@ getRecipientsExpandable
   startingAfter
   endingBefore
   expandParams  = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "recipients"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -340,7 +340,7 @@ updateRecipientBase
     email
     description
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "recipients" </> getRecipientId recipientid
         params  =
             let name = if firstName == Nothing || lastName == Nothing
@@ -494,6 +494,6 @@ deleteRecipient
     -> StripeRequest StripeDeleteResult
 deleteRecipient
    recipientid = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "recipients" </> getRecipientId recipientid
         params  = []

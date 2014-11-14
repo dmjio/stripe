@@ -46,7 +46,7 @@ module Web.Stripe.Token
    ) where
 
 import           Web.Stripe.Client.Types    (Method (GET, POST),
-                                             StripeRequest (..))
+                                             StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Client.Util     (getParams, toText, (</>))
 import           Web.Stripe.Types           (Account(..), AccountNumber (..),
                                              CVC (..), CardNumber (..),
@@ -68,7 +68,7 @@ createCardToken
       (ExpYear year)
       (CVC cvc)
           = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "tokens"
         params  = getParams [
                     ("card[number]", Just number)
@@ -89,7 +89,7 @@ createBankAccountToken
     (RoutingNumber routingNumber)
     (AccountNumber accountNumber)
     = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "tokens"
         params  = getParams [
                     ("bank_account[country]", Just country)
@@ -103,7 +103,7 @@ getCardToken
     :: TokenId -- ^ The `TokenId` of the `Card` `Token` to retrieve
     -> StripeRequest (Token Card)
 getCardToken (TokenId token) = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "tokens" </> token
         params  = []
 
@@ -113,6 +113,6 @@ getBankAccountToken
     :: TokenId -- ^ The `TokenId` of the `BankAccount` `Token` to retrieve
     -> StripeRequest (Token BankAccount)
 getBankAccountToken (TokenId token) = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "tokens" </> token
         params  = []

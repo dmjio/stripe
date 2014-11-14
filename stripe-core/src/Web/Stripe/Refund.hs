@@ -48,7 +48,7 @@ module Web.Stripe.Refund
     ) where
 
 import           Web.Stripe.Client.Types    (Method (GET, POST),
-                                             StripeRequest (..))
+                                             StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Client.Util     (getParams, toMetaData, toText,
                                              (</>), toExpandable)
 import           Web.Stripe.Types           (Charge (..), ChargeId (..),
@@ -67,7 +67,7 @@ createRefund
 createRefund
     chargeid
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "charges" </> getChargeId chargeid </> "refunds"
         params  = toMetaData metadata
 
@@ -80,7 +80,7 @@ getRefund
 getRefund
     chargeid
     (RefundId refundid) = request
-   where request = StripeRequest GET url params
+   where request = mkStripeRequest GET url params
          url     = "charges" </> getChargeId chargeid </> "refunds" </> refundid
          params  = []
 
@@ -95,7 +95,7 @@ getRefundExpandable
     chargeid
     (RefundId refundid)
     expandParams = request
-   where request = StripeRequest GET url params
+   where request = mkStripeRequest GET url params
          url     = "charges" </> getChargeId chargeid </> "refunds" </> refundid
          params  = toExpandable expandParams
 
@@ -110,7 +110,7 @@ updateRefund
    chargeid
    (RefundId refid)
    metadata     = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "charges" </> getChargeId chargeid  </> "refunds" </> refid
         params  = toMetaData metadata
 
@@ -145,7 +145,7 @@ getRefundsExpandable
   startingAfter
   endingBefore
   expandParams  = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "charges" </> getChargeId chargeid </> "refunds"
         params  = getParams [
             ("limit", toText `fmap` limit )

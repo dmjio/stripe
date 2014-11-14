@@ -48,7 +48,7 @@ module Web.Stripe.InvoiceItem
     ) where
 
 import           Web.Stripe.Client.Types   (Method (GET, POST, DELETE),
-                                            StripeRequest(..))
+                                            StripeRequest(..), mkStripeRequest)
 import           Web.Stripe.Client.Util    ( toMetaData, toExpandable,
                                              getParams, toText, (</>), toTextLower)
 import           Web.Stripe.Types           (Amount, Currency (..), StripeList(..),
@@ -78,7 +78,7 @@ createInvoiceItem
     subscriptionId
     description
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "invoiceitems"
         params  = toMetaData metadata ++ getParams [
                     ("customer", Just $ getCustomerId customerid)
@@ -102,7 +102,7 @@ getInvoiceItems
     limit
     startingAfter
     endingBefore = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "invoiceitems"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -126,7 +126,7 @@ getInvoiceItemsExpandable
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "invoiceitems"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -153,7 +153,7 @@ getInvoiceItemExpandable
 getInvoiceItemExpandable
     invoiceitemid
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = toExpandable expandParams
 
@@ -170,7 +170,7 @@ updateInvoiceItem
     amount
     description
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = toMetaData metadata ++ getParams [
                          ("amount",  toText `fmap` amount)
@@ -184,6 +184,6 @@ deleteInvoiceItem
     -> StripeRequest StripeDeleteResult
 deleteInvoiceItem
     invoiceitemid = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = []

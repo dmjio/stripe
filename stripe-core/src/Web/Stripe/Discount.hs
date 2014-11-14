@@ -34,7 +34,7 @@ module Web.Stripe.Discount
     ) where
 
 import           Web.Stripe.Client.Types   (Method (DELETE),
-                                             StripeRequest (..))
+                                            StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Client.Util    ((</>))
 import           Web.Stripe.Types           (CustomerId (..), Discount(..),
                                              StripeDeleteResult (..),
@@ -48,7 +48,7 @@ deleteCustomerDiscount
     -> StripeRequest StripeDeleteResult
 deleteCustomerDiscount
     customerId = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "customers" </> getCustomerId customerId </> "discount"
         params  = []
 
@@ -61,6 +61,6 @@ deleteSubscriptionDiscount
 deleteSubscriptionDiscount
     customerId
     (SubscriptionId subId) = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "customers" </> getCustomerId customerId </> "subscriptions" </> subId </> "discount"
         params  = []

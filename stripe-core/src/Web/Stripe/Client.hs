@@ -11,7 +11,7 @@ module Web.Stripe.Client
     , handleStream
     ) where
 
-import           Data.Aeson      (FromJSON, eitherDecodeStrict)
+import           Data.Aeson      (eitherDecodeStrict)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.Monoid     (mempty)

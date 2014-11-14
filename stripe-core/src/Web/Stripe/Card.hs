@@ -80,7 +80,7 @@ module Web.Stripe.Card
 import           Control.Applicative        ((<$>))
 import           Data.Aeson                 (FromJSON)
 import           Web.Stripe.Client.Types    (Method(DELETE, GET, POST)
-                                            , StripeRequest(..))
+                                            , StripeRequest(..), mkStripeRequest)
 import           Web.Stripe.Client.Util     ((</>), getParams, toExpandable
                                             , toText)
 import           Web.Stripe.Types           (AddressLine1(..), AddressLine2(..)
@@ -131,7 +131,7 @@ createCardBase
     addressLine2
     addressState
     addressZip  = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = requestType </> requestId </> "cards"
         params  = getParams [
                      ("card", (\(TokenId x) -> x) <$> tokenid)
@@ -242,7 +242,7 @@ updateCardBase
     addressLine2
     addressState
     addressZip  = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = requestType </> requestId </> "cards" </> case cardid of
                                                               Right x -> getRecipientCardId x
                                                               Left  x -> getCardId x
@@ -304,7 +304,7 @@ getCardBase
     requestId
     cardid
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = requestType </> requestId </> "cards" </> cardid
         params  = toExpandable expandParams
 
@@ -367,7 +367,7 @@ getCustomerCardsBase
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "customers" </> getCustomerId customerid </> "cards"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -390,7 +390,7 @@ getRecipientCardsBase
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "recipients" </> getRecipientId recipientid </> "cards"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -475,7 +475,7 @@ deleteCustomerCard
 deleteCustomerCard
     customerid
     cardid = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "customers" </> getCustomerId customerid </> "cards" </> getCardId cardid
         params  = []
 
@@ -488,7 +488,7 @@ deleteRecipientCard
 deleteRecipientCard
     recipientid
     cardid      = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "recipients" </> getRecipientId recipientid
                                </> "cards"
                                </> getRecipientCardId cardid

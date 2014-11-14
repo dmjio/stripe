@@ -52,7 +52,7 @@ module Web.Stripe.Subscription
     ) where
 
 import           Web.Stripe.Client.Types    (Method (GET, POST, DELETE),
-                                             StripeRequest (..))
+                                             StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Client.Util     (getParams, toExpandable,
                                              toMetaData, toText, (</>))
 import           Web.Stripe.Types           (CustomerId (..), EndingBefore,
@@ -74,7 +74,7 @@ createSubscription
     customerid
     (PlanId planid)
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions"
         params  = toMetaData metadata ++ getParams [ ("plan", Just planid)  ]
 
@@ -101,7 +101,7 @@ getSubscriptionExpandable
     customerid
     (SubscriptionId subscriptionid)
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
         params  = toExpandable expandParams
 
@@ -136,7 +136,7 @@ getSubscriptionsExpandable
     startingAfter
     endingBefore
     expandParams = request
-  where request = StripeRequest GET url params
+  where request = mkStripeRequest GET url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions"
         params  = getParams [
             ("limit", toText `fmap` limit )
@@ -157,7 +157,7 @@ updateSubscription
     (SubscriptionId subscriptionid)
     couponid
     metadata    = request
-  where request = StripeRequest POST url params
+  where request = mkStripeRequest POST url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
         params  = toMetaData metadata ++ getParams [
            ("coupon", (\(CouponId x) -> x) `fmap` couponid)
@@ -175,6 +175,6 @@ cancelSubscription
     (SubscriptionId subscriptionid)
     atPeriodEnd
      = request
-  where request = StripeRequest DELETE url params
+  where request = mkStripeRequest DELETE url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
         params  = getParams [ ("at_period_end", Just $ toText atPeriodEnd) ]
