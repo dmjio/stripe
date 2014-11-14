@@ -41,12 +41,6 @@ import           Web.Stripe.Client          (APIVersion (..), Method(..), Stripe
                                              paramsToByteString,
                                              )
 
-
-
-------------------------------------------------------------------------------
--- | The `Stripe` Monad
--- type Stripe a = EitherT StripeError (ReaderT (StripeConfig, Connection) IO) a
-
 ------------------------------------------------------------------------------
 -- | Create a request to `Stripe`'s API
 stripe
@@ -54,11 +48,12 @@ stripe
     => StripeConfig
     -> StripeRequest a
     -> IO (Either StripeError a)
-stripe config request = -- stripe' config (callAPI request)
+stripe config request =
   withConnection $ \conn -> do
-    json <- (callAPI conn eitherDecodeStrict config request) `finally` (closeConnection conn)
-    return json
+    callAPI conn eitherDecodeStrict config request
 
+------------------------------------------------------------------------------
+-- | Open a connection to the stripe API server
 withConnection :: (Connection -> IO (Either StripeError a))
                -> IO (Either StripeError a)
 withConnection f =
@@ -67,7 +62,7 @@ withConnection f =
     result <- try (openConnectionSSL ctx "api.stripe.com" 443) :: IO (Either SomeException Connection)
     case result of
       Left msg -> return $ Left $ StripeError ConnectionFailure (toText msg) Nothing Nothing Nothing
-      Right conn -> f conn
+      Right conn -> (f conn) `finally` (closeConnection conn)
 
 ------------------------------------------------------------------------------
 -- | Debug Helper
@@ -82,12 +77,13 @@ m2m POST   = C.POST
 m2m DELETE = C.DELETE
 
 ------------------------------------------------------------------------------
--- | API Request to be issued
+-- | Issue an API Request
+--
 callAPI
-    :: Connection
-    -> (ByteString -> Either String a)
-    -> StripeConfig
-    -> StripeRequest a
+  :: Connection                        -- ^ an open connection to the server (`withConnection`)
+    -> (ByteString -> Either String a) -- ^ function to decode the response ByteString
+    -> StripeConfig                    -- ^ StripeConfig
+    -> StripeRequest a                 -- ^ StripeRequest
     -> IO (Either StripeError a)
 callAPI conn eitherDecodeStrict StripeConfig {..} StripeRequest{..} = do
   let reqBody | method == GET = mempty
@@ -109,4 +105,4 @@ callAPI conn eitherDecodeStrict StripeConfig {..} StripeRequest{..} = do
   receiveResponse conn $ \response inputStream ->
       do when debug $ print response
          result <- concatHandler response inputStream
-         return $ handleStream (eitherDecodeStrict) (getStatusCode response) result
+         return $ handleStream eitherDecodeStrict (getStatusCode response) result

@@ -33,6 +33,7 @@ type Params = [(ByteString, ByteString)]
 
 ------------------------------------------------------------------------------
 -- | Stripe Request holding `Method`, URL and `Params` for a Request
+--
 data StripeRequest a = StripeRequest
     { method      :: Method -- ^ Method of StripeRequest (i.e. `GET`, `PUT`, `POST`, `PUT`)
     , endpoint    :: Text   -- ^ Endpoint of StripeRequest

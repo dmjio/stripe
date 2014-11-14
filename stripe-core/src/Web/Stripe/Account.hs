@@ -10,7 +10,7 @@
 -- < https:/\/\stripe.com/docs/api#account >
 --
 -- @
--- import Web.Stripe         
+-- import Web.Stripe
 -- import Web.Stripe.Account
 --
 -- main :: IO ()
