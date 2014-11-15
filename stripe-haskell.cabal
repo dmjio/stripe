@@ -1,5 +1,5 @@
 name:                stripe-haskell
-version:             0.1.0.5
+version:             0.1.0.6
 synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
@@ -109,7 +109,7 @@ Test-Suite tests
     hs-source-dirs:   tests
     build-depends:    HsOpenSSL
                     , aeson
-                    , base >=4.7 && <4.8
+                    , base >=4.6 && <4.8
                     , bytestring
                     , either
                     , hspec >= 1.11.4
@@ -125,7 +125,7 @@ library
   hs-source-dirs:      src
   build-depends:       HsOpenSSL
                      , aeson
-                     , base >=4.7 && <4.8
+                     , base >=4.6 && <4.8
                      , bytestring
                      , either
                      , http-streams
