@@ -499,7 +499,7 @@ instance FromJSON Plan where
 
 ------------------------------------------------------------------------------
 -- | `TrialPeriod` for a Plan
-type TrialPeriod = UTCTime
+newtype TrialPeriod = TrialPeriod UTCTime deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
 -- | Interval for `Plan`s

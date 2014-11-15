@@ -56,15 +56,15 @@ module Web.Stripe.Customer
     , PlanId             (..)
     , Quantity           (..)
     , StripeDeleteResult (..)
+    , TrialPeriod        (..)
     , Description
     , AccountBalance
-    , TrialPeriod
     , Limit
     ) where
 
 import           Web.Stripe.Client.Internal (Method (GET, POST, DELETE), Stripe,
                                              StripeRequest (..), callAPI, toMetaData,
-                                             getParams, toText, (</>), toExpandable)
+                                             toSeconds, getParams, toText, (</>), toExpandable)
 import           Web.Stripe.Types           (AccountBalance, CVC (..),
                                              CardId (..), CardNumber (..),
                                              CouponId (..), Customer (..),
@@ -75,7 +75,7 @@ import           Web.Stripe.Types           (AccountBalance, CVC (..),
                                              StartingAfter,
                                              StripeDeleteResult (..),
                                              StripeList (..), TokenId (..),
-                                             TrialPeriod, ExpandParams)
+                                             TrialPeriod(..), ExpandParams)
 import           Web.Stripe.Types.Util
 
 ------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ createCustomerBase
                    , ("email", (\(Email x) -> x) `fmap` email)
                    , ("plan", (\(PlanId x) -> x) `fmap` planId)
                    , ("quantity",  (\(Quantity x) -> toText x) `fmap` quantity)
-                   , ("trial_end", toText `fmap` trialEnd)
+                   , ("trial_end", (\(TrialPeriod x) -> toText $ toSeconds x) `fmap` trialEnd)
                 ]
 
 ------------------------------------------------------------------------------
