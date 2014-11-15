@@ -11,7 +11,7 @@
 --
 -- @
 -- import Web.Stripe         
--- import Web.Stripe.ApplicationFee
+-- import Web.Stripe.ApplicationFeeRefund
 --
 -- main :: IO ()
 -- main = do
