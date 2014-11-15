@@ -1,11 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
--- |
+------------------------------------------------------------------------------
+-- | 
 -- Module      : Web.Stripe.Client.Internal
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
+-- | 
+------------------------------------------------------------------------------
 module Web.Stripe.Client.Internal
     ( callAPI
     , stripe
@@ -41,7 +44,7 @@ import           Web.Stripe.Client.Error    (StripeError (..),
 import           Web.Stripe.Client.Types    (APIVersion (..), Stripe,
                                              StripeConfig (..),
                                              StripeRequest (..))
-import           Web.Stripe.Client.Util     (fromSeconds, getParams,
+import           Web.Stripe.Client.Util     (fromSeconds, getParams, toSeconds,
                                              paramsToByteString, toBytestring,
                                              toExpandable, toMetaData, toText,
                                              toTextLower, (</>))

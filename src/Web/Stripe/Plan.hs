@@ -48,6 +48,7 @@ module Web.Stripe.Plan
     , TrialPeriodDays    (..)
     , StripeDeleteResult (..)
     , Currency           (..)
+    , Email              (..)
     , Limit
     , StartingAfter
     , EndingBefore
@@ -62,7 +63,7 @@ import           Web.Stripe.Client.Internal (callAPI, Method(POST, GET, DELETE),
                                              StripeRequest(..), toTextLower, (</>))
 
 import           Web.Stripe.Types (PlanId (..) , Plan (..), Interval (..), StripeList(..),
-                                   IntervalCount (..), TrialPeriodDays (..), Limit,
+                                   IntervalCount (..), TrialPeriodDays (..), Limit, Email (..),
                                    StartingAfter, EndingBefore, StripeDeleteResult(..),
                                    Currency (..), Name, Amount, Description, MetaData)
 

@@ -3,12 +3,14 @@ module Test.Plan where
 
 import           Control.Monad (void)
 import           Data.Either   (isRight)
+import           Data.Time
 
 import           Test.Hspec
 import           Test.Util     (makePlanId)
 
 import           Web.Stripe
 import           Web.Stripe.Plan
+import           Web.Stripe.Customer
 
 planTests :: StripeConfig -> Spec
 planTests config = do
@@ -60,6 +62,34 @@ planTests config = do
       pm `shouldBe` [("key", "value")]
       pname `shouldBe` "cookie"
       pdesc `shouldBe` Just "test"
+    it "Succesfully creates a Plan with a TrialPeriod" $ do
+      planid <- makePlanId
+      today <- getCurrentTime
+      let trialPeriod = UTCTime (addDays 14 $ utctDay today) (utctDayTime today)
+      result <- stripe config $ do
+           p <- createPlan planid
+             100 -- lets charge for it
+             USD
+             Month
+             "sample 100 plan"
+             []
+           c <- createCustomerBase Nothing
+             Nothing
+             Nothing
+             Nothing
+             Nothing
+             Nothing
+             Nothing -- couponId
+             Nothing
+             (Just $ Email "test@example.com")
+             (Just planid)
+             Nothing
+             (Just $ TrialPeriod trialPeriod)
+             []
+           void $ deletePlan planid
+           void $ deleteCustomer $ customerId c
+           return (p, c)
+      result `shouldSatisfy` isRight
 
     it "Succesfully retrieves a Plan" $ do
       planid <- makePlanId
