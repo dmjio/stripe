@@ -18,7 +18,8 @@ All Stripe commands are supported, including but not limited to Charges, Refunds
   Pagination is possible on all API calls that return a JSON array.    
   Any API call that returns a `StripeList` is eligible for pagination.
   To use in practice do the following:
-  
+
+```haskell  
     import Web.Stripe
     import Web.Stripe.Customer
     
@@ -32,7 +33,7 @@ All Stripe commands are supported, including but not limited to Charges, Refunds
       case result of
         Right stripelist -> print (list stripelist :: [Customer])
         Left stripeError -> print stripeError
-    
+```    
 
 ##[Versioning](https://stripe.com/docs/api#versioning)
   All versioning is hard-coded (for safety).
@@ -48,7 +49,8 @@ All Stripe commands are supported, including but not limited to Charges, Refunds
   For example, a `Customer` object contains a Card ID hash on the default_card field.
   This default_card hash can be expanded into a full `Card` object inside a `Customer` object.
   As an example:
-  
+
+```haskell  
     import Web.Stripe
     import Web.Stripe.Customer
     
@@ -61,12 +63,14 @@ All Stripe commands are supported, including but not limited to Charges, Refunds
       case result of
         Right customer -> print (defaultCard customer) -- Will be an `ExpandedCard`
         Left stripeError -> print stripeError
+```
 
 ##[MetaData](https://stripe.com/docs/api#metadata)
   Stripe objects allow the embedding of arbitrary metadata.
   Any Stripe object that supports the embedding of metadata is available via this API.
   As an example:
   
+```haskell
     import Web.Stripe
     import Web.Stripe.Coupon
     
@@ -77,6 +81,7 @@ All Stripe commands are supported, including but not limited to Charges, Refunds
       case result of
         Right coupon -> print $ couponMetaData coupon
         Left stripeError -> print stripeError
+```
 
 ##[Issues](https://github.com/dmjio/stripe-haskell/issues)
   Any API recommendations or bugs can be reported on the GitHub issue tracker.
