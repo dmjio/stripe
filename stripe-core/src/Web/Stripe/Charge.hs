@@ -67,9 +67,9 @@ module Web.Stripe.Charge
     , Capture
     ) where
 
-import           Web.Stripe.Client.Types    (Method (GET, POST),
+import           Web.Stripe.StripeRequest    (Method (GET, POST),
                                              StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Client.Util     (getParams, toMetaData, toText,
+import           Web.Stripe.Util     (getParams, toMetaData, toText,
                                              toExpandable, toTextLower, (</>))
 import           Web.Stripe.Types           (Amount, CVC (..), Capture,
                                              CardNumber (..), Charge (..),

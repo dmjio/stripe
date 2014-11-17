@@ -5,11 +5,11 @@
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
--- 
+--
 -- < https:/\/\stripe.com/docs/api >
 --
 -- @
--- import Web.Stripe         
+-- import Web.Stripe
 -- import Web.Stripe.Account
 --
 -- main :: IO ()
@@ -21,7 +21,7 @@
 --     Left stripeError -> print stripeError
 -- @
 module Web.Stripe (
-    module Web.Stripe.Client 
+    module Web.Stripe.Client
   ) where
 
 import Web.Stripe.Client

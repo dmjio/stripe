@@ -62,9 +62,9 @@ module Web.Stripe.Customer
     , Limit
     ) where
 
-import           Web.Stripe.Client.Types    (Method (GET, POST, DELETE),
+import           Web.Stripe.StripeRequest    (Method (GET, POST, DELETE),
                                              StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Client.Util     (toMetaData, getParams, toText, (</>),
+import           Web.Stripe.Util     (toMetaData, getParams, toText, (</>),
                                              toExpandable)
 import           Web.Stripe.Types           (AccountBalance, CVC (..),
                                              CardId (..), CardNumber (..),

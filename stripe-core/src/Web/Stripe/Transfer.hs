@@ -46,9 +46,9 @@ module Web.Stripe.Transfer
     , Limit
     ) where
 
-import           Web.Stripe.Client.Types    (Method (GET, POST),
+import           Web.Stripe.StripeRequest    (Method (GET, POST),
                                              StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Client.Util     (getParams, toExpandable, toTextLower,
+import           Web.Stripe.Util     (getParams, toExpandable, toTextLower,
                                              toMetaData, toText, (</>))
 import           Web.Stripe.Types           (Amount, Currency (..),
                                              EndingBefore, ExpandParams, Limit,

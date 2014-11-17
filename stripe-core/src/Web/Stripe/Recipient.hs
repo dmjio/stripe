@@ -80,9 +80,9 @@ module Web.Stripe.Recipient
 import           Data.Monoid                ((<>))
 import qualified Data.Text                  as T
 
-import           Web.Stripe.Client.Types    (Method(POST,GET,DELETE),
+import           Web.Stripe.StripeRequest    (Method(POST,GET,DELETE),
                                              StripeRequest(..), mkStripeRequest)
-import           Web.Stripe.Client.Util     (toMetaData, getParams,
+import           Web.Stripe.Util     (toMetaData, getParams,
                                              toText, toExpandable, (</>))
 import           Web.Stripe.Types           (AccountNumber (..),
                                              BankAccount (..), CVC, CVC (..),

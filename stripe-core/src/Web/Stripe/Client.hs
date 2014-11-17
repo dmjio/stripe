@@ -5,10 +5,12 @@
 -- Stability   : experimental
 -- Portability : POSIX
 module Web.Stripe.Client
-    ( module Web.Stripe.Client.Types
-    , module Web.Stripe.Client.Error
-    , module Web.Stripe.Client.Util
+    ( module Web.Stripe.StripeRequest
+    , module Web.Stripe.Error
+    , module Web.Stripe.Util
     , handleStream
+    , StripeConfig  (..)
+    , APIVersion    (..)
     ) where
 
 import           Data.Aeson      (eitherDecodeStrict)
@@ -16,14 +18,34 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.Monoid     (mempty)
 import qualified Data.Text       as T
-import           Web.Stripe.Client.Types
-import           Web.Stripe.Client.Error
-import           Web.Stripe.Client.Util
+import           Web.Stripe.StripeRequest
+import           Web.Stripe.Error
+import           Web.Stripe.Util
 
+------------------------------------------------------------------------------
+-- | Stripe secret key
+data StripeConfig = StripeConfig
+    { secretKey :: ByteString
+    } deriving Show
+
+------------------------------------------------------------------------------
+-- | API Version
+data APIVersion =
+    V20141007 -- ^ Stripe API Version for this package release
+    deriving Eq
+
+instance Show APIVersion where
+    show V20141007 = "2014-10-07"
+
+------------------------------------------------------------------------------
+-- | handleStream
+--
+-- This function is used by the backends such as @stripe-http-client@ to
+-- decode the results of an API request.
 handleStream
-    :: (ByteString -> Either String a)
-    -> Int             -- ^ HTTP response code
-    -> S.ByteString    -- ^ HTTP request body
+    :: (ByteString -> Either String a) -- ^ function to decode JSON result (typically the 'decodeJson' field from 'StripeRequest')
+    -> Int                             -- ^ HTTP response code
+    -> S.ByteString                    -- ^ HTTP request body
     -> Either StripeError a
 handleStream eitherDecodeStrict_a statusCode x =
   case statusCode of

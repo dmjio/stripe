@@ -119,10 +119,7 @@ library
                      , unordered-containers
 
   default-language:    Haskell2010
-  other-modules:       Web.Stripe.Client.Error
-                       Web.Stripe.Client.Types
-                       Web.Stripe.Client.Util
-                       Web.Stripe.Types
+  other-modules:       Web.Stripe.Types
                        Web.Stripe.Types.Util
   exposed-modules:
                        Web.Stripe
@@ -137,15 +134,19 @@ library
                        Web.Stripe.Customer
                        Web.Stripe.Discount
                        Web.Stripe.Dispute
+                       Web.Stripe.Error
                        Web.Stripe.Event
                        Web.Stripe.Invoice
                        Web.Stripe.InvoiceItem
                        Web.Stripe.Plan
                        Web.Stripe.Recipient
                        Web.Stripe.Refund
+                       Web.Stripe.StripeRequest
                        Web.Stripe.Subscription
                        Web.Stripe.Token
                        Web.Stripe.Transfer
+                       Web.Stripe.Util
+
   ghc-options:        -Wall
 
 source-repository head

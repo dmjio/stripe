@@ -57,9 +57,9 @@ module Web.Stripe.Plan
     , MetaData
     ) where
 
-import           Web.Stripe.Client.Types   (Method(POST, GET, DELETE),
+import           Web.Stripe.StripeRequest   (Method(POST, GET, DELETE),
                                             StripeRequest(..), mkStripeRequest)
-import           Web.Stripe.Client.Util    ( toText, getParams, toMetaData,
+import           Web.Stripe.Util    ( toText, getParams, toMetaData,
                                              toTextLower, (</>))
 import           Web.Stripe.Types (PlanId (..) , Plan (..), Interval (..), StripeList(..),
                                    IntervalCount (..), TrialPeriodDays (..), Limit,

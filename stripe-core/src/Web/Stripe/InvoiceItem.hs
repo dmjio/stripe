@@ -47,9 +47,9 @@ module Web.Stripe.InvoiceItem
     , Amount
     ) where
 
-import           Web.Stripe.Client.Types   (Method (GET, POST, DELETE),
+import           Web.Stripe.StripeRequest   (Method (GET, POST, DELETE),
                                             StripeRequest(..), mkStripeRequest)
-import           Web.Stripe.Client.Util    ( toMetaData, toExpandable,
+import           Web.Stripe.Util    ( toMetaData, toExpandable,
                                              getParams, toText, (</>), toTextLower)
 import           Web.Stripe.Types           (Amount, Currency (..), StripeList(..),
                                              CustomerId (..), Description,

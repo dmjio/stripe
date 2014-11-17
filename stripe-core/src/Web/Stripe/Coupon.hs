@@ -51,9 +51,9 @@ module Web.Stripe.Coupon
     , StripeDeleteResult (..)
     ) where
 
-import           Web.Stripe.Client.Types    (Method (POST, DELETE, GET),
+import           Web.Stripe.StripeRequest    (Method (POST, DELETE, GET),
                                              StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Client.Util     (toMetaData,getParams, toText, (</>),
+import           Web.Stripe.Util     (toMetaData,getParams, toText, (</>),
                                              toTextLower)
 import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
                                              CouponId (..), Currency (..),

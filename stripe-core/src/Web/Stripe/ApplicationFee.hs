@@ -39,8 +39,8 @@ module Web.Stripe.ApplicationFee
     , ConnectApp     (..)
     ) where
 
-import           Web.Stripe.Client.Types    (Method (GET), StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Client.Util     (getParams, toText, (</>), toExpandable)
+import           Web.Stripe.StripeRequest    (Method (GET), StripeRequest (..), mkStripeRequest)
+import           Web.Stripe.Util     (getParams, toText, (</>), toExpandable)
 import           Web.Stripe.Types           (ApplicationFee (..),
                                              ApplicationId (..), ConnectApp (..),
                                              EndingBefore, FeeId (..),

@@ -1,17 +1,15 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- |
--- Module      : Web.Stripe.Client.Types
+-- Module      : Web.Stripe.StripeRequest
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
-module Web.Stripe.Client.Types
+module Web.Stripe.StripeRequest
   ( -- * Types
     Method(..)
   , StripeRequest (..)
-  , StripeConfig  (..)
-  , APIVersion    (..)
   , mkStripeRequest
   ) where
 
@@ -47,18 +45,3 @@ data StripeRequest a = StripeRequest
 
 mkStripeRequest :: (FromJSON a) => Method -> Text -> Params -> StripeRequest a
 mkStripeRequest m e q = StripeRequest m e q eitherDecodeStrict
-
-------------------------------------------------------------------------------
--- | Stripe secret key
-data StripeConfig = StripeConfig
-    { secretKey :: ByteString
-    } deriving Show
-
-------------------------------------------------------------------------------
--- | API Version
-data APIVersion =
-    V20141007 -- ^ Stripe API Version for this package release
-    deriving Eq
-
-instance Show APIVersion where
-    show V20141007 = "2014-10-07"

@@ -37,9 +37,9 @@ module Web.Stripe.Dispute
     , Evidence      (..)
     ) where
 
-import           Web.Stripe.Client.Types    (Method (POST), StripeRequest (..),
+import           Web.Stripe.StripeRequest    (Method (POST), StripeRequest (..),
                                              mkStripeRequest)
-import           Web.Stripe.Client.Util     (getParams, (</>), toMetaData)
+import           Web.Stripe.Util     (getParams, (</>), toMetaData)
 import           Web.Stripe.Types           (ChargeId (..), Dispute (..),
                                              DisputeReason (..),
                                              DisputeStatus (..),

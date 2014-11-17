@@ -29,7 +29,7 @@ module Web.Stripe.Account
     , AccountId (..)
     ) where
 
-import           Web.Stripe.Client.Types    ( Method (GET)
+import           Web.Stripe.StripeRequest    ( Method (GET)
                                             , StripeRequest (..)
                                             , mkStripeRequest
                                             )

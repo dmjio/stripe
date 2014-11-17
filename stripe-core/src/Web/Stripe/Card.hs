@@ -79,9 +79,9 @@ module Web.Stripe.Card
 
 import           Control.Applicative        ((<$>))
 import           Data.Aeson                 (FromJSON)
-import           Web.Stripe.Client.Types    (Method(DELETE, GET, POST)
+import           Web.Stripe.StripeRequest    (Method(DELETE, GET, POST)
                                             , StripeRequest(..), mkStripeRequest)
-import           Web.Stripe.Client.Util     ((</>), getParams, toExpandable
+import           Web.Stripe.Util     ((</>), getParams, toExpandable
                                             , toText)
 import           Web.Stripe.Types           (AddressLine1(..), AddressLine2(..)
                                             , AddressCity(..), AddressCountry(..)

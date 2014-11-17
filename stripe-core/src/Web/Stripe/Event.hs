@@ -34,9 +34,9 @@ module Web.Stripe.Event
     , Limit
     ) where
 
-import           Web.Stripe.Client.Types    (Method (GET), StripeRequest (..),
+import           Web.Stripe.StripeRequest    (Method (GET), StripeRequest (..),
                                              mkStripeRequest)
-import           Web.Stripe.Client.Util     ((</>), getParams, toText)
+import           Web.Stripe.Util     ((</>), getParams, toText)
 import           Web.Stripe.Types           (Event (..), EventId (..), Limit, EventData(..),
                                              EventType(..), StripeList (..), Limit,
                                              StartingAfter, EndingBefore)

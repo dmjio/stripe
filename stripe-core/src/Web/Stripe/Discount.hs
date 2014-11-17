@@ -33,9 +33,9 @@ module Web.Stripe.Discount
     , Discount           (..)
     ) where
 
-import           Web.Stripe.Client.Types   (Method (DELETE),
+import           Web.Stripe.StripeRequest   (Method (DELETE),
                                             StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Client.Util    ((</>))
+import           Web.Stripe.Util    ((</>))
 import           Web.Stripe.Types           (CustomerId (..), Discount(..),
                                              StripeDeleteResult (..),
                                              SubscriptionId (..))

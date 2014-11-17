@@ -50,9 +50,9 @@ module Web.Stripe.Invoice
     , Period              (..)
     ) where
 
-import           Web.Stripe.Client.Types (Method(GET, POST), StripeRequest(..),
+import           Web.Stripe.StripeRequest (Method(GET, POST), StripeRequest(..),
                                           mkStripeRequest)
-import           Web.Stripe.Client.Util  ((</>), getParams, toExpandable,
+import           Web.Stripe.Util  ((</>), getParams, toExpandable,
                                           toMetaData, toText)
 import           Web.Stripe.Types        (CustomerId(..), Discount(..), EndingBefore,
                                           ExpandParams, Invoice(..), InvoiceId(..),

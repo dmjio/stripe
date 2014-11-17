@@ -47,9 +47,9 @@ module Web.Stripe.Refund
     , StripeList (..)
     ) where
 
-import           Web.Stripe.Client.Types    (Method (GET, POST),
+import           Web.Stripe.StripeRequest    (Method (GET, POST),
                                              StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Client.Util     (getParams, toMetaData, toText,
+import           Web.Stripe.Util     (getParams, toMetaData, toText,
                                              (</>), toExpandable)
 import           Web.Stripe.Types           (Charge (..), ChargeId (..),
                                              EndingBefore, Limit, MetaData,

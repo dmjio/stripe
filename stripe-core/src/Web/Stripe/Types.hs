@@ -16,7 +16,7 @@ import           Data.Aeson                 (FromJSON (parseJSON),
 import qualified Data.HashMap.Strict        as H
 import           Data.Text                  (Text)
 import           Data.Time                  (UTCTime)
-import           Web.Stripe.Client.Util     (fromSeconds)
+import           Web.Stripe.Util     (fromSeconds)
 
 ------------------------------------------------------------------------------
 -- | `ChargeId` associated with a `Charge`

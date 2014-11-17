@@ -43,10 +43,10 @@ module Web.Stripe.ApplicationFeeRefund
     , Amount
     ) where
 
-import           Web.Stripe.Client.Types    (Method (POST, GET), StripeRequest (..),
+import           Web.Stripe.StripeRequest    (Method (POST, GET), StripeRequest (..),
                                              mkStripeRequest
                                             )
-import           Web.Stripe.Client.Util     (getParams, toExpandable,
+import           Web.Stripe.Util     (getParams, toExpandable,
                                              toMetaData, toText, (</>))
 import           Web.Stripe.Types           (Amount, ApplicationFee (..),
                                              ApplicationFeeRefund (..),

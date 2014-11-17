@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- |
--- Module      : Web.Stripe.Client.Util
+-- Module      : Web.Stripe.Util
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
-module Web.Stripe.Client.Util
+module Web.Stripe.Util
     ( -- * Utils
       fromSeconds
     , toSeconds

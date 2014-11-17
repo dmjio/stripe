@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- |
--- Module      : Web.Stripe.Client.Error
+-- Module      : Web.Stripe.Error
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
-module Web.Stripe.Client.Error 
+module Web.Stripe.Error
     ( -- * Types
       StripeErrorHTTPCode (..)
     , StripeErrorType     (..)
@@ -14,13 +14,13 @@ module Web.Stripe.Client.Error
     ) where
 
 import           Control.Applicative ((<$>))
-import           Data.Aeson          
+import           Data.Aeson
 import           Data.Text           (Text)
 import           Control.Monad       (mzero)
 
 ------------------------------------------------------------------------------
 -- | Error Codes for HTTP Responses
-data StripeErrorHTTPCode = 
+data StripeErrorHTTPCode =
           BadRequest        -- ^ 400
         | UnAuthorized      -- ^ 401
         | RequestFailed     -- ^ 402
@@ -37,7 +37,7 @@ data StripeErrorType =
         | CardError
         | ConnectionFailure
         | ParseFailure
-        | UnknownErrorType 
+        | UnknownErrorType
           deriving Show
 
 ------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ data StripeErrorCode =
         | Missing
         | ProcessingError
         | RateLimit
-        | UnknownError 
+        | UnknownError
           deriving Show
 
 ------------------------------------------------------------------------------
@@ -106,4 +106,3 @@ instance FromJSON StripeError where
         param <- e .:? "param"
         return $ StripeError typ msg code param Nothing
     parseJSON _ = mzero
-

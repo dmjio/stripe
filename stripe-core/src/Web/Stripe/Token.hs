@@ -45,9 +45,9 @@ module Web.Stripe.Token
    , Account       (..)
    ) where
 
-import           Web.Stripe.Client.Types    (Method (GET, POST),
+import           Web.Stripe.StripeRequest    (Method (GET, POST),
                                              StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Client.Util     (getParams, toText, (</>))
+import           Web.Stripe.Util     (getParams, toText, (</>))
 import           Web.Stripe.Types           (Account(..), AccountNumber (..),
                                              CVC (..), CardNumber (..),
                                              Country (..), ExpMonth (..), BankAccount(..),

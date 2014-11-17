@@ -51,9 +51,9 @@ module Web.Stripe.Subscription
     , StripeList         (..)
     ) where
 
-import           Web.Stripe.Client.Types    (Method (GET, POST, DELETE),
+import           Web.Stripe.StripeRequest    (Method (GET, POST, DELETE),
                                              StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Client.Util     (getParams, toExpandable,
+import           Web.Stripe.Util     (getParams, toExpandable,
                                              toMetaData, toText, (</>))
 import           Web.Stripe.Types           (CustomerId (..), EndingBefore,
                                              ExpandParams, Limit, MetaData,

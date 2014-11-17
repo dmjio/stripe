@@ -38,9 +38,9 @@ module Web.Stripe.Balance
     , BalanceAmount
     ) where
 
-import           Web.Stripe.Client.Types   (Method (GET), StripeRequest (..),
+import           Web.Stripe.StripeRequest   (Method (GET), StripeRequest (..),
                                             mkStripeRequest)
-import           Web.Stripe.Client.Util    (getParams, toExpandable, toText,
+import           Web.Stripe.Util    (getParams, toExpandable, toText,
                                              (</>))
 import           Web.Stripe.Types           (Balance (..), BalanceAmount,
                                              BalanceTransaction, EndingBefore,
