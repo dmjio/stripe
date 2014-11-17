@@ -1,6 +1,6 @@
-name:                stripe-core
+name:                stripe-tests
 version:             0.1.0.4
-synopsis:            Stripe API for Haskell
+synopsis:            Tests for Stripe API bindings for Haskell
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson
@@ -26,7 +26,7 @@ Description:
     All code written for this library is documented to completion with the haddock documentation tool
     .
     [100+ Hspec Tests] Thoroughly unit-tested with hspec.
-    All API commands are unit-tested before inclusion into the API (see the stripe-tests package).
+    All API commands are unit-tested before inclusion into the API (see the tests directory).
     To run the tests, perform the following:
     .
     >  cabal clean && cabal configure --enable-tests && cabal build tests && dist/build/tests/tests -- You will be prompted to enter your *TEST* key
@@ -104,7 +104,7 @@ Description:
     .
 
 library
-  hs-source-dirs:      src
+  hs-source-dirs:      tests
   build-depends:       aeson
                      , base >=4.7 && <4.8
                      , bytestring
@@ -112,6 +112,7 @@ library
                      , mtl >= 2.1.2
                      , random >= 1.1
                      , hspec
+                     , stripe-core
                      , template-haskell
                      , text
                      , time
@@ -119,33 +120,30 @@ library
                      , unordered-containers
 
   default-language:    Haskell2010
-  other-modules:       Web.Stripe.Client.Error
-                       Web.Stripe.Client.Types
-                       Web.Stripe.Client.Util
-                       Web.Stripe.Types
-                       Web.Stripe.Types.Util
   exposed-modules:
-                       Web.Stripe
-                       Web.Stripe.Account
-                       Web.Stripe.ApplicationFee
-                       Web.Stripe.ApplicationFeeRefund
-                       Web.Stripe.Balance
-                       Web.Stripe.Client
-                       Web.Stripe.Card
-                       Web.Stripe.Charge
-                       Web.Stripe.Coupon
-                       Web.Stripe.Customer
-                       Web.Stripe.Discount
-                       Web.Stripe.Dispute
-                       Web.Stripe.Event
-                       Web.Stripe.Invoice
-                       Web.Stripe.InvoiceItem
-                       Web.Stripe.Plan
-                       Web.Stripe.Recipient
-                       Web.Stripe.Refund
-                       Web.Stripe.Subscription
-                       Web.Stripe.Token
-                       Web.Stripe.Transfer
+                       Web.Stripe.Test.Account
+                       Web.Stripe.Test.ApplicationFee
+                       Web.Stripe.Test.ApplicationFeeRefund
+                       Web.Stripe.Test.Balance
+                       Web.Stripe.Test.Card
+                       Web.Stripe.Test.Charge
+                       Web.Stripe.Test.Config
+                       Web.Stripe.Test.Coupon
+                       Web.Stripe.Test.Customer
+                       Web.Stripe.Test.Discount
+                       Web.Stripe.Test.Dispute
+                       Web.Stripe.Test.Event
+                       Web.Stripe.Test.Invoice
+                       Web.Stripe.Test.InvoiceItem
+                       Web.Stripe.Test.Plan
+                       Web.Stripe.Test.Prelude
+                       Web.Stripe.Test.Recipient
+                       Web.Stripe.Test.Refund
+                       Web.Stripe.Test.Subscription
+                       Web.Stripe.Test.Token
+                       Web.Stripe.Test.Transfer
+                       Web.Stripe.Test.Util
+                       Web.Stripe.Test.AllTests
   ghc-options:        -Wall
 
 source-repository head
