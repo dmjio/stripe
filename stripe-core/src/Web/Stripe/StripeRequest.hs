@@ -43,5 +43,9 @@ data StripeRequest a = StripeRequest
     } deriving Functor
 
 
+------------------------------------------------------------------------------
+-- | HTTP Params
+--
+-- helper function for building a 'StripeRequest'
 mkStripeRequest :: (FromJSON a) => Method -> Text -> Params -> StripeRequest a
 mkStripeRequest m e q = StripeRequest m e q eitherDecodeStrict
