@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -- |
 -- Module      : Web.Stripe.Client
 -- Copyright   : (c) David Johnson, 2014
@@ -16,8 +17,11 @@ module Web.Stripe.Client
 import           Data.Aeson      (eitherDecodeStrict)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
+import           Data.Data       (Data, Typeable)
 import           Data.Monoid     (mempty)
-import qualified Data.Text       as T
+import           Data.Text       as T
+import           Text.Read       (lexP, pfail)
+import qualified Text.Read       as R
 import           Web.Stripe.StripeRequest
 import           Web.Stripe.Error
 import           Web.Stripe.Util
@@ -26,16 +30,23 @@ import           Web.Stripe.Util
 -- | Stripe secret key
 data StripeConfig = StripeConfig
     { secretKey :: ByteString
-    } deriving Show
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | API Version
 data APIVersion =
     V20141007 -- ^ Stripe API Version for this package release
-    deriving Eq
+    deriving (Eq, Ord, Data, Typeable)
 
 instance Show APIVersion where
     show V20141007 = "2014-10-07"
+
+instance Read APIVersion where
+  readPrec =
+    do (R.String s) <- lexP
+       case s of
+         "2014-10-07" -> return V20141007
+         _            -> pfail
 
 ------------------------------------------------------------------------------
 -- | handleStream

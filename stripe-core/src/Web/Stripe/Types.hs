@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 -- |
 -- Module      : Web.Stripe.Types
 -- Copyright   : (c) David Johnson, 2014
@@ -8,14 +9,17 @@
 -- Portability : POSIX
 module Web.Stripe.Types where
 
-import           Control.Applicative        (pure, (<$>), (<*>), (<|>))
-import           Control.Monad              (mzero)
-import           Data.Aeson                 (FromJSON (parseJSON),
-                                             Value (String, Object, Bool), (.:),
-                                             (.:?))
-import qualified Data.HashMap.Strict        as H
-import           Data.Text                  (Text)
-import           Data.Time                  (UTCTime)
+import           Control.Applicative (pure, (<$>), (<*>), (<|>))
+import           Control.Monad       (mzero)
+import           Data.Aeson          (FromJSON (parseJSON),
+                                      Value (String, Object, Bool), (.:),
+                                      (.:?))
+import           Data.Data           (Data, Typeable)
+import qualified Data.HashMap.Strict as H
+import           Data.Text           (Text)
+import           Data.Time           (UTCTime)
+import           Text.Read           (lexP, pfail)
+import qualified Text.Read           as R
 import           Web.Stripe.Util     (fromSeconds)
 
 ------------------------------------------------------------------------------
@@ -23,7 +27,7 @@ import           Web.Stripe.Util     (fromSeconds)
 data ChargeId
   = ChargeId Text
   | ExpandedCharge Charge
-  deriving (Show, Eq)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `ChargeId`
@@ -35,7 +39,7 @@ instance FromJSON ChargeId where
 ------------------------------------------------------------------------------
 -- | `StatementDescription` to be added to a `Charge`
 newtype StatementDescription =
-  StatementDescription Text deriving (Show, Eq)
+  StatementDescription Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Charge` object in `Stripe` API
@@ -63,7 +67,7 @@ data Charge = Charge {
     , chargeStatementDescription :: Maybe Description
     , chargeReceiptEmail         :: Maybe Text
     , chargeReceiptNumber        :: Maybe Text
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Charge`
@@ -104,7 +108,7 @@ type Capture = Bool
 ------------------------------------------------------------------------------
 -- | `RefundId` for `Refund`
 newtype RefundId =
-  RefundId Text deriving (Eq, Show)
+  RefundId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Refund` Object
@@ -117,7 +121,7 @@ data Refund = Refund {
     , refundCharge             :: ChargeId
     , refundBalanceTransaction :: TransactionId
     , refundMetaData           :: MetaData
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Refund`
@@ -139,7 +143,7 @@ instance FromJSON Refund where
 data CustomerId =
   CustomerId Text |
   ExpandedCustomer Customer
-  deriving (Show, Eq)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `CustomerId`
@@ -168,7 +172,7 @@ data Customer = Customer {
     } | DeletedCustomer {
       deletedCustomer   :: Maybe Bool
     , deletedCustomerId :: CustomerId
-  } deriving (Show, Eq)
+  } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Customer`
@@ -206,13 +210,13 @@ type AccountBalance = Int
 -- | CardId for a `Customer`
 data CardId = CardId Text
             | ExpandedCard Card
-            deriving (Eq, Show)
+            deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | CardId for a `Recipient`
 data RecipientCardId = RecipientCardId Text
                      | ExpandedRecipientCard RecipientCard
-                     deriving (Eq, Show)
+                     deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `CardId`
@@ -223,43 +227,43 @@ instance FromJSON CardId where
 
 ------------------------------------------------------------------------------
 -- | Number associated with a `Card`
-newtype CardNumber     = CardNumber Text deriving (Show, Eq)
+newtype CardNumber     = CardNumber Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Expiration Month for a `Card`
-newtype ExpMonth       = ExpMonth Int deriving (Show, Eq)
+newtype ExpMonth       = ExpMonth Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Expiration Year for a `Card`
-newtype ExpYear        = ExpYear Int deriving (Show, Eq)
+newtype ExpYear        = ExpYear Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | CVC for a `Card`
-newtype CVC            = CVC Text deriving (Show, Eq)
+newtype CVC            = CVC Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | City address for a `Card`
-newtype AddressCity    = AddressCity Text deriving (Show, Eq)
+newtype AddressCity    = AddressCity Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Country address for a `Card`
-newtype AddressCountry = AddressCountry Text deriving (Show, Eq)
+newtype AddressCountry = AddressCountry Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Address Line One for a `Card`
-newtype AddressLine1   = AddressLine1 Text deriving (Show, Eq)
+newtype AddressLine1   = AddressLine1 Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Address Line Two for a `Card`
-newtype AddressLine2   = AddressLine2 Text deriving (Show, Eq)
+newtype AddressLine2   = AddressLine2 Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Address State for a `Card`
-newtype AddressState   = AddressState Text deriving (Show, Eq)
+newtype AddressState   = AddressState Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Address Zip Code for a `Card`
-newtype AddressZip     = AddressZip Text deriving (Show, Eq)
+newtype AddressZip     = AddressZip Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Credit / Debit Card Brand
@@ -270,7 +274,7 @@ data Brand = Visa
            | JCB
            | DinersClub
            | Unknown
-             deriving (Show, Eq)
+             deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Brand`
@@ -306,7 +310,7 @@ data Card = Card {
     , cardAddressLine1Check :: Maybe Text
     , cardAddressZipCheck   :: Maybe Text
     , cardCustomerId        :: Maybe CustomerId
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `RecipientCard` object
@@ -330,7 +334,7 @@ data RecipientCard = RecipientCard {
     , recipientCardAddressLine1Check :: Maybe Text
     , recipientCardAddressZipCheck   :: Maybe Text
     , recipientCardRecipientId       :: Maybe RecipientId
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Card`
@@ -390,7 +394,7 @@ instance FromJSON RecipientCard where
 -- | `SubscriptionId` for a `Subscription`
 newtype SubscriptionId =
     SubscriptionId Text
-    deriving (Show, Eq)
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Subscription Object
@@ -412,7 +416,7 @@ data Subscription = Subscription {
     , subscriptionApplicationFeePercent :: Maybe Double
     , subscriptionDiscount              :: Maybe Discount
     , subscriptionMetaData              :: MetaData
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Subscription`
@@ -446,7 +450,7 @@ data SubscriptionStatus =
         | PastDue
         | Canceled
         | UnPaid
-        deriving (Show, Eq)
+        deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `SubscriptionStatus`
@@ -460,7 +464,7 @@ instance FromJSON SubscriptionStatus where
 
 ------------------------------------------------------------------------------
 -- | `PlanId` for a `Plan`
-newtype PlanId = PlanId Text deriving (Show, Eq)
+newtype PlanId = PlanId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Plan object
@@ -477,7 +481,7 @@ data Plan = Plan {
     , planTrialPeriodDays :: Maybe Int
     , planMetaData        :: MetaData
     , planDescription     :: Maybe Description
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Plan`
@@ -503,7 +507,7 @@ type TrialPeriod = UTCTime
 
 ------------------------------------------------------------------------------
 -- | Interval for `Plan`s
-data Interval = Day | Week | Month | Year deriving Eq
+data Interval = Day | Week | Month | Year deriving (Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Interval`
@@ -523,8 +527,20 @@ instance Show Interval where
     show Year  = "year"
 
 ------------------------------------------------------------------------------
+-- | `Read` instance for `Interval`
+instance Read Interval where
+  readPrec =
+    do (R.String s) <- lexP
+       case s of
+         "day"   -> return Day
+         "week"  -> return Week
+         "month" -> return Month
+         "year"  -> return Year
+         _       -> pfail
+
+------------------------------------------------------------------------------
 -- | `Coupon` Duration
-data Duration = Forever | Once | Repeating deriving Eq
+data Duration = Forever | Once | Repeating deriving (Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Show` instance for `Duration`
@@ -533,6 +549,16 @@ instance Show Duration where
     show Once      = "once"
     show Repeating = "repeating"
 
+------------------------------------------------------------------------------
+-- | `Read` instance for `Duration`
+instance Read Duration where
+  readPrec =
+    do (R.String s) <- lexP
+       case s of
+         "forever"   -> return Forever
+         "once"      -> return Once
+         "repeating" -> return Repeating
+         _           -> pfail
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Duration`
 instance FromJSON Duration where
@@ -558,7 +584,7 @@ data Coupon = Coupon {
     , couponDurationInMonths :: Maybe Int
     , couponValid            :: Bool
     , couponMetaData         :: MetaData
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Coupon`
@@ -581,35 +607,35 @@ instance FromJSON Coupon where
 
 ------------------------------------------------------------------------------
 -- | `CouponId` for a `Coupon`
-newtype CouponId = CouponId Text deriving (Show, Eq)
+newtype CouponId = CouponId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `AmountOff` for a `Coupon`
-newtype AmountOff = AmountOff Int deriving (Show, Eq)
+newtype AmountOff = AmountOff Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `MaxRedemptions` for a `Coupon`
-newtype MaxRedemptions = MaxRedemptions Int deriving (Show, Eq)
+newtype MaxRedemptions = MaxRedemptions Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `PercentOff` for a `Coupon`
-newtype PercentOff = PercentOff Int deriving (Show, Eq)
+newtype PercentOff = PercentOff Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `RedeemBy` date for a `Coupon`
-newtype RedeemBy = RedeemBy UTCTime deriving (Show, Eq)
+newtype RedeemBy = RedeemBy UTCTime deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `DurationInMonths` for a `Coupon`
-newtype DurationInMonths = DurationInMonths Int deriving (Show, Eq)
+newtype DurationInMonths = DurationInMonths Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `IntervalCount` for a `Coupon`
-newtype IntervalCount   = IntervalCount Int deriving (Show, Eq)
+newtype IntervalCount   = IntervalCount Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `TrialPeriodDays` for a `Coupon`
-newtype TrialPeriodDays = TrialPeriodDays Int deriving (Show, Eq)
+newtype TrialPeriodDays = TrialPeriodDays Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Amount representing a monetary value.
@@ -626,7 +652,7 @@ data Discount = Discount {
     , discountCustomer     :: CustomerId
     , discountObject       :: Text
     , discountSubscription :: Maybe SubscriptionId
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Discount`
@@ -646,7 +672,7 @@ instance FromJSON Discount where
 data InvoiceId =
     InvoiceId Text
   | ExpandedInvoice Invoice
-  deriving (Show, Eq)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `InvoiceId`
@@ -686,7 +712,7 @@ data Invoice = Invoice {
     , invoiceStatementDescription :: Maybe Description
     , invoiceDescription          :: Maybe Description
     , invoiceMetaData             :: MetaData
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Invoice`
@@ -729,7 +755,7 @@ instance FromJSON Invoice where
 data InvoiceItemId
     = InvoiceItemId Text
     | ExpandedInvoiceItem InvoiceItem
-      deriving (Eq, Show)
+      deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `InvoiceItem` object
@@ -747,7 +773,7 @@ data InvoiceItem = InvoiceItem {
     , invoiceItemQuantity     :: Maybe Quantity
     , invoiceItemSubscription :: Maybe Subscription
     , invoiceItemMetaData     :: MetaData
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `InvoiceItem`
@@ -773,14 +799,14 @@ instance FromJSON InvoiceItem where
 ------------------------------------------------------------------------------
 -- | `InvoiceLineItemId` for an `InvoiceLineItem`
 newtype InvoiceLineItemId =
-    InvoiceLineItemId Text deriving (Show, Eq)
+    InvoiceLineItemId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Type of `InvoiceItem`
 data InvoiceLineItemType
     = InvoiceItemType |
      SubscriptionItemType
-      deriving (Show,Eq)
+      deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `InvoiceLineItemType`
@@ -804,14 +830,14 @@ data InvoiceLineItem = InvoiceLineItem {
     , invoiceLineItemPlan        :: Maybe Plan
     , invoiceLineItemDescription :: Maybe Description
     , invoiceLineItemMetaData    :: MetaData
-  } deriving (Show, Eq)
+  } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Period for an `InvoiceLineItem`
 data Period = Period {
       start :: UTCTime
     , end   :: UTCTime
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Period`
@@ -849,7 +875,7 @@ data DisputeStatus
     | ChargeRefunded
     | Won
     | Lost
-    deriving (Show, Eq)
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `DisputeReason`
@@ -874,7 +900,7 @@ data DisputeReason
     | Unrecognized
     | CreditNotProcessed
     | General
-      deriving (Show, Eq)
+      deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `DisputeStatus`
@@ -904,11 +930,11 @@ data Dispute = Dispute {
     , disputeEvidenceDueBy       :: UTCTime
     , disputeEvidence            :: Maybe Evidence
     , disputeMetaData            :: MetaData
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Evidence` associated with a `Dispute`
-newtype Evidence = Evidence Text deriving (Show, Eq)
+newtype Evidence = Evidence Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Dispute`
@@ -933,7 +959,7 @@ instance FromJSON Dispute where
 ------------------------------------------------------------------------------
 -- | `TransferId`
 newtype TransferId =
-  TransferId Text deriving (Show, Eq)
+  TransferId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Status of a `Transfer`
@@ -942,14 +968,14 @@ data TransferStatus =
   | TransferPending
   | TransferCanceled
   | TransferFailed
-  deriving (Show, Eq)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Type of a `Transfer`
 data TransferType =
     CardTransfer
   | BankAccountTransfer
-    deriving (Show, Eq)
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `TransferType`
@@ -986,7 +1012,7 @@ data Transfer = Transfer {
      , transferStatementDescription :: Maybe Description
      , transferRecipient            :: Maybe RecipientId
      , transferMetaData             :: MetaData
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Transfer`
@@ -1024,7 +1050,7 @@ data BankAccount = BankAccount {
     , bankAccountStatus      :: Maybe BankAccountStatus
     , bankAccountFingerprint :: Maybe Text
     , bankAccountName        :: Text
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `BankAccount` JSON Instance
@@ -1043,13 +1069,13 @@ instance FromJSON BankAccount where
 ------------------------------------------------------------------------------
 -- | `BankAccountId` for `BankAccount`
 newtype BankAccountId = BankAccountId Text
-                        deriving (Show, Eq)
+                        deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `BankAccountStatus` Object
 data BankAccountStatus =
   New | Validated | Verified | Errored
-  deriving (Show, Eq)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `BankAccountStatus` JSON instance
@@ -1063,28 +1089,28 @@ instance FromJSON BankAccountStatus where
 ------------------------------------------------------------------------------
 -- | Routing Number for Bank Account
 newtype RoutingNumber =
-  RoutingNumber Text deriving (Show, Eq)
+  RoutingNumber Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
--- | Country 
+-- | Country
 newtype Country       =
-  Country Text deriving (Show, Eq)
+  Country Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Account Number of a Bank Account
 newtype AccountNumber =
-  AccountNumber Text deriving (Show, Eq)
+  AccountNumber Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Recipients
 
 ------------------------------------------------------------------------------
 -- | `FirstName` of a `Recipient`
-newtype FirstName = FirstName Text deriving (Show, Eq)
+newtype FirstName = FirstName Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `LastName` of a `Recipient`
-newtype LastName = LastName Text deriving (Show, Eq)
+newtype LastName = LastName Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Middle Initial of a `Recipient`
@@ -1095,7 +1121,7 @@ type MiddleInitial = Char
 data RecipientId =
       RecipientId Text
     | ExpandedRecipient Recipient
-  deriving (Show, Eq)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `RecipientId`
@@ -1112,13 +1138,23 @@ type TaxID  = Text
 -- | Type of `Recipient`
 data RecipientType =
     Individual
-  | Corporation deriving Eq
+  | Corporation deriving (Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Show` instance for `RecipientType`
 instance Show RecipientType where
     show Individual  = "individual"
     show Corporation = "corporation"
+
+------------------------------------------------------------------------------
+-- | `Read` instance for `RecipientType`
+instance Read RecipientType where
+  readPrec =
+    do (R.String s) <- lexP
+       case s of
+         "individual"  -> return Individual
+         "corporation" -> return Corporation
+         _             -> pfail
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `RecipientType`
@@ -1145,7 +1181,7 @@ data Recipient = Recipient {
  } | DeletedRecipient {
     deletedRecipient   :: Maybe Bool
   , deletedRecipientId :: RecipientId
- } deriving (Show, Eq)
+ } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Recipient`
@@ -1167,7 +1203,7 @@ instance FromJSON Recipient where
                  <|> DeletedRecipient
                  <$> o .:? "deleted"
                  <*> (RecipientId <$> o .: "id")
-                 
+
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1187,12 +1223,12 @@ data ApplicationFee = ApplicationFee {
     , applicationFeeApplicationId      :: ApplicationId
     , applicationFeeChargeId           :: ChargeId
     , applicationFeeMetaData           :: MetaData
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `ApplicationId` object
 newtype ApplicationId =
-  ApplicationId Text deriving (Show, Eq)
+  ApplicationId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `ApplicationFee`
@@ -1221,7 +1257,7 @@ instance FromJSON ApplicationFee where
 -- | `FeeId` for objects with Fees
 newtype FeeId =
   FeeId Text
-  deriving (Show, Eq)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Application Fee Refunds
@@ -1234,7 +1270,7 @@ data ApplicationFeeRefund = ApplicationFeeRefund {
      , applicationFeeRefundBalanceTransaction :: Maybe TransactionId
      , applicationFeeRefundFee                :: FeeId
      , applicationFeeRefundMetaData           :: MetaData
-     } deriving (Show, Eq)
+     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `ApplicationFeeRefund`
@@ -1256,7 +1292,7 @@ instance FromJSON ApplicationFeeRefund where
 data AccountId
   = AccountId Text
   | ExpandedAccount Account
-  deriving (Show, Eq)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `AccountId`
@@ -1284,7 +1320,7 @@ data Account = Account {
      , accountBusinessURL          :: Maybe Text
      , accountBusinessLogo         :: Maybe Text
      , accountSupportPhone         :: Maybe Text
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Account`
@@ -1315,7 +1351,7 @@ data Balance = Balance {
     , balanceAvailable :: [BalanceAmount]
     , balanceLiveMode  :: Bool
     , balanceObject    :: Text
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Balance`
@@ -1332,7 +1368,7 @@ instance FromJSON Balance where
 data BalanceAmount = BalanceAmount {
       balanceAmount   :: Int
     , balanceCurrency :: Currency
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `BalanceAmount`
@@ -1358,7 +1394,7 @@ data BalanceTransaction = BalanceTransaction {
     , balanceTransactionFeeDetails     :: [FeeDetails]
     , balanceTransactionFeeSource      :: ChargeId
     , balanceTransactionFeeDescription :: Maybe Description
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `BalanceTransaction`
@@ -1384,7 +1420,7 @@ instance FromJSON BalanceTransaction where
 -- | `TransactionId` of a `Transaction`
 data TransactionId = TransactionId Text
                    | ExpandedTransaction BalanceTransaction
-                   deriving (Show, Eq)
+                   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `TransactionId`
@@ -1401,7 +1437,7 @@ data FeeDetails = FeeDetails {
     , feeType            :: Text
     , feeDescription     :: Maybe Description
     , feeApplication     :: Maybe Text
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `FeeDetails`
@@ -1468,7 +1504,7 @@ data EventType =
   | TransferFailedEvent
   | PingEvent
   | UnknownEvent
-  deriving (Show, Eq)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Event Types JSON Instance
@@ -1526,7 +1562,7 @@ instance FromJSON EventType where
 
 ------------------------------------------------------------------------------
 -- | `EventId` of an `Event`
-newtype EventId = EventId Text deriving (Show, Eq)
+newtype EventId = EventId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | EventData
@@ -1548,8 +1584,8 @@ data EventData =
   | DiscountEvent Discount
   | InvoiceItemEvent InvoiceItem
   | UnknownEventData
-  | Ping 
-  deriving (Show, Eq)
+  | Ping
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Event` Object
@@ -1562,7 +1598,7 @@ data Event = Event {
     , eventObject          :: Text
     , eventPendingWebHooks :: Int
     , eventRequest         :: Maybe Text
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Event`
@@ -1572,59 +1608,59 @@ instance FromJSON Event where
      eventCreated <- fromSeconds <$> o .: "created"
      eventLiveMode <- o .: "livemode"
      eventType <- o .: "type"
-     String etype <- o .: "type"     
+     String etype <- o .: "type"
      obj <- o .: "data"
-     eventData <- 
+     eventData <-
        case etype of
-        "account.updated" -> AccountEvent <$> obj .: "object" 
-        "account.application.deauthorized" -> AccountApplicationEvent <$> obj .: "object" 
-        "application_fee.created" -> ApplicationFeeEvent <$> obj .: "object" 
-        "application_fee.refunded" -> ApplicationFeeEvent <$> obj .: "object" 
-        "balance.available" -> BalanceEvent <$> obj .: "object" 
-        "charge.succeeded" -> ChargeEvent <$> obj .: "object" 
-        "charge.failed" -> ChargeEvent <$> obj .: "object" 
-        "charge.refunded" -> ChargeEvent <$> obj .: "object" 
-        "charge.captured" -> ChargeEvent <$> obj .: "object" 
-        "charge.updated" -> ChargeEvent <$> obj .: "object" 
-        "charge.dispute.created" -> DisputeEvent <$> obj .: "object" 
-        "charge.dispute.updated" -> DisputeEvent <$> obj .: "object" 
-        "charge.dispute.closed" -> DisputeEvent <$> obj .: "object" 
-        "charge.dispute.funds_withdrawn" -> DisputeEvent <$> obj .: "object" 
-        "charge.dispute.funds_reinstated" -> DisputeEvent <$> obj .: "object" 
-        "customer.created" -> CustomerEvent <$> obj .: "object" 
-        "customer.updated" -> CustomerEvent <$> obj .: "object" 
-        "customer.deleted" -> CustomerEvent <$> obj .: "object" 
-        "customer.card.created" -> CardEvent <$> obj .: "object" 
-        "customer.card.updated" -> CardEvent <$> obj .: "object" 
-        "customer.card.deleted" -> CardEvent <$> obj .: "object" 
-        "customer.subscription.created" -> SubscriptionEvent <$> obj .: "object" 
-        "customer.subscription.updated" -> SubscriptionEvent <$> obj .: "object" 
-        "customer.subscription.deleted" -> SubscriptionEvent <$> obj .: "object" 
-        "customer.subscription.trial_will_end" -> SubscriptionEvent <$> obj .: "object" 
-        "customer.discount.created" -> DiscountEvent <$> obj .: "object" 
-        "customer.discount.updated" -> DiscountEvent <$> obj .: "object" 
-        "customer.discount.deleted" -> DiscountEvent <$> obj .: "object" 
-        "invoice.created" -> InvoiceEvent <$> obj .: "object" 
-        "invoice.updated" -> InvoiceEvent <$> obj .: "object" 
-        "invoice.payment_succeeded" -> InvoiceEvent <$> obj .: "object" 
-        "invoice.payment_failed" -> InvoiceEvent <$> obj .: "object" 
-        "invoiceitem.created" -> InvoiceItemEvent <$> obj .: "object" 
-        "invoiceitem.updated" -> InvoiceItemEvent <$> obj .: "object" 
-        "invoiceitem.deleted" -> InvoiceItemEvent <$> obj .: "object" 
-        "plan.created" -> PlanEvent <$> obj .: "object" 
-        "plan.updated" -> PlanEvent <$> obj .: "object" 
-        "plan.deleted" -> PlanEvent <$> obj .: "object" 
-        "coupon.created" -> CouponEvent <$> obj .: "object" 
-        "coupon.updated" -> CouponEvent <$> obj .: "object" 
-        "coupon.deleted" -> CouponEvent <$> obj .: "object" 
-        "recipient.created" -> RecipientEvent <$> obj .: "object" 
-        "recipient.updated" -> RecipientEvent <$> obj .: "object" 
-        "recipient.deleted" -> RecipientEvent <$> obj .: "object" 
-        "transfer.created" -> TransferEvent <$> obj .: "object" 
-        "transfer.updated" -> TransferEvent <$> obj .: "object" 
-        "transfer.canceled" -> TransferEvent <$> obj .: "object" 
-        "transfer.paid" -> TransferEvent <$> obj .: "object" 
-        "transfer.failed" -> TransferEvent <$> obj .: "object" 
+        "account.updated" -> AccountEvent <$> obj .: "object"
+        "account.application.deauthorized" -> AccountApplicationEvent <$> obj .: "object"
+        "application_fee.created" -> ApplicationFeeEvent <$> obj .: "object"
+        "application_fee.refunded" -> ApplicationFeeEvent <$> obj .: "object"
+        "balance.available" -> BalanceEvent <$> obj .: "object"
+        "charge.succeeded" -> ChargeEvent <$> obj .: "object"
+        "charge.failed" -> ChargeEvent <$> obj .: "object"
+        "charge.refunded" -> ChargeEvent <$> obj .: "object"
+        "charge.captured" -> ChargeEvent <$> obj .: "object"
+        "charge.updated" -> ChargeEvent <$> obj .: "object"
+        "charge.dispute.created" -> DisputeEvent <$> obj .: "object"
+        "charge.dispute.updated" -> DisputeEvent <$> obj .: "object"
+        "charge.dispute.closed" -> DisputeEvent <$> obj .: "object"
+        "charge.dispute.funds_withdrawn" -> DisputeEvent <$> obj .: "object"
+        "charge.dispute.funds_reinstated" -> DisputeEvent <$> obj .: "object"
+        "customer.created" -> CustomerEvent <$> obj .: "object"
+        "customer.updated" -> CustomerEvent <$> obj .: "object"
+        "customer.deleted" -> CustomerEvent <$> obj .: "object"
+        "customer.card.created" -> CardEvent <$> obj .: "object"
+        "customer.card.updated" -> CardEvent <$> obj .: "object"
+        "customer.card.deleted" -> CardEvent <$> obj .: "object"
+        "customer.subscription.created" -> SubscriptionEvent <$> obj .: "object"
+        "customer.subscription.updated" -> SubscriptionEvent <$> obj .: "object"
+        "customer.subscription.deleted" -> SubscriptionEvent <$> obj .: "object"
+        "customer.subscription.trial_will_end" -> SubscriptionEvent <$> obj .: "object"
+        "customer.discount.created" -> DiscountEvent <$> obj .: "object"
+        "customer.discount.updated" -> DiscountEvent <$> obj .: "object"
+        "customer.discount.deleted" -> DiscountEvent <$> obj .: "object"
+        "invoice.created" -> InvoiceEvent <$> obj .: "object"
+        "invoice.updated" -> InvoiceEvent <$> obj .: "object"
+        "invoice.payment_succeeded" -> InvoiceEvent <$> obj .: "object"
+        "invoice.payment_failed" -> InvoiceEvent <$> obj .: "object"
+        "invoiceitem.created" -> InvoiceItemEvent <$> obj .: "object"
+        "invoiceitem.updated" -> InvoiceItemEvent <$> obj .: "object"
+        "invoiceitem.deleted" -> InvoiceItemEvent <$> obj .: "object"
+        "plan.created" -> PlanEvent <$> obj .: "object"
+        "plan.updated" -> PlanEvent <$> obj .: "object"
+        "plan.deleted" -> PlanEvent <$> obj .: "object"
+        "coupon.created" -> CouponEvent <$> obj .: "object"
+        "coupon.updated" -> CouponEvent <$> obj .: "object"
+        "coupon.deleted" -> CouponEvent <$> obj .: "object"
+        "recipient.created" -> RecipientEvent <$> obj .: "object"
+        "recipient.updated" -> RecipientEvent <$> obj .: "object"
+        "recipient.deleted" -> RecipientEvent <$> obj .: "object"
+        "transfer.created" -> TransferEvent <$> obj .: "object"
+        "transfer.updated" -> TransferEvent <$> obj .: "object"
+        "transfer.canceled" -> TransferEvent <$> obj .: "object"
+        "transfer.paid" -> TransferEvent <$> obj .: "object"
+        "transfer.failed" -> TransferEvent <$> obj .: "object"
         "ping" -> pure Ping
         _        -> pure UnknownEventData
      eventObject <- o .: "object"
@@ -1639,7 +1675,7 @@ data ConnectApp = ConnectApp {
       connectAppId     :: Maybe Text
     , connectAppObject :: Text
     , connectAppName   :: Text
-  } deriving (Show, Eq)
+  } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Connect Application JSON instance
@@ -1654,13 +1690,13 @@ instance FromJSON ConnectApp where
 -- | `TokenId` of a `Token`
 newtype TokenId =
     TokenId Text
-    deriving (Show, Eq)
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Type of `Token`
 data TokenType = TokenCard
                | TokenBankAccount
-                 deriving (Show, Eq)
+                 deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `TokenType`
@@ -1679,7 +1715,7 @@ data Token a = Token {
     , tokenObject   :: Text
     , tokenType     :: TokenType
     , tokenData     :: a
-} deriving (Show, Eq)
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Token`
@@ -1711,7 +1747,7 @@ data StripeList a = StripeList {
     , object     :: Text
     , totalCount :: Maybe Int
     , hasMore    :: Bool
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `StripeList`
@@ -1741,14 +1777,14 @@ type EndingBefore a = Maybe a
 data StripeDeleteResult = StripeDeleteResult {
       deleted   :: Bool
     , deletedId :: Maybe Text
-    } deriving (Show, Eq)
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `StripeDeleteResult`
 instance FromJSON StripeDeleteResult where
    parseJSON (Object o) =
        StripeDeleteResult <$> o .: "deleted"
-                          <*> o .:? "id"  
+                          <*> o .:? "id"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1778,155 +1814,155 @@ type Description   = Text
 ------------------------------------------------------------------------------
 -- | Generic `Quantity` type to be used with `Customer`,
 -- `Subscription` and `InvoiceLineItem` API requests
-newtype Quantity = Quantity Int deriving (Show, Eq)
+newtype Quantity = Quantity Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Email` associated with a `Customer`, `Recipient` or `Charge`
-newtype Email = Email Text deriving (Show, Eq)
+newtype Email = Email Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
--- | Stripe supports 138 currencies 
+-- | Stripe supports 138 currencies
 data Currency =
-    AED -- ^  United Arab Emirates Dirham 
-  | AFN -- ^  Afghan Afghani  
-  | ALL -- ^  Albanian Lek 
-  | AMD -- ^  Armenian Dram 
-  | ANG -- ^  Netherlands Antillean Gulden 
-  | AOA -- ^  Angolan Kwanza  
-  | ARS -- ^  Argentine Peso  
-  | AUD -- ^  Australian Dollar 
-  | AWG -- ^  Aruban Florin 
-  | AZN -- ^  Azerbaijani Manat 
-  | BAM -- ^  Bosnia & Herzegovina Convertible Mark 
-  | BBD -- ^  Barbadian Dollar 
-  | BDT -- ^  Bangladeshi Taka 
-  | BGN -- ^  Bulgarian Lev 
-  | BIF -- ^  Burundian Franc 
-  | BMD -- ^  Bermudian Dollar 
-  | BND -- ^  Brunei Dollar 
+    AED -- ^  United Arab Emirates Dirham
+  | AFN -- ^  Afghan Afghani
+  | ALL -- ^  Albanian Lek
+  | AMD -- ^  Armenian Dram
+  | ANG -- ^  Netherlands Antillean Gulden
+  | AOA -- ^  Angolan Kwanza
+  | ARS -- ^  Argentine Peso
+  | AUD -- ^  Australian Dollar
+  | AWG -- ^  Aruban Florin
+  | AZN -- ^  Azerbaijani Manat
+  | BAM -- ^  Bosnia & Herzegovina Convertible Mark
+  | BBD -- ^  Barbadian Dollar
+  | BDT -- ^  Bangladeshi Taka
+  | BGN -- ^  Bulgarian Lev
+  | BIF -- ^  Burundian Franc
+  | BMD -- ^  Bermudian Dollar
+  | BND -- ^  Brunei Dollar
   | BOB -- ^  Bolivian Boliviano
   | BRL -- ^  Brazilian Real
-  | BSD -- ^  Bahamian Dollar 
-  | BWP -- ^  Botswana Pula 
-  | BZD -- ^  Belize Dollar 
-  | CAD -- ^  Canadian Dollar 
-  | CDF -- ^  Congolese Franc 
-  | CHF -- ^  Swiss Franc 
-  | CLP -- ^  Chilean Peso  
-  | CNY -- ^  Chinese Renminbi Yuan 
-  | COP -- ^  Colombian Peso  
-  | CRC -- ^  Costa Rican Colón 
+  | BSD -- ^  Bahamian Dollar
+  | BWP -- ^  Botswana Pula
+  | BZD -- ^  Belize Dollar
+  | CAD -- ^  Canadian Dollar
+  | CDF -- ^  Congolese Franc
+  | CHF -- ^  Swiss Franc
+  | CLP -- ^  Chilean Peso
+  | CNY -- ^  Chinese Renminbi Yuan
+  | COP -- ^  Colombian Peso
+  | CRC -- ^  Costa Rican Colón
   | CVE -- ^  Cape Verdean Escudo
-  | CZK -- ^  Czech Koruna  
-  | DJF -- ^  Djiboutian Franc 
-  | DKK -- ^  Danish Krone 
-  | DOP -- ^  Dominican Peso 
-  | DZD -- ^  Algerian Dinar 
-  | EEK -- ^  Estonian Kroon  
-  | EGP -- ^  Egyptian Pound 
-  | ETB -- ^  Ethiopian Birr 
-  | EUR -- ^  Euro 
-  | FJD -- ^  Fijian Dollar 
+  | CZK -- ^  Czech Koruna
+  | DJF -- ^  Djiboutian Franc
+  | DKK -- ^  Danish Krone
+  | DOP -- ^  Dominican Peso
+  | DZD -- ^  Algerian Dinar
+  | EEK -- ^  Estonian Kroon
+  | EGP -- ^  Egyptian Pound
+  | ETB -- ^  Ethiopian Birr
+  | EUR -- ^  Euro
+  | FJD -- ^  Fijian Dollar
   | FKP -- ^  Falkland Islands Pound
-  | GBP -- ^  British Pound 
-  | GEL -- ^  Georgian Lari 
-  | GIP -- ^  Gibraltar Pound 
-  | GMD -- ^  Gambian Dalasi 
-  | GNF -- ^  Guinean Franc   
-  | GTQ -- ^  Guatemalan Quetzal 
-  | GYD -- ^  Guyanese Dollar 
-  | HKD -- ^  Hong Kong Dollar 
-  | HNL -- ^  Honduran Lempira   
-  | HRK -- ^  Croatian Kuna 
-  | HTG -- ^  Haitian Gourde 
-  | HUF -- ^  Hungarian Forint   
-  | IDR -- ^  Indonesian Rupiah 
-  | ILS -- ^  Israeli New Sheqel 
-  | INR -- ^  Indian Rupee  
-  | ISK -- ^  Icelandic Króna 
-  | JMD -- ^  Jamaican Dollar 
-  | JPY -- ^  Japanese Yen 
-  | KES -- ^  Kenyan Shilling 
-  | KGS -- ^  Kyrgyzstani Som 
-  | KHR -- ^  Cambodian Riel 
-  | KMF -- ^  Comorian Franc 
-  | KRW -- ^  South Korean Won 
-  | KYD -- ^  Cayman Islands Dollar 
-  | KZT -- ^  Kazakhstani Tenge 
-  | LAK -- ^  Lao Kip  
-  | LBP -- ^  Lebanese Pound 
-  | LKR -- ^  Sri Lankan Rupee 
-  | LRD -- ^  Liberian Dollar 
-  | LSL -- ^  Lesotho Loti 
-  | LTL -- ^  Lithuanian Litas 
-  | LVL -- ^  Latvian Lats 
-  | MAD -- ^  Moroccan Dirham 
-  | MDL -- ^  Moldovan Leu 
-  | MGA -- ^  Malagasy Ariary 
-  | MKD -- ^  Macedonian Denar 
-  | MNT -- ^  Mongolian Tögrög 
-  | MOP -- ^  Macanese Pataca 
-  | MRO -- ^  Mauritanian Ouguiya 
-  | MUR -- ^  Mauritian Rupee   
-  | MVR -- ^  Maldivian Rufiyaa 
-  | MWK -- ^  Malawian Kwacha 
-  | MXN -- ^  Mexican Peso   
-  | MYR -- ^  Malaysian Ringgit 
-  | MZN -- ^  Mozambican Metical 
-  | NAD -- ^  Namibian Dollar 
-  | NGN -- ^  Nigerian Naira 
-  | NIO -- ^  Nicaraguan Córdoba   
-  | NOK -- ^  Norwegian Krone 
-  | NPR -- ^  Nepalese Rupee 
-  | NZD -- ^  New Zealand Dollar 
-  | PAB -- ^  Panamanian Balboa   
-  | PEN -- ^  Peruvian Nuevo Sol   
-  | PGK -- ^  Papua New Guinean Kina 
-  | PHP -- ^  Philippine Peso 
-  | PKR -- ^  Pakistani Rupee 
-  | PLN -- ^  Polish Złoty 
-  | PYG -- ^  Paraguayan Guaraní   
-  | QAR -- ^  Qatari Riyal 
-  | RON -- ^  Romanian Leu 
-  | RSD -- ^  Serbian Dinar 
-  | RUB -- ^  Russian Ruble 
-  | RWF -- ^  Rwandan Franc 
-  | SAR -- ^  Saudi Riyal 
-  | SBD -- ^  Solomon Islands Dollar 
-  | SCR -- ^  Seychellois Rupee 
-  | SEK -- ^  Swedish Krona 
-  | SGD -- ^  Singapore Dollar 
-  | SHP -- ^  Saint Helenian Pound   
-  | SLL -- ^  Sierra Leonean Leone 
-  | SOS -- ^  Somali Shilling 
-  | SRD -- ^  Surinamese Dollar   
-  | STD -- ^  São Tomé and Príncipe Dobra 
-  | SVC -- ^  Salvadoran Colón   
-  | SZL -- ^  Swazi Lilangeni 
-  | THB -- ^  Thai Baht 
-  | TJS -- ^  Tajikistani Somoni 
-  | TOP -- ^  Tongan Paʻanga 
-  | TRY -- ^  Turkish Lira 
-  | TTD -- ^  Trinidad and Tobago Dollar 
-  | TWD -- ^  New Taiwan Dollar 
-  | TZS -- ^  Tanzanian Shilling 
-  | UAH -- ^  Ukrainian Hryvnia 
-  | UGX -- ^  Ugandan Shilling 
-  | USD -- ^  United States Dollar 
-  | UYU -- ^  Uruguayan Peso  
-  | UZS -- ^  Uzbekistani Som 
-  | VND -- ^  Vietnamese Đồng 
-  | VUV -- ^  Vanuatu Vatu 
-  | WST -- ^  Samoan Tala 
-  | XAF -- ^  Central African Cfa Franc 
-  | XCD -- ^  East Caribbean Dollar 
-  | XOF -- ^  West African Cfa Franc  
-  | XPF -- ^  Cfp Franc   
-  | YER -- ^  Yemeni Rial 
-  | ZAR -- ^  South African Rand 
-  | ZMW -- ^  Zambian Kwacha 
+  | GBP -- ^  British Pound
+  | GEL -- ^  Georgian Lari
+  | GIP -- ^  Gibraltar Pound
+  | GMD -- ^  Gambian Dalasi
+  | GNF -- ^  Guinean Franc
+  | GTQ -- ^  Guatemalan Quetzal
+  | GYD -- ^  Guyanese Dollar
+  | HKD -- ^  Hong Kong Dollar
+  | HNL -- ^  Honduran Lempira
+  | HRK -- ^  Croatian Kuna
+  | HTG -- ^  Haitian Gourde
+  | HUF -- ^  Hungarian Forint
+  | IDR -- ^  Indonesian Rupiah
+  | ILS -- ^  Israeli New Sheqel
+  | INR -- ^  Indian Rupee
+  | ISK -- ^  Icelandic Króna
+  | JMD -- ^  Jamaican Dollar
+  | JPY -- ^  Japanese Yen
+  | KES -- ^  Kenyan Shilling
+  | KGS -- ^  Kyrgyzstani Som
+  | KHR -- ^  Cambodian Riel
+  | KMF -- ^  Comorian Franc
+  | KRW -- ^  South Korean Won
+  | KYD -- ^  Cayman Islands Dollar
+  | KZT -- ^  Kazakhstani Tenge
+  | LAK -- ^  Lao Kip
+  | LBP -- ^  Lebanese Pound
+  | LKR -- ^  Sri Lankan Rupee
+  | LRD -- ^  Liberian Dollar
+  | LSL -- ^  Lesotho Loti
+  | LTL -- ^  Lithuanian Litas
+  | LVL -- ^  Latvian Lats
+  | MAD -- ^  Moroccan Dirham
+  | MDL -- ^  Moldovan Leu
+  | MGA -- ^  Malagasy Ariary
+  | MKD -- ^  Macedonian Denar
+  | MNT -- ^  Mongolian Tögrög
+  | MOP -- ^  Macanese Pataca
+  | MRO -- ^  Mauritanian Ouguiya
+  | MUR -- ^  Mauritian Rupee
+  | MVR -- ^  Maldivian Rufiyaa
+  | MWK -- ^  Malawian Kwacha
+  | MXN -- ^  Mexican Peso
+  | MYR -- ^  Malaysian Ringgit
+  | MZN -- ^  Mozambican Metical
+  | NAD -- ^  Namibian Dollar
+  | NGN -- ^  Nigerian Naira
+  | NIO -- ^  Nicaraguan Córdoba
+  | NOK -- ^  Norwegian Krone
+  | NPR -- ^  Nepalese Rupee
+  | NZD -- ^  New Zealand Dollar
+  | PAB -- ^  Panamanian Balboa
+  | PEN -- ^  Peruvian Nuevo Sol
+  | PGK -- ^  Papua New Guinean Kina
+  | PHP -- ^  Philippine Peso
+  | PKR -- ^  Pakistani Rupee
+  | PLN -- ^  Polish Złoty
+  | PYG -- ^  Paraguayan Guaraní
+  | QAR -- ^  Qatari Riyal
+  | RON -- ^  Romanian Leu
+  | RSD -- ^  Serbian Dinar
+  | RUB -- ^  Russian Ruble
+  | RWF -- ^  Rwandan Franc
+  | SAR -- ^  Saudi Riyal
+  | SBD -- ^  Solomon Islands Dollar
+  | SCR -- ^  Seychellois Rupee
+  | SEK -- ^  Swedish Krona
+  | SGD -- ^  Singapore Dollar
+  | SHP -- ^  Saint Helenian Pound
+  | SLL -- ^  Sierra Leonean Leone
+  | SOS -- ^  Somali Shilling
+  | SRD -- ^  Surinamese Dollar
+  | STD -- ^  São Tomé and Príncipe Dobra
+  | SVC -- ^  Salvadoran Colón
+  | SZL -- ^  Swazi Lilangeni
+  | THB -- ^  Thai Baht
+  | TJS -- ^  Tajikistani Somoni
+  | TOP -- ^  Tongan Paʻanga
+  | TRY -- ^  Turkish Lira
+  | TTD -- ^  Trinidad and Tobago Dollar
+  | TWD -- ^  New Taiwan Dollar
+  | TZS -- ^  Tanzanian Shilling
+  | UAH -- ^  Ukrainian Hryvnia
+  | UGX -- ^  Ugandan Shilling
+  | USD -- ^  United States Dollar
+  | UYU -- ^  Uruguayan Peso
+  | UZS -- ^  Uzbekistani Som
+  | VND -- ^  Vietnamese Đồng
+  | VUV -- ^  Vanuatu Vatu
+  | WST -- ^  Samoan Tala
+  | XAF -- ^  Central African Cfa Franc
+  | XCD -- ^  East Caribbean Dollar
+  | XOF -- ^  West African Cfa Franc
+  | XPF -- ^  Cfp Franc
+  | YER -- ^  Yemeni Rial
+  | ZAR -- ^  South African Rand
+  | ZMW -- ^  Zambian Kwacha
   | UnknownCurrency -- ^  Unknown Currency
-    deriving (Show, Eq)
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Currency` JSON instances
