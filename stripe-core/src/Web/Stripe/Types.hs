@@ -1,6 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE StandaloneDeriving  #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 -- |
 -- Module      : Web.Stripe.Types
 -- Copyright   : (c) David Johnson, 2014
@@ -23,17 +27,46 @@ import qualified Text.Read           as R
 import           Web.Stripe.Util     (fromSeconds)
 
 ------------------------------------------------------------------------------
+-- | `Expandable` values
+
+type family Expand id :: *
+
+data Expandable id
+  = Id id
+  | Expanded (Expand id)
+    deriving (Typeable)
+deriving instance (Data id, Data (Expand id)) => Data (Expandable id)
+deriving instance (Show id, Show (Expand id)) => Show (Expandable id)
+deriving instance (Read id, Read (Expand id)) => Read (Expandable id)
+deriving instance (Eq   id, Eq   (Expand id)) => Eq   (Expandable id)
+deriving instance (Ord  id, Ord  (Expand id)) => Ord  (Expandable id)
+
+type instance Expand AccountId       = Account
+type instance Expand CardId          = Card
+type instance Expand ChargeId        = Charge
+type instance Expand CustomerId      = Customer
+type instance Expand InvoiceId       = Invoice
+type instance Expand InvoiceItemId   = InvoiceItem
+type instance Expand RecipientId     = Recipient
+type instance Expand RecipientCardId = RecipientCard
+type instance Expand TransactionId   = BalanceTransaction
+
+------------------------------------------------------------------------------
+-- | JSON Instance for `Expandable`
+instance (FromJSON id,  FromJSON (Expand id)) =>
+         FromJSON (Expandable id) where
+  parseJSON v = (Id <$> parseJSON v) <|> (Expanded <$> parseJSON v)
+
+------------------------------------------------------------------------------
 -- | `ChargeId` associated with a `Charge`
-data ChargeId
+newtype ChargeId
   = ChargeId Text
-  | ExpandedCharge Charge
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `ChargeId`
 instance FromJSON ChargeId where
    parseJSON (String x)   = pure $ ChargeId x
-   parseJSON o@(Object _) = ExpandedCharge <$> parseJSON o
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -55,12 +88,12 @@ data Charge = Charge {
     , chargeCreditCard           :: Card
     , chargeCaptured             :: Bool
     , chargeRefunds              :: StripeList Refund
-    , chargeBalanceTransaction   :: Maybe TransactionId
+    , chargeBalanceTransaction   :: Maybe (Expandable TransactionId)
     , chargeFailureMessage       :: Maybe Text
     , chargeFailureCode          :: Maybe Text
     , chargeAmountRefunded       :: Int
-    , chargeCustomerId           :: Maybe CustomerId
-    , chargeInvoice              :: Maybe InvoiceId
+    , chargeCustomerId           :: Maybe (Expandable CustomerId)
+    , chargeInvoice              :: Maybe (Expandable InvoiceId)
     , chargeDescription          :: Maybe Description
     , chargeDispute              :: Maybe Dispute
     , chargeMetaData             :: MetaData
@@ -84,15 +117,12 @@ instance FromJSON Charge where
                <*> o .: "card"
                <*> o .: "captured"
                <*> o .: "refunds"
-               <*> ((fmap TransactionId <$> o .:? "balance_transaction")
-               <|> (fmap ExpandedTransaction <$> o .:? "balance_transaction"))
+               <*> o .:? "balance_transaction"
                <*> o .:? "failure_message"
                <*> o .:? "failure_code"
                <*> o .: "amount_refunded"
-               <*> ((fmap CustomerId <$> o .:? "customer")
-               <|> (fmap ExpandedCustomer <$> o .:? "customer"))
-               <*> ((fmap InvoiceId <$> o .:? "invoice")
-               <|> (fmap ExpandedInvoice <$> o .:? "invoice"))
+               <*> o .:? "customer"
+               <*> o .:? "invoice"
                <*> o .:? "description"
                <*> o .:? "dispute"
                <*> (H.toList <$> o .: "metadata")
@@ -119,7 +149,7 @@ data Refund = Refund {
     , refundCreated            :: UTCTime
     , refundObject             :: Text
     , refundCharge             :: ChargeId
-    , refundBalanceTransaction :: TransactionId
+    , refundBalanceTransaction :: Expandable TransactionId
     , refundMetaData           :: MetaData
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
@@ -132,24 +162,21 @@ instance FromJSON Refund where
                <*> o .: "currency"
                <*> (fromSeconds <$> o .: "created")
                <*> o .: "object"
-               <*> (ChargeId <$> o .: "charge")
-               <*> ((TransactionId <$> o .: "balance_transaction")
-               <|> (ExpandedTransaction <$> o .: "balance_transaction"))
+               <*> o .: "charge"
+               <*> o .: "balance_transaction"
                <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | `CustomerId` for a `Customer`
-data CustomerId =
-  CustomerId Text |
-  ExpandedCustomer Customer
+newtype CustomerId
+  = CustomerId Text
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `CustomerId`
 instance FromJSON CustomerId where
     parseJSON (String x)   = pure (CustomerId x)
-    parseJSON v@(Object _) = ExpandedCustomer <$> parseJSON v
     parseJSON _            = mzero
 
 ------------------------------------------------------------------------------
@@ -167,7 +194,7 @@ data Customer = Customer {
     , customerAccountBalance :: Int
     , customerCards          :: StripeList Card
     , customerCurrency       :: Maybe Currency
-    , customerDefaultCard    :: Maybe CardId
+    , customerDefaultCard    :: Maybe (Expandable CardId)
     , customerMetaData       :: MetaData
     } | DeletedCustomer {
       deletedCustomer   :: Maybe Bool
@@ -191,8 +218,7 @@ instance FromJSON Customer where
            <*> o .: "account_balance"
            <*> o .: "cards"
            <*> o .:? "currency"
-           <*> ((fmap CardId <$> o .:? "default_card")
-           <|> (fmap ExpandedCard <$> o .:? "default_card"))
+           <*> o .:? "default_card"
            <*> (H.toList <$> o .: "metadata")
            <|> DeletedCustomer
            <$> o .: "deleted"
@@ -208,21 +234,24 @@ type AccountBalance = Int
 
 ------------------------------------------------------------------------------
 -- | CardId for a `Customer`
-data CardId = CardId Text
-            | ExpandedCard Card
+newtype CardId = CardId Text
             deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | CardId for a `Recipient`
-data RecipientCardId = RecipientCardId Text
-                     | ExpandedRecipientCard RecipientCard
+newtype RecipientCardId = RecipientCardId Text
                      deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `CardId`
 instance FromJSON CardId where
-   parseJSON o@(Object _) = ExpandedCard <$> parseJSON o
    parseJSON (String x)   = pure $ CardId x
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | JSON Instance for `RecipientCardId`
+instance FromJSON RecipientCardId where
+   parseJSON (String x)   = pure $ RecipientCardId x
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -309,7 +338,7 @@ data Card = Card {
     , cardCVCCheck          :: Maybe Text
     , cardAddressLine1Check :: Maybe Text
     , cardAddressZipCheck   :: Maybe Text
-    , cardCustomerId        :: Maybe CustomerId
+    , cardCustomerId        :: Maybe (Expandable CustomerId)
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
@@ -333,7 +362,7 @@ data RecipientCard = RecipientCard {
     , recipientCardCVCCheck          :: Maybe Text
     , recipientCardAddressLine1Check :: Maybe Text
     , recipientCardAddressZipCheck   :: Maybe Text
-    , recipientCardRecipientId       :: Maybe RecipientId
+    , recipientCardRecipientId       :: Maybe (Expandable RecipientId)
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
@@ -359,8 +388,7 @@ instance FromJSON Card where
              <*> o .:? "cvc_check"
              <*> o .:? "address_line1_check"
              <*> o .:? "address_zip_check"
-             <*> ((fmap CustomerId <$> o .:? "customer")
-             <|> (fmap ExpandedCustomer <$> o .:? "customer"))
+             <*> o .:? "customer"
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -386,8 +414,7 @@ instance FromJSON RecipientCard where
              <*> o .:? "cvc_check"
              <*> o .:? "address_line1_check"
              <*> o .:? "address_zip_check"
-             <*> ((fmap RecipientId <$> o .:? "recipient")
-             <|> (fmap ExpandedRecipient <$> o .:? "recipient"))
+             <*> o .:? "recipient"
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -404,7 +431,7 @@ data Subscription = Subscription {
     , subscriptionObject                :: Text
     , subscriptionStart                 :: UTCTime
     , subscriptionStatus                :: SubscriptionStatus
-    , subscriptionCustomerId            :: CustomerId
+    , subscriptionCustomerId            :: Expandable CustomerId
     , subscriptionCancelAtPeriodEnd     :: Bool
     , subscriptionCurrentPeriodStart    :: UTCTime
     , subscriptionCurrentPeriodEnd      :: UTCTime
@@ -427,8 +454,7 @@ instance FromJSON Subscription where
                     <*> o .: "object"
                     <*> (fromSeconds <$> o .: "start")
                     <*> o .: "status"
-                    <*> ((CustomerId <$> o .: "customer")
-                    <|> (ExpandedCustomer <$> o .: "customer"))
+                    <*> o .: "customer"
                     <*> o .: "cancel_at_period_end"
                     <*> (fromSeconds <$> o .: "current_period_start")
                     <*> (fromSeconds <$> o .: "current_period_end")
@@ -559,6 +585,7 @@ instance Read Duration where
          "once"      -> return Once
          "repeating" -> return Repeating
          _           -> pfail
+
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Duration`
 instance FromJSON Duration where
@@ -649,7 +676,7 @@ data Discount = Discount {
       discountCoupon       :: Coupon
     , discountStart        :: UTCTime
     , discountEnd          :: Maybe UTCTime
-    , discountCustomer     :: CustomerId
+    , discountCustomer     :: Expandable CustomerId
     , discountObject       :: Text
     , discountSubscription :: Maybe SubscriptionId
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -661,24 +688,21 @@ instance FromJSON Discount where
         Discount <$> o .: "coupon"
                  <*> (fromSeconds <$> o .: "start")
                  <*> (fmap fromSeconds <$> o .:? "end")
-                 <*> ((CustomerId <$> o .: "customer")
-                 <|> (ExpandedCustomer <$> o .: "customer"))
+                 <*> o .: "customer"
                  <*> o .: "object"
                  <*> (fmap SubscriptionId <$> o .:? "subscription")
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | `Invoice` for a `Coupon`
-data InvoiceId =
+newtype InvoiceId =
     InvoiceId Text
-  | ExpandedInvoice Invoice
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `InvoiceId`
 instance FromJSON InvoiceId where
    parseJSON (String x)   = pure $ InvoiceId x
-   parseJSON o@(Object _) = ExpandedInvoice <$> parseJSON o
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -691,7 +715,7 @@ data Invoice = Invoice {
     , invoiceLineItems            :: StripeList InvoiceLineItem
     , invoiceSubTotal             :: Int
     , invoiceTotal                :: Int
-    , invoiceCustomer             :: CustomerId
+    , invoiceCustomer             :: Expandable CustomerId
     , invoiceObject               :: Text
     , invoiceAttempted            :: Bool
     , invoiceClosed               :: Bool
@@ -705,7 +729,7 @@ data Invoice = Invoice {
     , invoiceEndingBalance        :: Maybe Int
     , invoiceNextPaymentAttempt   :: Maybe UTCTime
     , invoiceWebHooksDeliveredAt  :: Maybe UTCTime
-    , invoiceCharge               :: Maybe ChargeId
+    , invoiceCharge               :: Maybe (Expandable ChargeId)
     , invoiceDiscount             :: Maybe Discount
     , invoiceApplicateFee         :: Maybe FeeId
     , invoiceSubscription         :: Maybe SubscriptionId
@@ -725,8 +749,7 @@ instance FromJSON Invoice where
                <*> o .: "lines"
                <*> o .: "subtotal"
                <*> o .: "total"
-               <*> ((CustomerId <$> o .: "customer")
-               <|> (ExpandedCustomer <$> o .: "customer"))
+               <*> o .: "customer"
                <*> o .: "object"
                <*> o .: "attempted"
                <*> o .: "closed"
@@ -740,8 +763,7 @@ instance FromJSON Invoice where
                <*> o .:? "ending_balance"
                <*> (fmap fromSeconds <$> o .:? "next_payment_attempt")
                <*> (fmap fromSeconds <$> o .: "webhooks_delivered_at")
-               <*> ((fmap ChargeId <$> o .:? "charge")
-               <|> (fmap ExpandedCharge <$> o .:? "charge"))
+               <*> o .:? "charge"
                <*> o .:? "discount"
                <*> (fmap FeeId <$> o .:? "application_fee")
                <*> (fmap SubscriptionId <$> o .: "subscription")
@@ -752,9 +774,8 @@ instance FromJSON Invoice where
 
 ------------------------------------------------------------------------------
 -- | `InvoiceItemId` for `InvoiceItem`
-data InvoiceItemId
+newtype InvoiceItemId
     = InvoiceItemId Text
-    | ExpandedInvoiceItem InvoiceItem
       deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
@@ -767,9 +788,9 @@ data InvoiceItem = InvoiceItem {
     , invoiceItemLiveMode     :: Bool
     , invoiceItemProration    :: Bool
     , invoiceItemCurrency     :: Currency
-    , invoiceItemCustomer     :: CustomerId
+    , invoiceItemCustomer     :: Expandable CustomerId
     , invoiceItemDescription  :: Maybe Description
-    , invoiceItemInvoice      :: Maybe InvoiceId
+    , invoiceItemInvoice      :: Maybe (Expandable InvoiceId)
     , invoiceItemQuantity     :: Maybe Quantity
     , invoiceItemSubscription :: Maybe Subscription
     , invoiceItemMetaData     :: MetaData
@@ -786,11 +807,9 @@ instance FromJSON InvoiceItem where
                    <*> o .: "livemode"
                    <*> o .: "proration"
                    <*> o .: "currency"
-                   <*> ((CustomerId <$> o .: "customer")
-                   <|> (ExpandedCustomer <$> o .: "customer"))
+                   <*> o .: "customer"
                    <*> o .:? "description"
-                   <*> ((fmap InvoiceId <$> o .:? "invoice")
-                   <|> (fmap ExpandedInvoice <$> o .:? "invoice"))
+                   <*> o .:? "invoice"
                    <*> (fmap Quantity <$> o .:? "quantity")
                    <*> o .:? "subscription"
                    <*> (H.toList <$> o .: "metadata")
@@ -917,7 +936,7 @@ instance FromJSON DisputeStatus where
 ------------------------------------------------------------------------------
 -- | `Dispute` Object
 data Dispute = Dispute {
-      disputeChargeId            :: ChargeId
+      disputeChargeId            :: Expandable ChargeId
     , disputeAmount              :: Int
     , disputeCreated             :: UTCTime
     , disputeStatus              :: DisputeStatus
@@ -940,8 +959,7 @@ newtype Evidence = Evidence Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 -- | JSON Instance for `Dispute`
 instance FromJSON Dispute where
     parseJSON (Object o) =
-        Dispute <$> ((ChargeId <$> o .: "charge")
-                <|> (ExpandedCharge <$> o .: "charge"))
+        Dispute <$> o .: "charge"
                 <*> o .: "amount"
                 <*> (fromSeconds <$> o .: "created")
                 <*> o .: "status"
@@ -1004,13 +1022,13 @@ data Transfer = Transfer {
      , transferCurrency             :: Currency
      , transferStatus               :: TransferStatus
      , transferType                 :: TransferType
-     , transferBalanceTransaction   :: TransactionId
+     , transferBalanceTransaction   :: Expandable TransactionId
      , transferDescription          :: Maybe Description
      , transferBankAccount          :: Maybe BankAccount
      , transferFailureMessage       :: Maybe Text
      , transferFailureCode          :: Maybe Text
      , transferStatementDescription :: Maybe Description
-     , transferRecipient            :: Maybe RecipientId
+     , transferRecipient            :: Maybe (Expandable RecipientId)
      , transferMetaData             :: MetaData
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
@@ -1027,15 +1045,13 @@ instance FromJSON Transfer where
                     <*> o .: "currency"
                     <*> o .: "status"
                     <*> o .: "type"
-                    <*> ((TransactionId <$> o .: "balance_transaction")
-                    <|> (ExpandedTransaction <$> o .: "balance_transaction"))
+                    <*> o .: "balance_transaction"
                     <*> o .:? "description"
                     <*> o .:? "bank_account"
                     <*> o .:? "failure_message"
                     <*> o .:? "failure_code"
                     <*> o .:? "statement_description"
-                    <*> ((fmap RecipientId <$> o .:? "recipient")
-                    <|> (fmap ExpandedRecipient <$> o .:? "recipient"))
+                    <*> o .:? "recipient"
                     <*> (H.toList <$> o .: "metadata")
     parseJSON _ = mzero
 
@@ -1118,16 +1134,14 @@ type MiddleInitial = Char
 
 ------------------------------------------------------------------------------
 -- | `RecipientId` for a `Recipient`
-data RecipientId =
+newtype RecipientId =
       RecipientId Text
-    | ExpandedRecipient Recipient
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `RecipientId`
 instance FromJSON RecipientId where
    parseJSON (String x)   = pure $ RecipientId x
-   parseJSON o@(Object _) = ExpandedRecipient <$> parseJSON o
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1177,7 +1191,7 @@ data Recipient = Recipient {
     , recipientVerified      :: Bool
     , recipientActiveAccount :: Maybe BankAccount
     , recipientCards         :: StripeList RecipientCard
-    , recipientDefaultCard   :: Maybe RecipientCardId
+    , recipientDefaultCard   :: Maybe (Expandable RecipientCardId)
  } | DeletedRecipient {
     deletedRecipient   :: Maybe Bool
   , deletedRecipientId :: RecipientId
@@ -1198,9 +1212,9 @@ instance FromJSON Recipient where
                  <*> o .: "verified"
                  <*> o .:? "active_account"
                  <*> o .: "cards"
-                 <*> ((fmap RecipientCardId <$> o .:? "default_card")
-                 <|> (fmap ExpandedRecipientCard <$> o .:? "default_card")))
-                 <|> DeletedRecipient
+                 <*> o .:? "default_card"
+      )
+      <|> DeletedRecipient
                  <$> o .:? "deleted"
                  <*> (RecipientId <$> o .: "id")
 
@@ -1218,10 +1232,10 @@ data ApplicationFee = ApplicationFee {
     , applicationFeeRefunded           :: Bool
     , applicationFeeAmountRefunded     :: Int
     , applicationFeeRefunds            :: StripeList Refund
-    , applicationFeeBalanceTransaction :: TransactionId
-    , applicationFeeAccountId          :: AccountId
+    , applicationFeeBalanceTransaction :: Expandable TransactionId
+    , applicationFeeAccountId          :: Expandable AccountId
     , applicationFeeApplicationId      :: ApplicationId
-    , applicationFeeChargeId           :: ChargeId
+    , applicationFeeChargeId           :: Expandable ChargeId
     , applicationFeeMetaData           :: MetaData
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
@@ -1243,13 +1257,10 @@ instance FromJSON ApplicationFee where
                       <*> o .: "refunded"
                       <*> o .: "amount_refunded"
                       <*> o .: "refunds"
-                      <*> ((TransactionId <$> o .: "balance_transaction")
-                      <|> (ExpandedTransaction <$> o .: "balance_transaction"))
-                      <*> ((AccountId <$> o .: "account")
-                      <|> (ExpandedAccount <$> o .: "account"))
+                      <*> o .: "balance_transaction"
+                      <*> o .: "account"
                       <*> (ApplicationId <$> o .: "application")
-                      <*> ((ChargeId <$> o .: "charge")
-                      <|> (ExpandedCharge <$> o .: "charge"))
+                      <*> o .: "charge"
                       <*> (H.toList <$> o .: "metadata")
    parseJSON _ = mzero
 
@@ -1267,7 +1278,7 @@ data ApplicationFeeRefund = ApplicationFeeRefund {
      , applicationFeeRefundCurrency           :: Currency
      , applicationFeeRefundCreated            :: UTCTime
      , applicationFeeRefundObject             :: Text
-     , applicationFeeRefundBalanceTransaction :: Maybe TransactionId
+     , applicationFeeRefundBalanceTransaction :: Maybe (Expandable TransactionId)
      , applicationFeeRefundFee                :: FeeId
      , applicationFeeRefundMetaData           :: MetaData
      } deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -1281,23 +1292,20 @@ instance FromJSON ApplicationFeeRefund where
               <*> o .: "currency"
               <*> (fromSeconds <$> o .: "created")
               <*> o .: "object"
-              <*> ((fmap TransactionId <$> o .:? "balance_transaction")
-              <|> (fmap ExpandedTransaction <$> o .:? "balance_transaction"))
+              <*> o .:? "balance_transaction"
               <*> (FeeId <$> o .: "fee")
               <*> (H.toList <$> o .: "metadata")
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | `AccountId` of an `Account`
-data AccountId
+newtype AccountId
   = AccountId Text
-  | ExpandedAccount Account
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `AccountId`
 instance FromJSON AccountId where
-   parseJSON o@(Object _) = ExpandedAccount <$> parseJSON o
    parseJSON (String aid) = pure $ AccountId aid
    parseJSON _ = mzero
 
@@ -1392,7 +1400,7 @@ data BalanceTransaction = BalanceTransaction {
     , balanceTransactionStatus         :: Text
     , balanceTransactionFee            :: Int
     , balanceTransactionFeeDetails     :: [FeeDetails]
-    , balanceTransactionFeeSource      :: ChargeId
+    , balanceTransactionFeeSource      :: Expandable ChargeId
     , balanceTransactionFeeDescription :: Maybe Description
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
@@ -1411,22 +1419,19 @@ instance FromJSON BalanceTransaction where
                           <*> o .: "status"
                           <*> o .: "fee"
                           <*> o .: "fee_details"
-                          <*> ((ChargeId <$> o .: "source")
-                          <|> (ExpandedCharge <$> o .: "source"))
+                          <*> o .: "source"
                           <*> o .:? "description"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | `TransactionId` of a `Transaction`
-data TransactionId = TransactionId Text
-                   | ExpandedTransaction BalanceTransaction
+newtype TransactionId = TransactionId Text
                    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `TransactionId`
 instance FromJSON TransactionId where
     parseJSON (String x)   = pure (TransactionId x)
-    parseJSON v@(Object _) = ExpandedTransaction <$> parseJSON v
     parseJSON _            = mzero
 
 ------------------------------------------------------------------------------
@@ -2106,3 +2111,4 @@ instance FromJSON Currency where
    parseJSON (String "zar") = pure ZAR
    parseJSON (String "zmw") = pure ZMW
    parseJSON _ = pure UnknownCurrency
+
