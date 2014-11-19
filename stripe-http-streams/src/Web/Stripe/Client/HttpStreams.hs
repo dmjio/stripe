@@ -75,10 +75,11 @@ m2m POST   = C.POST
 m2m DELETE = C.DELETE
 
 ------------------------------------------------------------------------------
--- | Issue an API Request
+-- | Create a request to `Stripe`'s API over an existing connection
 --
+-- see also: 'withConnection'
 callAPI
-  :: Connection                        -- ^ an open connection to the server (`withConnection`)
+    :: Connection                      -- ^ an open connection to the server (`withConnection`)
     -> StripeConfig                    -- ^ StripeConfig
     -> StripeRequest a                 -- ^ StripeRequest
     -> IO (Either StripeError a)
