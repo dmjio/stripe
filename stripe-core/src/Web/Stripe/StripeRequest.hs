@@ -32,7 +32,7 @@ import           Data.Text          (Text)
 import qualified Data.Text.Encoding as Text
 import           Numeric            (showFFloat)
 import           Web.Stripe.Error   (StripeError(..))
-import           Web.Stripe.Types   (AccountBalance(..), AddressCity(..), AddressCountry(..), AddressLine1(..), AddressLine2(..), AddressState(..), AddressZip(..), Amount(..), ApplicationFeeAmount(..), ApplicationFeePercent(..), AtPeriodEnd(..), Card(..), CardId(..), CardNumber(..), Capture(..), ChargeId(..), CouponId(..), Created(..), Currency(..), CustomerId(..), CVC(..), Description(..), Email(..), EndingBefore(..), ExpMonth(..), ExpYear(..), Interval(..), IntervalCount(..), MetaData(..), PlanId(..), PlanName(..), Prorate(..), Limit(..), Name(..), Quantity(..), ReceiptEmail(..), RefundId(..), RefundApplicationFee(..), RefundReason(..), StartingAfter(..), StatementDescription(..), SubscriptionId(..), TokenId(..), TrialEnd(..), TrialPeriodDays(..))
+import           Web.Stripe.Types   (AccountBalance(..), AddressCity(..), AddressCountry(..), AddressLine1(..), AddressLine2(..), AddressState(..), AddressZip(..), Amount(..), AmountOff(..), ApplicationFeeAmount(..), ApplicationFeePercent(..), AtPeriodEnd(..), Card(..), CardId(..), CardNumber(..), Capture(..), ChargeId(..), CouponId(..), Created(..), Currency(..), CustomerId(..), CVC(..), Description(..), Duration(..), DurationInMonths(..), Email(..), EndingBefore(..), Evidence(..), ExpMonth(..), ExpYear(..), Interval(..), IntervalCount(..), InvoiceId(..), InvoiceItemId(..), MetaData(..), PlanId(..), PlanName(..), Prorate(..), Limit(..), MaxRedemptions(..), Name(..), PercentOff(..), Quantity(..), ReceiptEmail(..), RedeemBy(..), RefundId(..), RefundApplicationFee(..), RefundReason(..), StartingAfter(..), StatementDescription(..), SubscriptionId(..), TokenId(..), TrialEnd(..), TrialPeriodDays(..))
 import           Web.Stripe.Util    (toBytestring, toMetaData, toSeconds)
 
 ------------------------------------------------------------------------------
@@ -72,6 +72,10 @@ class ToStripeParam param where
 instance ToStripeParam Amount where
   toStripeParam (Amount i) =
     (("amount", toBytestring i) :)
+
+instance ToStripeParam AmountOff where
+  toStripeParam (AmountOff i) =
+    (("amount_off", toBytestring i) :)
 
 instance ToStripeParam AccountBalance where
   toStripeParam (AccountBalance i) =
@@ -156,9 +160,21 @@ instance ToStripeParam Description where
   toStripeParam (Description txt) =
     (("description", Text.encodeUtf8 txt) :)
 
+instance ToStripeParam Duration where
+  toStripeParam duration =
+    (("duration", toBytestring duration) :)
+
+instance ToStripeParam DurationInMonths where
+  toStripeParam (DurationInMonths i) =
+    (("duration_in_months", toBytestring i) :)
+
 instance ToStripeParam Email where
   toStripeParam (Email txt) =
     (("email", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam Evidence where
+  toStripeParam (Evidence txt) =
+    (("evidence", Text.encodeUtf8 txt) :)
 
 instance ToStripeParam ExpMonth where
   toStripeParam (ExpMonth m) =
@@ -176,9 +192,21 @@ instance ToStripeParam IntervalCount where
   toStripeParam (IntervalCount c) =
     (("interval_count", toBytestring c) :)
 
+instance ToStripeParam InvoiceId where
+  toStripeParam (InvoiceId txt) =
+    (("invoice", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam InvoiceItemId where
+  toStripeParam (InvoiceItemId txt) =
+    (("id", Text.encodeUtf8 txt) :)
+
 instance ToStripeParam Limit where
   toStripeParam (Limit i) =
     (("limit", toBytestring i) :)
+
+instance ToStripeParam MaxRedemptions where
+  toStripeParam (MaxRedemptions i) =
+    (("max_redemptions", toBytestring i) :)
 
 instance ToStripeParam Name where
   toStripeParam (Name txt) =
@@ -187,6 +215,10 @@ instance ToStripeParam Name where
 instance ToStripeParam (Param Text Text) where
   toStripeParam (Param (k,v)) =
     ((Text.encodeUtf8 k, Text.encodeUtf8 v) :)
+
+instance ToStripeParam PercentOff where
+  toStripeParam (PercentOff i) =
+    (("percent_off", toBytestring i) :)
 
 instance ToStripeParam PlanId where
   toStripeParam (PlanId pid) =
@@ -203,6 +235,10 @@ instance ToStripeParam Prorate where
 instance ToStripeParam Quantity where
   toStripeParam (Quantity i) =
     (("quantity", toBytestring i) :)
+
+instance ToStripeParam RedeemBy where
+  toStripeParam (RedeemBy time) =
+    (("redeem_by", toBytestring $ toSeconds time) :)
 
 instance ToStripeParam RefundId where
   toStripeParam (RefundId fid) =

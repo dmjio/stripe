@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Discount
@@ -24,7 +27,9 @@
 -- @
 module Web.Stripe.Discount
     ( -- * API
-      deleteCustomerDiscount
+      DeleteCustomerDiscount
+    , deleteCustomerDiscount
+    , DeleteSubscriptionDiscount
     , deleteSubscriptionDiscount
       -- * Types
     , StripeDeleteResult (..)
@@ -33,7 +38,7 @@ module Web.Stripe.Discount
     , Discount           (..)
     ) where
 
-import           Web.Stripe.StripeRequest   (Method (DELETE),
+import           Web.Stripe.StripeRequest   (Method (DELETE), StripeReturn,
                                             StripeRequest (..), mkStripeRequest)
 import           Web.Stripe.Util    ((</>))
 import           Web.Stripe.Types           (CustomerId (..), Discount(..),
@@ -43,9 +48,11 @@ import           Web.Stripe.Types.Util      (getCustomerId)
 
 ------------------------------------------------------------------------------
 -- | Delete `Customer` `Discount` by `CustomerId`
+data DeleteCustomerDiscount
+type instance StripeReturn DeleteCustomerDiscount = StripeDeleteResult
 deleteCustomerDiscount
     :: CustomerId -- ^ The `Customer` upon which to remove the `Discount`
-    -> StripeRequest StripeDeleteResult
+    -> StripeRequest DeleteCustomerDiscount
 deleteCustomerDiscount
     customerId = request
   where request = mkStripeRequest DELETE url params
@@ -54,10 +61,12 @@ deleteCustomerDiscount
 
 ------------------------------------------------------------------------------
 -- | Delete `Subscription` `Discount` by `CustomerId` and `SubscriptionId`
+data DeleteSubscriptionDiscount
+type instance StripeReturn DeleteSubscriptionDiscount = StripeDeleteResult
 deleteSubscriptionDiscount
   :: CustomerId     -- ^ The `Customer` to remove the `Discount` from
   -> SubscriptionId -- ^ The `Subscription` to remove the `Discount` from
-  -> StripeRequest StripeDeleteResult
+  -> StripeRequest DeleteSubscriptionDiscount
 deleteSubscriptionDiscount
     customerId
     (SubscriptionId subId) = request

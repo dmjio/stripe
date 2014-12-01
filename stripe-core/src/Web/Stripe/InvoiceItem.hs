@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.InvoiceItem
@@ -26,120 +29,79 @@
 -- @
 module Web.Stripe.InvoiceItem
     ( -- * API
-      createInvoiceItem
+      CreateInvoiceItem
+    , createInvoiceItem
+    , GetInvoiceItem
     , getInvoiceItem
     , getInvoiceItemExpandable
+    , UpdateInvoiceItem
+    , updateInvoiceItem
+    , DeleteInvoiceItem
+    , deleteInvoiceItem
+    , GetInvoiceItems
     , getInvoiceItems
     , getInvoiceItemsExpandable
-    , updateInvoiceItem
-    , deleteInvoiceItem
       -- * Types
     , InvoiceItemId      (..)
     , InvoiceItem        (..)
+    , Created            (..)
     , CustomerId         (..)
     , Currency           (..)
+    , EndingBefore       (..)
     , InvoiceId          (..)
     , Invoice            (..)
+    , Limit              (..)
     , SubscriptionId     (..)
+    , StartingAfter      (..)
     , StripeDeleteResult (..)
     , StripeList         (..)
-    , Description
-    , Amount
+    , Description        (..)
+    , Amount             (..)
     ) where
-
-import           Web.Stripe.StripeRequest   (Method (GET, POST, DELETE),
-                                            StripeRequest(..), mkStripeRequest)
-import           Web.Stripe.Util    ( toMetaData, toExpandable,
-                                             getParams, toText, (</>), toTextLower)
-import           Web.Stripe.Types           (Amount, Currency (..), StripeList(..),
-                                             CustomerId (..), Description,
-                                             InvoiceId (..), InvoiceItem (..), Invoice(..),
-                                             InvoiceItemId (..), Limit, StartingAfter, EndingBefore,
-                                             StripeDeleteResult (..), ExpandParams,
-                                             SubscriptionId (..), MetaData)
-import           Web.Stripe.Types.Util
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
+import           Web.Stripe.Util          ((</>), toExpandable)
+import           Web.Stripe.Types         (Amount, Created(..), Currency (..),
+                                           CustomerId (..), Description,
+                                           InvoiceId (..), InvoiceItem (..), Invoice(..),
+                                           InvoiceItemId (..), Limit(..), StartingAfter(..), EndingBefore(..),
+                                           StripeDeleteResult (..), ExpandParams,
+                                           SubscriptionId (..), StripeList(..), MetaData(..))
+import           Web.Stripe.Types.Util    (getInvoiceItemId)
 
 ------------------------------------------------------------------------------
 -- | Create an invoice for a Customer
+data CreateInvoiceItem
+type instance StripeReturn CreateInvoiceItem = InvoiceItem
+instance StripeHasParam CreateInvoiceItem InvoiceId
+instance StripeHasParam CreateInvoiceItem SubscriptionId
+instance StripeHasParam CreateInvoiceItem Description
+instance StripeHasParam CreateInvoiceItem MetaData
 createInvoiceItem
     :: CustomerId            -- ^ `CustomerId` of `Customer` on which to create an `InvoiceItem`
     -> Amount                -- ^ `Amount` associated with `InvoiceItem`
     -> Currency              -- ^ `Currency` to use for `InvoiceItem`
-    -> Maybe InvoiceId       -- ^ `InvoiceId` to use for `InvoiceItem`
-    -> Maybe SubscriptionId  -- ^ `SubscriptionId` to use for `InvoiceItem`
-    -> Maybe Description     -- ^ `Description` to use for `InvoiceItem`
-    -> MetaData              -- ^ `MetaData` to use for `InvoiceItem`
-    -> StripeRequest InvoiceItem
+    -> StripeRequest CreateInvoiceItem
 createInvoiceItem
     customerid
     amount
-    currency
-    invoiceid
-    subscriptionId
-    description
-    metadata    = request
+    currency    = request
   where request = mkStripeRequest POST url params
         url     = "invoiceitems"
-        params  = toMetaData metadata ++ getParams [
-                    ("customer", Just $ getCustomerId customerid)
-                  , ("amount", toText `fmap` Just amount)
-                  , ("currency", toTextLower `fmap` Just currency)
-                  , ("invoice", (\(InvoiceId x) -> x) `fmap` invoiceid)
-                  , ("subscription", (\(SubscriptionId x) -> x) `fmap` subscriptionId)
-                  , ("description", description)
-                  ]
+        params  = toStripeParam customerid $
+                  toStripeParam amount     $
+                  toStripeParam currency   $
+                  []
 
 ------------------------------------------------------------------------------
 -- | Retrieve an `InvoiceItem` by `InvoiceItemId`
-getInvoiceItems
-    :: Maybe CustomerId            -- ^ When specified, only `InvoiceItems` for this `Customer` are returned
-    -> Limit                       -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter InvoiceItemId -- ^ Paginate starting after the following `InvoiceItemId`
-    -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `InvoiceItemId`
-    -> StripeRequest (StripeList InvoiceItem)
-getInvoiceItems
-    customerid
-    limit
-    startingAfter
-    endingBefore = request
-  where request = mkStripeRequest GET url params
-        url     = "invoiceitems"
-        params  = getParams [
-            ("limit", toText `fmap` limit )
-          , ("starting_after", (\(InvoiceItemId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(InvoiceItemId x) -> x) `fmap` endingBefore)
-          , ("customer", (\(CustomerId x) -> x) `fmap` customerid)
-          ]
-
-------------------------------------------------------------------------------
--- | Retrieve an `InvoiceItem` by `InvoiceItemId` with `ExpandParams`
-getInvoiceItemsExpandable
-    :: Maybe CustomerId            -- ^ When specified, only `InvoiceItems` for this `Customer` are returned
-    -> Limit                       -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter InvoiceItemId -- ^ Paginate starting after the following `InvoiceItemId`
-    -> EndingBefore InvoiceItemId  -- ^ Paginate ending before the following `InvoiceItemId`
-    -> ExpandParams                -- ^ `ExpandParams` of the objects for expansion
-    -> StripeRequest (StripeList InvoiceItem)
-getInvoiceItemsExpandable
-    customerid
-    limit
-    startingAfter
-    endingBefore
-    expandParams = request
-  where request = mkStripeRequest GET url params
-        url     = "invoiceitems"
-        params  = getParams [
-            ("limit", toText `fmap` limit )
-          , ("starting_after", (\(InvoiceItemId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(InvoiceItemId x) -> x) `fmap` endingBefore)
-          , ("customer", (\(CustomerId x) -> x) `fmap` customerid)
-          ] ++ toExpandable expandParams
-
-------------------------------------------------------------------------------
--- | Retrieve an `InvoiceItem` by `InvoiceItemId`
+data GetInvoiceItem
+type instance StripeReturn GetInvoiceItem = InvoiceItem
 getInvoiceItem
     :: InvoiceItemId -- ^ `InvoiceItemId` of `InvoiceItem` to retrieve
-    -> StripeRequest InvoiceItem
+    -> StripeRequest GetInvoiceItem
 getInvoiceItem
     invoiceitemid =
       getInvoiceItemExpandable invoiceitemid []
@@ -149,7 +111,7 @@ getInvoiceItem
 getInvoiceItemExpandable
     :: InvoiceItemId -- ^ `InvoiceItemId` of `InvoiceItem` to retrieve
     -> ExpandParams  -- ^ `ExpandParams` of the objects for expansion
-    -> StripeRequest InvoiceItem
+    -> StripeRequest GetInvoiceItem
 getInvoiceItemExpandable
     invoiceitemid
     expandParams = request
@@ -159,31 +121,53 @@ getInvoiceItemExpandable
 
 ------------------------------------------------------------------------------
 -- | Update an `InvoiceItem` by `InvoiceItemId`
+data UpdateInvoiceItem
+type instance StripeReturn UpdateInvoiceItem = InvoiceItem
+instance StripeHasParam UpdateInvoiceItem Amount
+instance StripeHasParam UpdateInvoiceItem Description
+instance StripeHasParam UpdateInvoiceItem MetaData
 updateInvoiceItem
     :: InvoiceItemId     -- ^ `InvoiceItemId` of to update
-    -> Maybe Amount      -- ^ `Amount` in cents of the charge to be applied to the invoice
-    -> Maybe Description -- ^ `Amount` in cents of the charge to be applied to the invoice
-    -> MetaData          -- ^ `MetaData` of `InvoiceItem` to update
-    -> StripeRequest InvoiceItem
+    -> StripeRequest UpdateInvoiceItem
 updateInvoiceItem
     invoiceitemid
-    amount
-    description
-    metadata    = request
+                = request
   where request = mkStripeRequest POST url params
         url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
-        params  = toMetaData metadata ++ getParams [
-                         ("amount",  toText `fmap` amount)
-                       , ("description",  description)
-                       ]
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Delete an `InvoiceItem` by `InvoiceItemId`
+data DeleteInvoiceItem
+type instance StripeReturn DeleteInvoiceItem = StripeDeleteResult
 deleteInvoiceItem
     :: InvoiceItemId -- ^ `InvoiceItemdId` of `InvoiceItem` to be deleted
-    -> StripeRequest StripeDeleteResult
+    -> StripeRequest DeleteInvoiceItem
 deleteInvoiceItem
     invoiceitemid = request
   where request = mkStripeRequest DELETE url params
         url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = []
+
+------------------------------------------------------------------------------
+-- | List `InvoiceItem`s
+data GetInvoiceItems
+type instance StripeReturn GetInvoiceItems = (StripeList InvoiceItem)
+instance StripeHasParam GetInvoiceItems Created
+instance StripeHasParam GetInvoiceItems CustomerId
+instance StripeHasParam GetInvoiceItems (EndingBefore InvoiceItemId)
+instance StripeHasParam GetInvoiceItems Limit
+instance StripeHasParam GetInvoiceItems (StartingAfter InvoiceItemId)
+getInvoiceItems
+    :: StripeRequest GetInvoiceItems
+getInvoiceItems = getInvoiceItemsExpandable []
+
+------------------------------------------------------------------------------
+-- | Retrieve an `InvoiceItem` by `InvoiceItemId` with `ExpandParams`
+getInvoiceItemsExpandable
+    :: ExpandParams
+    -> StripeRequest GetInvoiceItems
+getInvoiceItemsExpandable expandParams = request
+  where request = mkStripeRequest GET url params
+        url     = "invoiceitems"
+        params  = toExpandable expandParams

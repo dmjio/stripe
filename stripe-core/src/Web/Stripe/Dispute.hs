@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Dispute
@@ -27,7 +30,9 @@
 -- @
 module Web.Stripe.Dispute
     ( -- * API
-      updateDispute
+      UpdateDispute
+    , updateDispute
+    , CloseDispute
     , closeDispute
       -- * Types
     , ChargeId      (..)
@@ -35,38 +40,42 @@ module Web.Stripe.Dispute
     , DisputeReason (..)
     , DisputeStatus (..)
     , Evidence      (..)
+    , MetaData      (..)
     ) where
 
-import           Web.Stripe.StripeRequest    (Method (POST), StripeRequest (..),
-                                             mkStripeRequest)
-import           Web.Stripe.Util     (getParams, (</>), toMetaData)
-import           Web.Stripe.Types           (ChargeId (..), Dispute (..),
-                                             DisputeReason (..),
-                                             DisputeStatus (..),
-                                             Evidence (..), MetaData)
-import           Web.Stripe.Types.Util      (getChargeId)
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
+import           Web.Stripe.Util          ((</>))
+import           Web.Stripe.Types         (ChargeId (..), Dispute (..),
+                                           DisputeReason (..),
+                                           DisputeStatus (..),
+                                           Evidence (..), MetaData(..))
+import           Web.Stripe.Types.Util    (getChargeId)
 
 ------------------------------------------------------------------------------
 -- | `Dispute` to be updated
+data UpdateDispute
+type instance StripeReturn UpdateDispute = Dispute
+instance StripeHasParam UpdateDispute Evidence
+instance StripeHasParam UpdateDispute MetaData
 updateDispute
     :: ChargeId        -- ^ The ID of the Charge being disputed
-    -> Maybe Evidence  -- ^ Text-only evidence of the dispute
-    -> MetaData        -- ^ `MetaData` associated with `Dispute`
-    -> StripeRequest Dispute
+    -> StripeRequest UpdateDispute
 updateDispute
-    chargeId
-    evidence
-    metadata    = request
+  chargeId = request
   where request = mkStripeRequest POST url params
         url     = "charges" </> getChargeId chargeId </> "dispute"
-        params  = toMetaData metadata ++ getParams [
-                   ("evidence", (\(Evidence x) -> x) `fmap` evidence)
-                  ]
+        params  = []
+
 ------------------------------------------------------------------------------
 -- | `Dispute` to be closed
+data CloseDispute
+type instance StripeReturn CloseDispute = Dispute
 closeDispute
     :: ChargeId  -- ^ The ID of the Charge being disputed
-    -> StripeRequest Dispute
+    -> StripeRequest CloseDispute
 closeDispute
     chargeId = request
   where request = mkStripeRequest POST url params
