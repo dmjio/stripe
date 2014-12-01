@@ -27,6 +27,7 @@
 -- @
 module Web.Stripe.Token
    ( -- * API
+{-
      createCardToken
    , createBankAccountToken
    , getCardToken
@@ -36,13 +37,13 @@ module Web.Stripe.Token
    , ExpMonth      (..)
    , ExpYear       (..)
    , CVC           (..)
-   , Token         (..)
-   , TokenId       (..)
-   , TokenType     (..)
+   , Token         (..) -}
+    TokenId       (..)
+{-   , TokenType     (..)
    , Country       (..)
    , RoutingNumber (..)
    , AccountNumber (..)
-   , Account       (..)
+   , Account       (..) -}
    ) where
 
 import           Web.Stripe.StripeRequest    (Method (GET, POST),
@@ -53,7 +54,7 @@ import           Web.Stripe.Types           (Account(..), AccountNumber (..),
                                              Country (..), ExpMonth (..), BankAccount(..),
                                              ExpYear (..), RoutingNumber (..), Card(..),
                                              Token (..), TokenId (..), TokenType(..))
-
+{-
 ------------------------------------------------------------------------------
 -- | Create a `Token` by specifiying Credit `Card` information
 createCardToken
@@ -116,3 +117,4 @@ getBankAccountToken (TokenId token) = request
   where request = mkStripeRequest GET url params
         url     = "tokens" </> token
         params  = []
+-}

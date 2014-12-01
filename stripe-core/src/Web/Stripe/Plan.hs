@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Plan
@@ -29,149 +32,79 @@
 -- @
 module Web.Stripe.Plan
     ( -- * API
-      createPlan
-    , createPlanIntervalCount
-    , createPlanTrialPeriodDays
-    , createPlanBase
+      CreatePlan
+    , createPlan
+    , GetPlan
     , getPlan
-    , getPlans
-    , updatePlanName
-    , updatePlanDescription
-    , updatePlanBase
+    , UpdatePlan
+    , updatePlan
+    , DeletePlan
     , deletePlan
+    , GetPlans
+    , getPlans
       -- * Types
-    , PlanId             (..)
-    , Plan               (..)
-    , Interval           (..)
-    , StripeList         (..)
-    , IntervalCount      (..)
-    , TrialPeriodDays    (..)
-    , StripeDeleteResult (..)
-    , Currency           (..)
-    , Limit
-    , StartingAfter
-    , EndingBefore
-    , Name
-    , Amount
-    , Description
-    , MetaData
+    , PlanId              (..)
+    , Plan                (..)
+    , Interval            (..)
+    , StripeList          (..)
+    , IntervalCount       (..)
+    , TrialPeriodDays     (..)
+    , StripeDeleteResult  (..)
+    , Currency            (..)
+    , Limit               (..)
+    , StartingAfter       (..)
+    , EndingBefore        (..)
+    , PlanName            (..)
+    , Amount              (..)
+    , StatementDescription(..)
+    , MetaData            (..)
     ) where
 
-import           Web.Stripe.StripeRequest   (Method(POST, GET, DELETE),
-                                            StripeRequest(..), mkStripeRequest)
-import           Web.Stripe.Util    ( toText, getParams, toMetaData,
-                                             toTextLower, (</>))
-import           Web.Stripe.Types (PlanId (..) , Plan (..), Interval (..), StripeList(..),
-                                   IntervalCount (..), TrialPeriodDays (..), Limit,
-                                   StartingAfter, EndingBefore, StripeDeleteResult(..),
-                                   Currency (..), Name, Amount, Description, MetaData)
+import           Data.Text                (Text)
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
+import           Web.Stripe.Types         (PlanId (..) , Plan (..), PlanName(..), Interval (..), StripeList(..), IntervalCount (..), TrialPeriodDays (..), Limit, StartingAfter, EndingBefore, StripeDeleteResult(..), Currency (..), Name, Amount, StatementDescription, MetaData)
+import           Web.Stripe.Util    ( (</>))
 
 ------------------------------------------------------------------------------
--- | Base Request for creating a 'Plan', useful for making custom `Plan` creation requests
-createPlanBase
+-- | Create a `Plan`
+data CreatePlan
+type instance StripeReturn CreatePlan = Plan
+instance StripeHasParam CreatePlan IntervalCount
+instance StripeHasParam CreatePlan TrialPeriodDays
+instance StripeHasParam CreatePlan MetaData
+instance StripeHasParam CreatePlan StatementDescription
+createPlan
     :: PlanId                -- ^ Unique string used to identify `Plan`
     -> Amount                -- ^ Positive integer in cents representing how much to charge on a recurring basis
     -> Currency              -- ^ `Currency` of `Plan`
     -> Interval              -- ^ Billing Frequency (i.e. `Day`, `Week` or `Month`)
-    -> Name                  -- ^ Name of `Plan` to be displayed on `Invoice`s
-    -> Maybe IntervalCount   -- ^ Number of intervals between each `Subscription` billing, default 1
-    -> Maybe TrialPeriodDays -- ^ Integer number of days a trial will have
-    -> Maybe Description     -- ^ An arbitrary string to be displayed on `Customer` credit card statements
-    -> MetaData              -- ^ `MetaData` for the `Plan`
-    -> StripeRequest Plan
-createPlanBase
-    (PlanId planid)
-    amount
-    currency
-    interval
-    name
-    intervalCount
-    trialPeriodDays
-    description
-    metadata    = request
+    -> PlanName              -- ^ Name of `Plan` to be displayed on `Invoice`s
+    -> StripeRequest CreatePlan
+createPlan
+  (PlanId planid)
+  amount
+  currency
+  interval
+  name = request
   where request = mkStripeRequest POST url params
         url     = "plans"
-        params  = toMetaData metadata ++ getParams [
-                     ("id", Just planid)
-                   , ("amount", toText `fmap` Just amount)
-                   , ("currency", toTextLower `fmap` Just currency)
-                   , ("interval", toText `fmap` Just interval)
-                   , ("name", Just name)
-                   , ("interval_count", (\(IntervalCount x) -> toText x) `fmap` intervalCount )
-                   , ("trial_period_days", (\(TrialPeriodDays x) -> toText x) `fmap` trialPeriodDays )
-                   , ("statement_description", description )
-                 ]
-
-------------------------------------------------------------------------------
--- | Create a `Plan`
-createPlan
-    :: PlanId        -- ^ Unique string used to identify `Plan`
-    -> Amount        -- ^ Positive integer in cents (or 0 for a free plan) representing how much to charge on a recurring basis
-    -> Currency      -- ^ `Currency` of `Plan`
-    -> Interval      -- ^ Billing Frequency
-    -> Name          -- ^ Name of `Plan` to be displayed on `Invoice`s
-    -> MetaData      -- ^ MetaData for the Plan
-    -> StripeRequest Plan
-createPlan
-    planid
-    amount
-    currency
-    intervalCount
-    name = createPlanBase planid amount currency intervalCount name Nothing Nothing Nothing
-
-------------------------------------------------------------------------------
--- | Create a `Plan` with a specified `IntervalCount`
-createPlanIntervalCount
-    :: PlanId        -- ^ Unique string used to identify `Plan`
-    -> Amount        -- ^ Positive integer in cents (or 0 for a free plan) representing how much to charge on a recurring basis
-    -> Currency      -- ^ `Currency` of `Plan`
-    -> Interval      -- ^ Billing Frequency
-    -> Name          -- ^ Name of `Plan` to be displayed on `Invoice`s
-    -> IntervalCount -- ^ # of billins between each `Subscription` billing
-    -> StripeRequest Plan
-createPlanIntervalCount
-    planid
-    amount
-    currency
-    interval
-    name
-    intervalCount = createPlanBase planid amount
-                    currency interval name
-                    (Just intervalCount) Nothing Nothing []
-
-------------------------------------------------------------------------------
--- | Create a `Plan` with a specified number of `TrialPeriodDays`
-createPlanTrialPeriodDays
-    :: PlanId          -- ^ Unique string used to identify `Plan`
-    -> Amount          -- ^ Positive integer in cents (or 0 for a free plan) representing how much to charge on a recurring basis
-    -> Currency        -- ^ `Currency` of `Plan`
-    -> Interval        -- ^ Billing Frequency
-    -> Name            -- ^ Name of `Plan` to be displayed on `Invoice`s
-    -> TrialPeriodDays -- ^ Number of Trial Period Days to be displayed on `Invoice`s
-    -> StripeRequest Plan
-createPlanTrialPeriodDays
-    planid
-    amount
-    currency
-    interval
-    name
-    trialPeriodDays =
-        createPlanBase
-          planid
-          amount
-          currency
-          interval
-          name
-          Nothing
-          (Just trialPeriodDays)
-          Nothing
-          []
+        params  = toStripeParam (Param ("id" :: Text, planid)) $
+                  toStripeParam amount $
+                  toStripeParam currency $
+                  toStripeParam interval $
+                  toStripeParam name $
+                  []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Plan`
+data GetPlan
+type instance StripeReturn GetPlan = Plan
 getPlan
     :: PlanId -- ^ The ID of the plan to retrieve
-    -> StripeRequest Plan
+    -> StripeRequest GetPlan
 getPlan
     (PlanId planid) = request
   where request = mkStripeRequest GET url params
@@ -179,81 +112,45 @@ getPlan
         params  = []
 
 ------------------------------------------------------------------------------
--- | Retrieve a `Plan`
-getPlans
-    :: Limit                -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter PlanId -- ^ Paginate starting after the following `CustomerID`
-    -> EndingBefore PlanId  -- ^ Paginate ending before the following `CustomerID`
-    -> StripeRequest (StripeList Plan)
-getPlans
-    limit
-    startingAfter
-    endingBefore = request
-  where request = mkStripeRequest GET url params
-        url     = "plans"
-        params  = getParams [
-            ("limit", toText `fmap` limit )
-          , ("starting_after", (\(PlanId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(PlanId x) -> x) `fmap` endingBefore)
-          ]
-
-------------------------------------------------------------------------------
--- | Base Request for updating a `Plan`, useful for creating customer `Plan` update functions
-updatePlanBase
+-- | Update a `Plan`
+data UpdatePlan
+type instance StripeReturn UpdatePlan = Plan
+instance StripeHasParam UpdatePlan PlanName
+instance StripeHasParam UpdatePlan MetaData
+instance StripeHasParam UpdatePlan StatementDescription
+updatePlan
     :: PlanId            -- ^ The ID of the `Plan` to update
-    -> Maybe Name        -- ^ The `Name` of the `Plan` to update
-    -> Maybe Description -- ^ The `Description` of the `Plan` to update
-    -> MetaData          -- ^ The `MetaData` for the `Plan`
-    -> StripeRequest Plan
-updatePlanBase
+    -> StripeRequest UpdatePlan
+updatePlan
     (PlanId planid)
-    name
-    description
-    metadata    = request
+                = request
   where request = mkStripeRequest POST url params
         url     = "plans" </> planid
-        params  = toMetaData metadata ++ getParams [
-                      ("name", name)
-                    , ("statement_description", description)
-                  ]
-
-------------------------------------------------------------------------------
--- | Update a `Plan` `Description`
-updatePlanDescription
-    :: PlanId      -- ^ The ID of the `Plan` to update
-    -> Description -- ^ The `Description` of the `Plan` to update
-    -> StripeRequest Plan
-updatePlanDescription
-    (PlanId planid)
-    description = request
-  where request = mkStripeRequest POST url params
-        url     = "plans" </> planid
-        params  = getParams [
-                    ("statement_description", Just description)
-                  ]
-
-------------------------------------------------------------------------------
--- | Update a `Plan` `Name`
-updatePlanName
-    :: PlanId      -- ^ The ID of the `Plan` to update
-    -> Description -- ^ The `Name` of the `Plan` to update
-    -> StripeRequest Plan
-updatePlanName
-    (PlanId planid)
-    name = request
-  where request = mkStripeRequest POST url params
-        url     = "plans" </> planid
-        params  = getParams [
-                    ("name", Just name)
-                  ]
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Delete a `Plan`
+data DeletePlan
+type instance StripeReturn DeletePlan = StripeDeleteResult
 deletePlan
     :: PlanId -- ^ The ID of the `Plan` to delete
-    -> StripeRequest StripeDeleteResult
+    -> StripeRequest DeletePlan
 deletePlan
     (PlanId planid) = request
   where request = mkStripeRequest DELETE url params
         url     = "plans" </> planid
+        params  = []
+
+------------------------------------------------------------------------------
+-- | Retrieve all  `Plan`s
+data GetPlans
+type instance StripeReturn GetPlans = (StripeList Plan)
+instance StripeHasParam GetPlans (EndingBefore PlanId)
+instance StripeHasParam GetPlans Limit
+instance StripeHasParam GetPlans (StartingAfter PlanId)
+
+getPlans :: StripeRequest GetPlans
+getPlans = request
+  where request = mkStripeRequest GET url params
+        url     = "plans"
         params  = []

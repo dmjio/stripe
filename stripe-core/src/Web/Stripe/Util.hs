@@ -105,3 +105,4 @@ toExpandable :: [Text] -> [(ByteString, ByteString)]
 toExpandable = map toKV
   where
     toKV v = ("expand[]",  T.encodeUtf8 v)
+

@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Card
@@ -33,17 +36,24 @@ module Web.Stripe.Card
     ( -- * API
       -- ** Customers
       -- *** Create Customer Card
-      createCustomerCard
+      CreateCustomerCardByToken
     , createCustomerCardByToken
+    , CreateCustomerCard
+    , createCustomerCard
       -- *** Get Customer Card(s)
+    , GetCustomerCard
     , getCustomerCard
     , getCustomerCardExpandable
+    , GetCustomerCards
     , getCustomerCards
     , getCustomerCardsExpandable
       -- *** Update Customer Card
+    , UpdateCustomerCard
     , updateCustomerCard
       -- *** Delete Card
+    , DeleteCustomerCard
     , deleteCustomerCard
+{-
       -- ** Recipients
       -- *** Create Recipient Card
     , createRecipientCard
@@ -57,6 +67,7 @@ module Web.Stripe.Card
     , updateRecipientCard
       -- *** Delete Recipient Card
     , deleteRecipientCard
+-}
       -- * Types
     , Brand           (..)
     , Card            (..)
@@ -79,10 +90,11 @@ module Web.Stripe.Card
 
 import           Control.Applicative        ((<$>))
 import           Data.Aeson                 (FromJSON)
-import           Web.Stripe.StripeRequest    (Method(DELETE, GET, POST)
-                                            , StripeRequest(..), mkStripeRequest)
-import           Web.Stripe.Util     ((</>), getParams, toExpandable
-                                            , toText)
+import           Web.Stripe.StripeRequest   (Method (GET, POST, DELETE),
+                                             StripeHasParam, StripeRequest (..),
+                                             StripeReturn, ToStripeParam(..),
+                                             mkStripeRequest)
+import           Web.Stripe.Util            ((</>), toExpandable)
 import           Web.Stripe.Types           (AddressLine1(..), AddressLine2(..)
                                             , AddressCity(..), AddressCountry(..)
                                             , AddressState(..), AddressZip(..)
@@ -97,6 +109,147 @@ import           Web.Stripe.Types           (AddressLine1(..), AddressLine2(..)
 import           Web.Stripe.Types.Util      ( getCardId, getCustomerId
                                             , getRecipientId, getRecipientCardId)
 
+------------------------------------------------------------------------------
+-- | `Card` creation from a `TokenId`
+data CreateCustomerCardByToken
+type instance StripeReturn CreateCustomerCardByToken = Card
+createCustomerCardByToken
+    :: CustomerId
+    -> TokenId
+    -> StripeRequest CreateCustomerCardByToken
+createCustomerCardByToken
+  customerid
+  tokenid       = request
+  where request = mkStripeRequest POST url params
+        url     = "customers" </> getCustomerId customerid </> "cards"
+        params  = toStripeParam tokenid []
+
+------------------------------------------------------------------------------
+-- | `Card` creation from card info
+data CreateCustomerCard
+type instance StripeReturn CreateCustomerCard = Card
+instance StripeHasParam CreateCustomerCard CVC
+instance StripeHasParam CreateCustomerCard Name
+instance StripeHasParam CreateCustomerCard AddressLine1
+instance StripeHasParam CreateCustomerCard AddressLine2
+instance StripeHasParam CreateCustomerCard AddressCity
+instance StripeHasParam CreateCustomerCard AddressZip
+instance StripeHasParam CreateCustomerCard AddressState
+instance StripeHasParam CreateCustomerCard AddressCountry
+createCustomerCard
+    :: CustomerId
+    -> CardNumber
+    -> ExpMonth
+    -> ExpYear
+    -> StripeRequest CreateCustomerCard
+createCustomerCard
+  customerid
+  cardNumber
+  expMonth
+  expYear       = request
+  where request = mkStripeRequest POST url params
+        url     = "customers" </> getCustomerId customerid </> "cards"
+        params  = toStripeParam cardNumber $
+                  toStripeParam expMonth   $
+                  toStripeParam expYear    $
+                  []
+
+
+------------------------------------------------------------------------------
+-- | Get card by `CustomerId` and `CardId`
+data GetCustomerCard
+type instance StripeReturn GetCustomerCard = Card
+getCustomerCard
+    :: CustomerId -- ^ `CustomerId` of the `Card` to retrieve
+    -> CardId     -- ^ `CardId` of the card to retrieve
+    -> StripeRequest GetCustomerCard
+getCustomerCard
+    customerid cardid = getCustomerCardExpandable customerid cardid []
+
+------------------------------------------------------------------------------
+-- | Get card by `CustomerId` and `CardId` with `ExpandParams`
+getCustomerCardExpandable
+    :: CustomerId   -- ^ `CustomerId` of the `Card` to retrieve
+    -> CardId       -- ^ `CardId` of the card to retrieve
+    -> ExpandParams -- ^ `ExpandParams` of the card to retrieve
+    -> StripeRequest GetCustomerCard
+getCustomerCardExpandable
+    customerid
+    cardid
+    expandParams = request
+  where request = mkStripeRequest GET url params
+        url     = "customer" </> getCustomerId customerid </>
+                  "cards" </> getCardId cardid
+        params  = toExpandable expandParams
+
+------------------------------------------------------------------------------
+-- | Update a `Card`
+data UpdateCustomerCard
+type instance StripeReturn UpdateCustomerCard = Card
+instance StripeHasParam UpdateCustomerCard AddressLine1
+instance StripeHasParam UpdateCustomerCard AddressLine2
+instance StripeHasParam UpdateCustomerCard AddressCity
+instance StripeHasParam UpdateCustomerCard AddressZip
+instance StripeHasParam UpdateCustomerCard AddressState
+instance StripeHasParam UpdateCustomerCard AddressCountry
+instance StripeHasParam UpdateCustomerCard ExpMonth
+instance StripeHasParam UpdateCustomerCard ExpYear
+instance StripeHasParam UpdateCustomerCard Name
+updateCustomerCard
+    :: CustomerId
+    -> CardId
+    -> StripeRequest UpdateCustomerCard
+updateCustomerCard
+  customerid
+  cardid       = request
+  where request = mkStripeRequest POST url params
+        url     = "customers" </> getCustomerId customerid </>
+                  "cards" </> getCardId cardid
+        params  = []
+
+------------------------------------------------------------------------------
+-- | Removes a card from a `Customer`
+data DeleteCustomerCard
+type instance StripeReturn DeleteCustomerCard = StripeDeleteResult
+deleteCustomerCard
+    :: CustomerId -- ^ `CustomerId` of the `Card` to retrieve
+    -> CardId     -- ^ `CardId` associated with `Card` to be deleted
+    -> StripeRequest DeleteCustomerCard
+deleteCustomerCard
+    customerid
+    cardid = request
+  where request = mkStripeRequest DELETE url params
+        url     = "customers" </> getCustomerId customerid </> "cards" </> getCardId cardid
+        params  = []
+
+------------------------------------------------------------------------------
+-- | Retrieve all cards associated with a `Customer`
+data GetCustomerCards
+type instance StripeReturn GetCustomerCards = (StripeList Card)
+instance StripeHasParam GetCustomerCards (EndingBefore CardId)
+instance StripeHasParam GetCustomerCards Limit
+instance StripeHasParam GetCustomerCards (StartingAfter CardId)
+getCustomerCards
+    :: CustomerId    -- ^ The `CustomerId` associated with the cards
+    -> StripeRequest GetCustomerCards
+getCustomerCards
+    customerid
+    = getCustomerCardsExpandable customerid []
+
+------------------------------------------------------------------------------
+-- | Retrieve all cards associated with a `Customer`
+getCustomerCardsExpandable
+    :: CustomerId           -- ^ The `CustomerId` associated with the cards
+    -> ExpandParams         -- ^ Expansion on `Card`
+    -> StripeRequest GetCustomerCards
+getCustomerCardsExpandable
+    customerid
+    expandParams = request
+  where request = mkStripeRequest GET url params
+        url     = "customers" </> getCustomerId customerid </> "cards"
+        params  = toExpandable expandParams
+
+{-
 ------------------------------------------------------------------------------
 -- | Base request function for `Card` creation, good for making custom create `Card` functions
 createCardBase
@@ -493,3 +646,4 @@ deleteRecipientCard
                                </> "cards"
                                </> getRecipientCardId cardid
         params  = []
+-}

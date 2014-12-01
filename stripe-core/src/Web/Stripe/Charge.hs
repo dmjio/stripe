@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Charge
@@ -32,21 +35,20 @@
 module Web.Stripe.Charge
     ( -- * API
       ---- * Create Charges
-      chargeCustomer
-    , chargeCardByToken
-    , chargeCustomerByCardId
-    , chargeCard
-    , chargeBase
+      CreateCharge
+    , createCharge
       ---- * Get Charge(s)
+    , GetCharge
     , getCharge
     , getChargeExpandable
+    , GetCharges
     , getCharges
     , getChargesExpandable
-    , getCustomerCharges
-    , getCustomerChargesExpandable
       ---- * Update Charge
+    , UpdateCharge
     , updateCharge
       ---- * Capture Charge
+    , CaptureCharge
     , captureCharge
       -- * Types
     , Charge       (..)
@@ -68,135 +70,54 @@ module Web.Stripe.Charge
     ) where
 
 import           Web.Stripe.StripeRequest    (Method (GET, POST),
-                                             StripeRequest (..), mkStripeRequest)
+                                             StripeHasParam(..), ToStripeParam(..), StripeRequest (..), StripeReturn, mkStripeRequest)
 import           Web.Stripe.Util     (getParams, toMetaData, toText,
                                              toExpandable, toTextLower, (</>))
-import           Web.Stripe.Types           (Amount, CVC (..), Capture,
+import           Web.Stripe.Types           (Amount, ApplicationFeeAmount(..), Card(..), CardId(..), CVC (..), Capture,
                                              CardNumber (..), Charge (..),
-                                             ChargeId (..), Currency (..),
-                                             CustomerId (..), Description,
+                                             ChargeId (..), Created(..), Currency (..),
+                                             CustomerId (..), Description(..),
                                              EndingBefore, ExpMonth (..),
                                              ExpYear (..), Limit, MetaData,
                                              Email (..), StartingAfter, Customer(..),
-                                             StatementDescription(..), ExpandParams,
+                                             ReceiptEmail(..), StatementDescription(..), ExpandParams,
                                              StripeList (..), TokenId (..), CardId(..))
 import           Web.Stripe.Types.Util      (getCardId, getChargeId, getCustomerId)
 
 ------------------------------------------------------------------------------
--- | Charge `Customer``s by `CustomerId`, will charge the default `Card` if exists
-chargeCustomer
-    :: CustomerId   -- ^ The `CustomerId` of the `Customer` to be charged
-    -> Currency     -- ^ Required, 3-letter ISO Code
-    -> Amount       -- ^ Required, Integer value of 100 represents $1
-    -> Maybe Description -- ^ Optional, default is null
-    -> StripeRequest Charge
-chargeCustomer customerid currency amount description =
-    chargeBase amount currency description (Just customerid)
-    Nothing Nothing Nothing True
-    Nothing Nothing Nothing Nothing []
+-- | Create a `Charge`
+data CreateCharge
+type instance StripeReturn CreateCharge = Charge
+instance StripeHasParam CreateCharge CustomerId
+instance StripeHasParam CreateCharge CardId
+instance StripeHasParam CreateCharge Card
+instance StripeHasParam CreateCharge TokenId
+instance StripeHasParam CreateCharge Description
+instance StripeHasParam CreateCharge MetaData
+instance StripeHasParam CreateCharge StatementDescription
+instance StripeHasParam CreateCharge ReceiptEmail
+instance StripeHasParam CreateCharge ApplicationFeeAmount
 
-------------------------------------------------------------------------------
--- | Charge `Customer`s by `CustomerId`
-chargeCustomerByCardId
-    :: CustomerId   -- ^ The `CustomerId` of the `Customer` to be charged
-    -> CardId       -- ^ `CardId` of `Customer` to charge
-    -> Currency     -- ^ Required, 3-letter ISO Code
-    -> Amount       -- ^ Required, Integer value of 100 represents $1
-    -> Maybe Description -- ^ Optional, default is null
-    -> StripeRequest Charge
-chargeCustomerByCardId
-    customerid
-    cardid
-    currency
+createCharge
+    :: Amount
+    -> Currency
+    -> StripeRequest CreateCharge
+createCharge
     amount
-    description =
-      chargeBase amount currency description
-      (Just customerid) (Just $ TokenId $ getCardId cardid)  Nothing
-      Nothing True Nothing Nothing
-      Nothing Nothing []
-
-------------------------------------------------------------------------------
--- | Charge a card by a `TokenId`
-chargeCardByToken
-    :: TokenId    -- ^ The `TokenId` representative of a `Card`
-    -> Currency   -- ^ Required, 3-letter ISO Code
-    -> Amount     -- ^ Required, Integer value of 100 represents $1
-    -> Maybe Description -- ^ Optional, default is null
-    -> StripeRequest Charge
-chargeCardByToken tokenId currency amount description =
-    chargeBase amount currency description Nothing (Just tokenId)
-    Nothing Nothing True Nothing Nothing Nothing Nothing []
-
-------------------------------------------------------------------------------
--- | Charge a card by `CardNumber`
-chargeCard
-    :: CardNumber        -- ^ Required, Credit Card Number
-    -> ExpMonth          -- ^ Required, Expiration Month (i.e. 09)
-    -> ExpYear           -- ^ Required, Expiration Year (i.e. 2018)
-    -> CVC               -- ^ Required, CVC Number (i.e. 000)
-    -> Currency          -- ^ Required, 3-letter ISO Code
-    -> Amount            -- ^ Required, Integer value of 100 represents $1
-    -> Maybe Description -- ^ Optional, default is null
-    -> StripeRequest Charge
-chargeCard cardNumber expMonth expYear cvc currency amount description =
-    chargeBase amount currency description
-    Nothing Nothing Nothing Nothing True
-    (Just cardNumber) (Just expMonth)
-    (Just expYear) (Just cvc) []
-
-------------------------------------------------------------------------------
--- | Base method for creating a `Charge`
-chargeBase
-    :: Amount             -- ^ Required, Integer value of 100 represents $1
-    -> Currency           -- ^ Required, 3-letter ISO Code
-    -> Maybe Description  -- ^ Optional, default is null
-    -> Maybe CustomerId   -- ^ Optional, either `CustomerId` or `TokenId` has to be specified
-    -> Maybe TokenId      -- ^ Optional, either `CustomerId` or `TokenId` has to be specified
-    -> Maybe StatementDescription -- ^ Optional, Arbitrary string to include on CC statements
-    -> Maybe Email        -- ^ Optional, Arbitrary string to include on CC statements
-    -> Capture            -- ^ Optional, default is True
-    -> Maybe CardNumber   -- ^ Optional, Credit Card Number
-    -> Maybe ExpMonth     -- ^ `Card` Expiration Month
-    -> Maybe ExpYear      -- ^ `Card` Expiration Year
-    -> Maybe CVC          -- ^ `Card` `CVC`
-    -> MetaData           -- ^ `Card` `MetaData`
-    -> StripeRequest Charge
-chargeBase
-    amount
-    currency
-    description
-    customerid
-    tokenId
-    statementDescription
-    receiptEmail
-    capture
-    cardNumber
-    expMonth
-    expYear
-    cvc'
-    metadata    = request
+    currency = request
   where request = mkStripeRequest POST url params
         url     = "charges"
-        params  = toMetaData metadata ++ getParams [
-                     ("amount", toText `fmap` Just amount)
-                   , ("customer", (\(CustomerId cid) -> cid) `fmap` customerid)
-                   , ("currency", toTextLower `fmap` Just currency)
-                   , ("card", (\(TokenId tokenid) -> tokenid) `fmap` tokenId)
-                   , ("description", description)
-                   , ("statement_description", (\(StatementDescription x) -> x) `fmap` statementDescription)
-                   , ("receipt_email", (\(Email email) -> email) `fmap` receiptEmail)
-                   , ("capture", (\x -> if x then "true" else "false") `fmap` Just capture)
-                   , ("card[number]", (\(CardNumber c) -> c) `fmap` cardNumber)
-                   , ("card[exp_month]", (\(ExpMonth m) ->  toText m) `fmap` expMonth)
-                   , ("card[exp_year]", (\(ExpYear y) -> toText y) `fmap` expYear)
-                   , ("card[cvc]", (\(CVC c) -> c) `fmap` cvc')
-                  ]
+        params  = toStripeParam amount   $
+                  toStripeParam currency $
+                  []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Charge` by `ChargeId`
+data GetCharge
+type instance StripeReturn GetCharge = Charge
 getCharge
     :: ChargeId -- ^ The `Charge` to retrive
-    -> StripeRequest Charge
+    -> StripeRequest GetCharge
 getCharge chargeid = getChargeExpandable chargeid []
 
 ------------------------------------------------------------------------------
@@ -204,7 +125,7 @@ getCharge chargeid = getChargeExpandable chargeid []
 getChargeExpandable
     :: ChargeId     -- ^ The `Charge` retrive
     -> ExpandParams -- ^ The `ExpandParams` to retrive
-    -> StripeRequest Charge
+    -> StripeRequest GetCharge
 getChargeExpandable
     chargeid
     expandParams = request
@@ -213,111 +134,56 @@ getChargeExpandable
         params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
--- | Retrieve all `Charge`s
-getCharges
-    :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter ChargeId   -- ^ Paginate starting after the following CustomerID
-    -> EndingBefore ChargeId    -- ^ Paginate ending before the following CustomerID
-    -> StripeRequest (StripeList Charge)
-getCharges
-    limit
-    startingAfter
-    endingBefore =
-      getChargesExpandable limit startingAfter endingBefore []
-
-------------------------------------------------------------------------------
--- | Retrieve all `Charge`s
-getChargesExpandable
-    :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter ChargeId   -- ^ Paginate starting after the following `CustomerId`
-    -> EndingBefore ChargeId    -- ^ Paginate ending before the following `CustomerId`
-    -> ExpandParams             -- ^ Get Charges with `ExpandParams`
-    -> StripeRequest (StripeList Charge)
-getChargesExpandable
-    limit
-    startingAfter
-    endingBefore
-    expandParams = request
-  where request = mkStripeRequest GET url params
-        url     = "charges"
-        params  = getParams [
-            ("limit", toText `fmap` limit )
-          , ("starting_after", (\(ChargeId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(ChargeId x) -> x) `fmap` endingBefore)
-          ] ++ toExpandable expandParams
-
-
-------------------------------------------------------------------------------
--- | Retrieve all `Charge`s for a specified `Customer`
-getCustomerCharges
-    :: CustomerId
-    -> Limit                    -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter ChargeId   -- ^ Paginate starting after the following `CustomerId`
-    -> EndingBefore ChargeId    -- ^ Paginate ending before the following `CustomerId`
-    -> StripeRequest (StripeList Charge)
-getCustomerCharges
-    customerid
-    limit
-    startingAfter
-    endingBefore =
-      getCustomerChargesExpandable customerid limit
-        startingAfter endingBefore []
-
-------------------------------------------------------------------------------
--- | Retrieve all `Charge`s for a specified `Customer` with `ExpandParams`
-getCustomerChargesExpandable
-    :: CustomerId
-    -> Limit                    -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter ChargeId   -- ^ Paginate starting after the following `CustomerId`
-    -> EndingBefore ChargeId    -- ^ Paginate ending before the following `CustomerId`
-    -> ExpandParams             -- ^ Get `Customer` `Charge`s with `ExpandParams`
-    -> StripeRequest (StripeList Charge)
-getCustomerChargesExpandable
-    customerid
-    limit
-    startingAfter
-    endingBefore
-    expandParams = request
-  where request = mkStripeRequest GET url params
-        url     = "charges"
-        params  = getParams [
-            ("customer", Just $ getCustomerId customerid )
-          , ("limit", toText `fmap` limit )
-          , ("starting_after", (\(ChargeId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(ChargeId x) -> x) `fmap` endingBefore)
-          ] ++ toExpandable expandParams
-
-------------------------------------------------------------------------------
 -- | A `Charge` to be updated
+data UpdateCharge
+type instance StripeReturn UpdateCharge = Charge
+instance StripeHasParam UpdateCharge Description
+instance StripeHasParam UpdateCharge MetaData
 updateCharge
     :: ChargeId    -- ^ The `Charge` to update
-    -> Description -- ^ The `Charge` `Description` to update
-    -> MetaData    -- ^ The `Charge` `MetaData` to update
-    -> StripeRequest Charge
+    -> StripeRequest UpdateCharge
 updateCharge
-    chargeid
-    description
-    metadata    = request
+    chargeid    = request
   where request = mkStripeRequest POST url params
         url     = "charges" </> getChargeId chargeid
-        params  = toMetaData metadata ++ getParams [
-                   ("description", Just description)
-                  ]
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | a `Charge` to be captured
+data CaptureCharge
+type instance StripeReturn CaptureCharge = Charge
+instance StripeHasParam CaptureCharge Amount
+instance StripeHasParam CaptureCharge ReceiptEmail
 captureCharge
     :: ChargeId     -- ^ The `ChargeId` of the `Charge` to capture
-    -> Maybe Amount -- ^ If Nothing the entire charge will be captured, otherwise the remaining will be refunded
-    -> Maybe Email  -- ^ `Email` to send `Charge` receipt
-    -> StripeRequest Charge
+    -> StripeRequest CaptureCharge
 captureCharge
-    chargeid
-    amount
-    receiptEmail = request
+    chargeid     = request
   where request  = mkStripeRequest POST url params
         url      = "charges" </> getChargeId chargeid </> "capture"
-        params   = getParams [
-                     ("amount", toText `fmap` amount)
-                   , ("receipt_email", (\(Email email) -> email) `fmap` receiptEmail)
-                   ]
+        params   = []
+
+------------------------------------------------------------------------------
+-- | Retrieve all `Charge`s
+data GetCharges
+type instance StripeReturn GetCharges = StripeList Charge
+instance StripeHasParam GetCharges Created
+instance StripeHasParam GetCharges CustomerId
+instance StripeHasParam GetCharges (EndingBefore ChargeId)
+instance StripeHasParam GetCharges Limit
+instance StripeHasParam GetCharges (StartingAfter ChargeId)
+getCharges
+    :: StripeRequest GetCharges
+getCharges =
+      getChargesExpandable []
+
+------------------------------------------------------------------------------
+-- | Retrieve all `Charge`s
+getChargesExpandable
+    :: ExpandParams             -- ^ Get Charges with `ExpandParams`
+    -> StripeRequest GetCharges
+getChargesExpandable
+    expandParams = request
+  where request = mkStripeRequest GET url params
+        url     = "charges"
+        params  = toExpandable expandParams

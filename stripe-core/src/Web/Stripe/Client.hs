@@ -11,6 +11,7 @@ module Web.Stripe.Client
     , module Web.Stripe.Util
     , handleStream
     , StripeConfig  (..)
+    , StripeKey     (..)
     , APIVersion    (..)
     ) where
 
@@ -26,10 +27,17 @@ import           Web.Stripe.StripeRequest
 import           Web.Stripe.Error
 import           Web.Stripe.Util
 
+
 ------------------------------------------------------------------------------
 -- | Stripe secret key
+newtype StripeKey = StripeKey
+    { getStripeKey :: ByteString
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | Stripe config
 data StripeConfig = StripeConfig
-    { secretKey :: ByteString
+    { secretKey :: StripeKey
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------

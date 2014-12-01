@@ -22,6 +22,8 @@
 -- @
 module Web.Stripe (
     module Web.Stripe.Client
+  , showAmount
   ) where
 
 import Web.Stripe.Client
+import Web.Stripe.Types

@@ -36,8 +36,8 @@ import qualified System.IO.Streams          as Streams
 import           Web.Stripe.Client          (APIVersion (..), Method(..), StripeConfig (..),
                                              StripeError (..), StripeErrorHTTPCode (..),
                                              StripeErrorType (..), StripeRequest (..),
-                                             handleStream, toBytestring, toText,
-                                             paramsToByteString,
+                                             StripeReturn, getStripeKey, handleStream,
+                                             toBytestring, toText, paramsToByteString
                                              )
 
 ------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ import           Web.Stripe.Client          (APIVersion (..), Method(..), Stripe
 stripe
     :: StripeConfig
     -> StripeRequest a
-    -> IO (Either StripeError a)
+    -> IO (Either StripeError (StripeReturn a))
 stripe config request =
   withConnection $ \conn -> do
     callAPI conn config request
@@ -82,7 +82,7 @@ callAPI
     :: Connection                      -- ^ an open connection to the server (`withConnection`)
     -> StripeConfig                    -- ^ StripeConfig
     -> StripeRequest a                 -- ^ StripeRequest
-    -> IO (Either StripeError a)
+    -> IO (Either StripeError (StripeReturn a))
 callAPI conn StripeConfig {..} StripeRequest{..} = do
   let reqBody | method == GET = mempty
               | otherwise     = paramsToByteString queryParams
@@ -94,7 +94,7 @@ callAPI conn StripeConfig {..} StripeRequest{..} = do
               | otherwise = T.encodeUtf8 endpoint
   req <- buildRequest $ do
     http (m2m method) $ "/v1/" <> reqURL
-    setAuthorizationBasic secretKey mempty
+    setAuthorizationBasic (getStripeKey secretKey) mempty
     setContentType "application/x-www-form-urlencoded"
     setHeader "Stripe-Version" (toBytestring V20141007)
     setHeader "Connection" "Keep-Alive"
@@ -104,3 +104,23 @@ callAPI conn StripeConfig {..} StripeRequest{..} = do
       do when debug $ print response
          result <- concatHandler response inputStream
          return $ handleStream decodeJson (getStatusCode response) result
+
+         
+--         result <- concatHandler response inputStream
+--         undefined
+{-         
+         case getStatusCode response of
+           200 ->
+             do v <- Streams.parseFromJSON decodeJson inputStream
+             case v of
+               (Left err) -> ..
+               (Right obj) ->
+                 return obj
+           _ ->
+             undefined
+
+--             handleError (getStatusCode response) result
+
+
+--         result <- concatHandler response inputStream
+-}

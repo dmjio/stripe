@@ -20,8 +20,10 @@ import           Data.Aeson          (FromJSON (parseJSON),
                                       (.:?))
 import           Data.Data           (Data, Typeable)
 import qualified Data.HashMap.Strict as H
+import           Data.Ratio          ((%))
 import           Data.Text           (Text)
 import           Data.Time           (UTCTime)
+import           Numeric             (fromRat, showFFloat)
 import           Text.Read           (lexP, pfail)
 import qualified Text.Read           as R
 import           Web.Stripe.Util     (fromSeconds)
@@ -58,6 +60,11 @@ instance (FromJSON id,  FromJSON (Expand id)) =>
   parseJSON v = (Id <$> parseJSON v) <|> (Expanded <$> parseJSON v)
 
 ------------------------------------------------------------------------------
+-- | `Created`
+newtype Created = Created UTCTime
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
 -- | `ChargeId` associated with a `Charge`
 newtype ChargeId
   = ChargeId Text
@@ -73,6 +80,9 @@ instance FromJSON ChargeId where
 -- | `StatementDescription` to be added to a `Charge`
 newtype StatementDescription =
   StatementDescription Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON StatementDescription where
+  parseJSON v = StatementDescription <$> parseJSON v
 
 ------------------------------------------------------------------------------
 -- | `Charge` object in `Stripe` API
@@ -97,7 +107,7 @@ data Charge = Charge {
     , chargeDescription          :: Maybe Description
     , chargeDispute              :: Maybe Dispute
     , chargeMetaData             :: MetaData
-    , chargeStatementDescription :: Maybe Description
+    , chargeStatementDescription :: Maybe StatementDescription
     , chargeReceiptEmail         :: Maybe Text
     , chargeReceiptNumber        :: Maybe Text
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -125,7 +135,7 @@ instance FromJSON Charge where
                <*> o .:? "invoice"
                <*> o .:? "description"
                <*> o .:? "dispute"
-               <*> (H.toList <$> o .: "metadata")
+               <*> o .: "metadata"
                <*> o .:? "statement_description"
                <*> o .:? "receipt_email"
                <*> o .:? "receipt_number"
@@ -133,7 +143,8 @@ instance FromJSON Charge where
 
 ------------------------------------------------------------------------------
 -- | Capture for `Charge`
-type Capture = Bool
+newtype Capture = Capture { getCapture :: Bool }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `RefundId` for `Refund`
@@ -164,8 +175,22 @@ instance FromJSON Refund where
                <*> o .: "object"
                <*> o .: "charge"
                <*> o .: "balance_transaction"
-               <*> (H.toList <$> o .: "metadata")
+               <*> o .: "metadata"
    parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | `RefundApplicationFee`
+newtype RefundApplicationFee =
+  RefundApplicationFee { getRefundApplicationFee :: Bool }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | `RefundReason`
+data RefundReason
+  = RefundDuplicate
+  | RefundFraudulent
+  | RefundRequestedByCustomer
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `CustomerId` for a `Customer`
@@ -219,7 +244,7 @@ instance FromJSON Customer where
            <*> o .: "cards"
            <*> o .:? "currency"
            <*> o .:? "default_card"
-           <*> (H.toList <$> o .: "metadata")
+           <*> o .: "metadata"
            <|> DeletedCustomer
            <$> o .: "deleted"
            <*> (CustomerId <$> o .: "id"))
@@ -230,12 +255,13 @@ instance FromJSON Customer where
 
 ------------------------------------------------------------------------------
 -- | AccountBalance for a `Customer`
-type AccountBalance = Int
+newtype AccountBalance = AccountBalance Int
+  deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | CardId for a `Customer`
 newtype CardId = CardId Text
-            deriving (Eq, Ord, Read, Show, Data, Typeable)
+  deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | CardId for a `Recipient`
@@ -419,8 +445,7 @@ instance FromJSON RecipientCard where
 
 ------------------------------------------------------------------------------
 -- | `SubscriptionId` for a `Subscription`
-newtype SubscriptionId =
-    SubscriptionId Text
+newtype SubscriptionId = SubscriptionId { getSubscriptionId :: Text }
     deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
@@ -465,7 +490,7 @@ instance FromJSON Subscription where
                     <*> (Quantity <$> o .:  "quantity")
                     <*> o .:? "application_fee_percent"
                     <*> o .:? "discount"
-                    <*> (H.toList <$> o .: "metadata")
+                    <*> o .: "metadata"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -523,13 +548,18 @@ instance FromJSON Plan where
              <*> o .: "livemode"
              <*> o .:? "interval_count"
              <*> o .:? "trial_period_days"
-             <*> (H.toList <$> o .: "metadata")
+             <*> o .: "metadata"
              <*> o .:? "statement_description"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | `TrialPeriod` for a Plan
 type TrialPeriod = UTCTime
+
+------------------------------------------------------------------------------
+-- | `TrialEnd` for a Plan
+newtype TrialEnd = TrialEnd UTCTime
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Interval for `Plan`s
@@ -629,7 +659,7 @@ instance FromJSON Coupon where
                <*> o .:? "times_redeemed"
                <*> o .:? "duration_in_months"
                <*> o .: "valid"
-               <*> (H.toList <$> o .: "metadata")
+               <*> o .: "metadata"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -668,7 +698,8 @@ newtype TrialPeriodDays = TrialPeriodDays Int deriving (Read, Show, Eq, Ord, Dat
 -- | Amount representing a monetary value.
 -- Stripe represents pennies as whole numbers
 -- i.e. 100 = $1
-type Amount = Int
+newtype Amount = Amount { getAmount :: Int }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Discount` for `Coupon`
@@ -733,7 +764,7 @@ data Invoice = Invoice {
     , invoiceDiscount             :: Maybe Discount
     , invoiceApplicateFee         :: Maybe FeeId
     , invoiceSubscription         :: Maybe SubscriptionId
-    , invoiceStatementDescription :: Maybe Description
+    , invoiceStatementDescription :: Maybe StatementDescription
     , invoiceDescription          :: Maybe Description
     , invoiceMetaData             :: MetaData
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -769,7 +800,7 @@ instance FromJSON Invoice where
                <*> (fmap SubscriptionId <$> o .: "subscription")
                <*> o .:? "statement_description"
                <*> o .:? "description"
-               <*> (H.toList <$> o .: "metadata")
+               <*> o .: "metadata"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -812,7 +843,7 @@ instance FromJSON InvoiceItem where
                    <*> o .:? "invoice"
                    <*> (fmap Quantity <$> o .:? "quantity")
                    <*> o .:? "subscription"
-                   <*> (H.toList <$> o .: "metadata")
+                   <*> o .: "metadata"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -881,7 +912,7 @@ instance FromJSON InvoiceLineItem where
                        <*> (fmap Quantity <$> o .:? "quantity")
                        <*> o .:? "plan"
                        <*> o .:? "description"
-                       <*> (H.toList <$> o .: "metadata")
+                       <*> o .: "metadata"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -971,7 +1002,7 @@ instance FromJSON Dispute where
                 <*> o .: "balance_transactions"
                 <*> (fromSeconds <$> o .: "evidence_due_by")
                 <*> (fmap Evidence <$> o .:? "evidence")
-                <*> (H.toList <$> o .: "metadata")
+                <*> o .: "metadata"
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1027,7 +1058,7 @@ data Transfer = Transfer {
      , transferBankAccount          :: Maybe BankAccount
      , transferFailureMessage       :: Maybe Text
      , transferFailureCode          :: Maybe Text
-     , transferStatementDescription :: Maybe Description
+     , transferStatementDescription :: Maybe StatementDescription
      , transferRecipient            :: Maybe (Expandable RecipientId)
      , transferMetaData             :: MetaData
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -1052,7 +1083,7 @@ instance FromJSON Transfer where
                     <*> o .:? "failure_code"
                     <*> o .:? "statement_description"
                     <*> o .:? "recipient"
-                    <*> (H.toList <$> o .: "metadata")
+                    <*> o .: "metadata"
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1240,6 +1271,17 @@ data ApplicationFee = ApplicationFee {
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
+-- | ApplicationFeePercent
+newtype ApplicationFeePercent = ApplicationFeePercent Double
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+
+------------------------------------------------------------------------------
+-- | ApplicationFeeAmount
+newtype ApplicationFeeAmount = ApplicationFeeAmount Integer
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
 -- | `ApplicationId` object
 newtype ApplicationId =
   ApplicationId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -1261,7 +1303,7 @@ instance FromJSON ApplicationFee where
                       <*> o .: "account"
                       <*> (ApplicationId <$> o .: "application")
                       <*> o .: "charge"
-                      <*> (H.toList <$> o .: "metadata")
+                      <*> o .: "metadata"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1294,7 +1336,7 @@ instance FromJSON ApplicationFeeRefund where
               <*> o .: "object"
               <*> o .:? "balance_transaction"
               <*> (FeeId <$> o .: "fee")
-              <*> (H.toList <$> o .: "metadata")
+              <*> o .: "metadata"
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -1391,7 +1433,7 @@ instance FromJSON BalanceAmount where
 data BalanceTransaction = BalanceTransaction {
       balanceTransactionId             :: TransactionId
     , balanceTransactionObject         :: Text
-    , balanceTransactionAmount         :: Amount
+    , balanceTransactionAmount         :: Int
     , balanceTransactionCurrency       :: Currency
     , balanceTransactionNet            :: Int
     , balanceTransactionType           :: Text
@@ -1767,15 +1809,18 @@ instance FromJSON a => FromJSON (StripeList a) where
 
 ------------------------------------------------------------------------------
 -- | Pagination Option for `StripeList`
-type Limit             = Maybe Int
+newtype Limit             = Limit Int
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Pagination Option for `StripeList`
-type StartingAfter a = Maybe a
+newtype StartingAfter a = StartingAfter a
+ deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Pagination Option for `StripeList`
-type EndingBefore a = Maybe a
+newtype EndingBefore a = EndingBefore a
+ deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON returned from a `Stripe` deletion request
@@ -1794,7 +1839,11 @@ instance FromJSON StripeDeleteResult where
 
 ------------------------------------------------------------------------------
 -- | Type of MetaData for use on `Stripe` objects
-type MetaData = [ (Text,Text) ]
+newtype MetaData = MetaData [ (Text,Text) ]
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON MetaData where
+  parseJSON j = (MetaData . H.toList) <$> (parseJSON j)
 
 ------------------------------------------------------------------------------
 -- | Type of Expansion Parameters for use on `Stripe` objects
@@ -1809,12 +1858,28 @@ type ID    = Text
 type URL   = Text
 
 ------------------------------------------------------------------------------
--- | Generic URL for use in constructing API Calls
-type Name  = Text
+-- | a cardholder's full name
+newtype Name  = Name { getName :: Text }
+   deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON Name where
+  parseJSON v = Name <$> parseJSON v
+
+------------------------------------------------------------------------------
+-- | a plan name
+newtype PlanName  = PlanName { getPlanName :: Text }
+   deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON PlanName where
+  parseJSON v = PlanName <$> parseJSON v
 
 ------------------------------------------------------------------------------
 -- | Generic Description for use in constructing API Calls
-type Description   = Text
+newtype Description = Description Text
+   deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON Description where
+  parseJSON v = Description <$> parseJSON v
 
 ------------------------------------------------------------------------------
 -- | Generic `Quantity` type to be used with `Customer`,
@@ -1822,8 +1887,21 @@ type Description   = Text
 newtype Quantity = Quantity Int deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
+-- | Prorate
+newtype Prorate = Prorate Bool deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | A flag that if set to true will delay the cancellation of the
+-- subscription until the end of the current period.
+newtype AtPeriodEnd = AtPeriodEnd Bool deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
 -- | `Email` associated with a `Customer`, `Recipient` or `Charge`
 newtype Email = Email Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | `Email` to send receipt to
+newtype ReceiptEmail = ReceiptEmail Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Stripe supports 138 currencies
@@ -2112,3 +2190,44 @@ instance FromJSON Currency where
    parseJSON (String "zmw") = pure ZMW
    parseJSON _ = pure UnknownCurrency
 
+------------------------------------------------------------------------------
+-- | Show an amount
+showAmount :: Currency
+           -> Int
+           -> String
+showAmount cur amt =
+  case cur of
+   USD -> "$" ++ show2places (currencyDivisor cur amt)
+   _   -> show2places (currencyDivisor cur amt) ++ " " ++ show cur
+  where
+    show2places v = showFFloat (Just 2) v ""
+
+------------------------------------------------------------------------------
+--
+-- https:\/\/support.stripe.com\/questions\/which-zero-decimal-currencies-does-stripe-support
+currencyDivisor :: Currency
+             -> Int
+             -> Float
+currencyDivisor cur =
+  case cur of
+    BIF -> zeroCurrency
+    CLP -> zeroCurrency
+    DJF -> zeroCurrency
+    GNF -> zeroCurrency
+    JPY -> zeroCurrency
+    KMF -> zeroCurrency
+    KRW -> zeroCurrency
+    MGA -> zeroCurrency
+    PYG -> zeroCurrency
+    RWF -> zeroCurrency
+    VND -> zeroCurrency
+    VUV -> zeroCurrency
+    XAF -> zeroCurrency
+    XOF -> zeroCurrency
+    XPF -> zeroCurrency
+    EUR -> hundred
+    USD -> hundred
+    _   -> error $ "please submit a patch to currencyDivisor for this currency: " ++ show cur
+  where
+    zeroCurrency = fromIntegral
+    hundred v    = fromRat $ (fromIntegral v) % (100 :: Integer)

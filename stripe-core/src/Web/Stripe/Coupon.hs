@@ -32,13 +32,15 @@
 -- @
 module Web.Stripe.Coupon
     ( -- * API
+      {-
       createCoupon
     , getCoupon
     , getCoupons
     , updateCoupon
     , deleteCoupon
+-}
       -- * Types
-    , Duration           (..)
+     Duration           (..)
     , AmountOff          (..)
     , CouponId           (..)
     , Coupon             (..)
@@ -64,7 +66,7 @@ import           Web.Stripe.Types           (AmountOff (..), Coupon (..),
                                              StartingAfter,
                                              StripeDeleteResult (..),
                                              StripeList (..))
-
+{-
 ------------------------------------------------------------------------------
 -- | `Coupon` creation
 createCoupon
@@ -155,3 +157,4 @@ deleteCoupon
   where request = mkStripeRequest DELETE url params
         url     = "coupons" </> couponid
         params  = []
+-}
