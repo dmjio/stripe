@@ -65,6 +65,11 @@ newtype Created = Created UTCTime
     deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
+-- | `Date`
+newtype Date = Date UTCTime
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
 -- | `ChargeId` associated with a `Charge`
 newtype ChargeId
   = ChargeId Text
@@ -319,6 +324,11 @@ newtype AddressState   = AddressState Text deriving (Read, Show, Eq, Ord, Data, 
 ------------------------------------------------------------------------------
 -- | Address Zip Code for a `Card`
 newtype AddressZip     = AddressZip Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | `IsVerified` `Recipients`
+newtype IsVerified = IsVerified { getVerified :: Bool }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Credit / Debit Card Brand
@@ -1176,8 +1186,9 @@ instance FromJSON RecipientId where
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
--- | `TaxID` of `Recipient`
-type TaxID  = Text
+-- | `TaxID`
+newtype TaxID  = TaxID { getTaxID :: Text }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Type of `Recipient`
@@ -1252,9 +1263,13 @@ instance FromJSON Recipient where
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
+-- | `PlanId` for a `Plan`
+newtype ApplicationFeeId = ApplicationFeeId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
 -- | ApplicationFee Object
 data ApplicationFee = ApplicationFee {
-      applicationFeeId                 :: Text
+      applicationFeeId                 :: ApplicationFeeId
     , applicationFeeObjecet            :: Text
     , applicationFeeCreated            :: UTCTime
     , applicationFeeLiveMode           :: Bool
@@ -1290,7 +1305,7 @@ newtype ApplicationId =
 -- | JSON Instance for `ApplicationFee`
 instance FromJSON ApplicationFee where
    parseJSON (Object o) =
-       ApplicationFee <$> o .: "id"
+       ApplicationFee <$> (ApplicationFeeId <$> o .: "id")
                       <*> o .: "object"
                       <*> (fromSeconds <$> o .: "created")
                       <*> o .: "livemode"

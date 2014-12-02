@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.AppplicationFee
@@ -23,35 +26,47 @@
 -- @
 module Web.Stripe.ApplicationFee
     (  -- * API
-      getApplicationFee
+      GetApplicationFee
+    , getApplicationFee
     , getApplicationFeeExpanded
+    , GetApplicationFees
     , getApplicationFees
     , getApplicationFeesExpanded
        -- * Types
     , ApplicationId  (..)
     , ApplicationFee (..)
-    , FeeId          (..)
-    , StripeList     (..)
-    , EndingBefore
-    , StartingAfter
-    , Limit
-    , ExpandParams
+    , ApplicationFeeId (..)
+    , ChargeId       (..)
     , ConnectApp     (..)
+    , Created        (..)
+    , EndingBefore   (..)
+    , FeeId          (..)
+    , Limit          (..)
+    , StartingAfter  (..)
+    , StripeList     (..)
+    , ExpandParams
     ) where
-
-import           Web.Stripe.StripeRequest    (Method (GET), StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Util     (getParams, toText, (</>), toExpandable)
-import           Web.Stripe.Types           (ApplicationFee (..),
-                                             ApplicationId (..), ConnectApp (..),
-                                             EndingBefore, FeeId (..),
-                                             Limit, StartingAfter, ExpandParams,
-                                             StripeList (..))
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
+import           Web.Stripe.Util          ((</>), toExpandable)
+import           Web.Stripe.Types          (ApplicationFee (..),
+                                            ApplicationFeeId (..),
+                                            ApplicationId (..), ChargeId(..),
+                                            ConnectApp (..), Created(..),
+                                            EndingBefore(..), FeeId (..),
+                                            Limit(..), StartingAfter(..),
+                                            ExpandParams,
+                                            StripeList (..))
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee' retrieval
+data GetApplicationFee
+type instance StripeReturn GetApplicationFee = ApplicationFee
 getApplicationFee
     :: FeeId        -- ^ The `FeeId` associated with the Application
-    -> StripeRequest ApplicationFee
+    -> StripeRequest GetApplicationFee
 getApplicationFee
     feeid = getApplicationFeeExpanded feeid []
 
@@ -60,7 +75,7 @@ getApplicationFee
 getApplicationFeeExpanded
     :: FeeId        -- ^ The `FeeId` associated with the application
     -> ExpandParams -- ^ The `ExpandParams` for an `ApplicationFee`
-    -> StripeRequest ApplicationFee
+    -> StripeRequest GetApplicationFee
 getApplicationFeeExpanded
     (FeeId feeid)
     expandParams = request
@@ -70,35 +85,25 @@ getApplicationFeeExpanded
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee's retrieval
+data GetApplicationFees
+type instance StripeReturn GetApplicationFees =  (StripeList ApplicationFee)
+instance StripeHasParam GetApplicationFees ChargeId
+instance StripeHasParam GetApplicationFees Created
+instance StripeHasParam GetApplicationFees (EndingBefore ApplicationFeeId)
+instance StripeHasParam GetApplicationFees Limit
+instance StripeHasParam GetApplicationFees (StartingAfter ApplicationFeeId)
 getApplicationFees
-    :: Maybe Limit         -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter FeeId -- ^ Paginate starting after the following `FeeId`
-    -> EndingBefore FeeId  -- ^ Paginate ending before the following `FeeId`
-    -> StripeRequest (StripeList ApplicationFee)
+    :: StripeRequest GetApplicationFees
 getApplicationFees
-    limit
-    startingAfter
-    endingBefore =
-      getApplicationFeesExpanded
-        limit startingAfter endingBefore []
+    = getApplicationFeesExpanded []
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee's retrieval with `ExpandParams`
 getApplicationFeesExpanded
-    :: Maybe Limit         -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter FeeId -- ^ Paginate starting after the following `FeeId`
-    -> EndingBefore FeeId  -- ^ Paginate ending before the following `FeeId`
-    -> ExpandParams        -- ^ The `ExpandParams` for `ApplicationFee`s
-    -> StripeRequest (StripeList ApplicationFee)
+    :: ExpandParams        -- ^ The `ExpandParams` for `ApplicationFee`s
+    -> StripeRequest GetApplicationFees
 getApplicationFeesExpanded
-    limit
-    startingAfter
-    endingBefore
-    expandParams = request
+   expandParams = request
   where request = mkStripeRequest GET url params
         url     = "application_fees"
-        params  = getParams [
-            ("limit", toText `fmap` limit )
-          , ("starting_after", (\(FeeId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(FeeId x) -> x) `fmap` endingBefore)
-          ] ++ toExpandable expandParams
+        params  = toExpandable expandParams

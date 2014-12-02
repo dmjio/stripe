@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.AppplicationFeeRefund
@@ -23,61 +26,66 @@
 -- @
 module Web.Stripe.ApplicationFeeRefund
     ( -- * API
-      createApplicationFeeRefund
+      CreateApplicationFeeRefund
+    , createApplicationFeeRefund
+    , GetApplicationFeeRefund
     , getApplicationFeeRefund
     , getApplicationFeeRefundExpandable
+    , UpdateApplicationFeeRefund
+    , updateApplicationFeeRefund
+    , GetApplicationFeeRefunds
     , getApplicationFeeRefunds
     , getApplicationFeeRefundsExpandable
-    , updateApplicationFeeRefund
       -- * Types
     , FeeId                  (..)
     , RefundId               (..)
     , ApplicationFee         (..)
     , ApplicationFeeRefund   (..)
     , StripeList             (..)
-    , EndingBefore
-    , StartingAfter
-    , Limit
+    , EndingBefore           (..)
+    , StartingAfter          (..)
+    , Limit                  (..)
     , ExpandParams
-    , MetaData
-    , Amount
+    , MetaData               (..)
+    , Amount                 (..)
     ) where
 
-import           Web.Stripe.StripeRequest    (Method (POST, GET), StripeRequest (..),
-                                             mkStripeRequest
-                                            )
-import           Web.Stripe.Util     (getParams, toExpandable,
-                                             toMetaData, toText, (</>))
-import           Web.Stripe.Types           (Amount, ApplicationFee (..),
-                                             ApplicationFeeRefund (..),
-                                             EndingBefore, ExpandParams,
-                                             FeeId (..), Limit, MetaData,
-                                             RefundId (..), StartingAfter,
-                                             StripeList (..))
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
+import           Web.Stripe.Util          (toExpandable, (</>))
+import           Web.Stripe.Types         (Amount(..), ApplicationFee (..),
+                                           ApplicationFeeRefund (..),
+                                           EndingBefore(..), ExpandParams,
+                                           FeeId (..), Limit(..), MetaData(..),
+                                           RefundId (..), StartingAfter(..),
+                                           StripeList (..))
 
 ------------------------------------------------------------------------------
 -- | Create a new `ApplicationFeeRefund`
+data CreateApplicationFeeRefund
+type instance StripeReturn CreateApplicationFeeRefund = ApplicationFeeRefund
+instance StripeHasParam CreateApplicationFeeRefund Amount
+instance StripeHasParam CreateApplicationFeeRefund MetaData
 createApplicationFeeRefund
     :: FeeId        -- ^ The `FeeID` associated with the `ApplicationFee`
-    -> Maybe Amount -- ^ The `Amount` associated with the `ApplicationFee` (optional)
-    -> MetaData     -- ^ The `MetaData` associated with the `ApplicationFee` (optional)
-    -> StripeRequest ApplicationFeeRefund
+    -> StripeRequest CreateApplicationFeeRefund
 createApplicationFeeRefund
     (FeeId feeid)
-    amount
-    metadata    = request
+                = request
   where request = mkStripeRequest POST url params
         url     = "application_fees" </> feeid </> "refunds"
-        params  = toMetaData metadata ++ getParams [
-                   ("amount", fmap toText amount)
-                  ]
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Retrieve an existing 'ApplicationFeeRefund'
+data GetApplicationFeeRefund
+type instance StripeReturn GetApplicationFeeRefund = ApplicationFeeRefund
 getApplicationFeeRefund
     :: FeeId     -- ^ The `FeeID` associated with the `ApplicationFee`
     -> RefundId  -- ^ The `ReufndId` associated with the `ApplicationFeeRefund`
-    -> StripeRequest ApplicationFeeRefund
+    -> StripeRequest GetApplicationFeeRefund
 getApplicationFeeRefund feeid refundid =
   getApplicationFeeRefundExpandable feeid refundid []
 
@@ -87,7 +95,7 @@ getApplicationFeeRefundExpandable
     :: FeeId          -- ^ The `FeeID` associated with the `ApplicationFee`
     -> RefundId       -- ^ The `ReufndId` associated with the `ApplicationFeeRefund`
     -> ExpandParams   -- ^ The `ExpandParams` to be used for object expansion
-    -> StripeRequest ApplicationFeeRefund
+    -> StripeRequest GetApplicationFeeRefund
 getApplicationFeeRefundExpandable (FeeId feeid) (RefundId refundid) expansion
     = request
   where request = mkStripeRequest GET url params
@@ -95,57 +103,49 @@ getApplicationFeeRefundExpandable (FeeId feeid) (RefundId refundid) expansion
         params  = toExpandable expansion
 
 ------------------------------------------------------------------------------
+-- | Update an `ApplicationFeeRefund` for a given Application `FeeId` and `RefundId`
+data UpdateApplicationFeeRefund
+type instance StripeReturn UpdateApplicationFeeRefund = ApplicationFeeRefund
+instance StripeHasParam UpdateApplicationFeeRefund MetaData
+updateApplicationFeeRefund
+    :: FeeId    -- ^ The `FeeID` associated with the application
+    -> RefundId -- ^ The `RefundId` associated with the application
+    -> StripeRequest UpdateApplicationFeeRefund
+updateApplicationFeeRefund
+    (FeeId feeid)
+    (RefundId refundid)
+            = request
+  where
+    request = mkStripeRequest GET url params
+    url     = "application_fees" </> feeid </> "refunds" </> refundid
+    params  = []
+
+------------------------------------------------------------------------------
 -- | Retrieve a list of all 'ApplicationFeeRefund's for a given Application 'FeeId'
+data GetApplicationFeeRefunds
+type instance StripeReturn GetApplicationFeeRefunds = (StripeList ApplicationFeeRefund)
+instance StripeHasParam GetApplicationFeeRefunds (EndingBefore RefundId)
+instance StripeHasParam GetApplicationFeeRefunds Limit
+instance StripeHasParam GetApplicationFeeRefunds (StartingAfter RefundId)
 getApplicationFeeRefunds
     :: FeeId               -- ^ The `FeeID` associated with the application
-    -> Limit               -- ^ `Limit` on how many `Refund`s to return (max 100, default 10)
-    -> StartingAfter FeeId -- ^ Lower bound on how many `Refund`s to return
-    -> EndingBefore FeeId  -- ^ Upper bound on how many `Refund`s to return
-    -> StripeRequest (StripeList ApplicationFeeRefund)
+    -> StripeRequest GetApplicationFeeRefunds
 getApplicationFeeRefunds
-   feeid
-   limit
-   startingAfter
-   endingBefore =
+   feeid =
      getApplicationFeeRefundsExpandable
-       feeid limit startingAfter endingBefore []
+       feeid []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a list of all 'ApplicationFeeRefund's for a given Application 'FeeId'
 getApplicationFeeRefundsExpandable
     :: FeeId               -- ^ The `FeeID` associated with the `ApplicationFee`
-    -> Limit               -- ^ Limit on how many Refunds to return (max 100, default 10)
-    -> StartingAfter FeeId -- ^ Lower bound on how many Refunds to return
-    -> EndingBefore FeeId  -- ^ Upper bound on how many Refunds to return
     -> ExpandParams        -- ^ The `ExpandParams` to be used for object expansion
-    -> StripeRequest (StripeList ApplicationFeeRefund)
+    -> StripeRequest GetApplicationFeeRefunds
 getApplicationFeeRefundsExpandable
   (FeeId feeid)
-   limit
-   startingAfter
-   endingBefore
    expandParams = request
   where
     request = mkStripeRequest GET url params
     url     = "application_fees" </> feeid </> "refunds"
-    params  = getParams [
-        ("limit", toText `fmap` limit )
-      , ("starting_after", (\(FeeId x) -> x) `fmap` startingAfter)
-      , ("ending_before", (\(FeeId x) -> x) `fmap` endingBefore)
-      ] ++ toExpandable expandParams
+    params  = toExpandable expandParams
 
-------------------------------------------------------------------------------
--- | Update an `ApplicationFeeRefund` for a given Application `FeeId` and `RefundId`
-updateApplicationFeeRefund
-    :: FeeId    -- ^ The `FeeID` associated with the application
-    -> RefundId -- ^ The `RefundId` associated with the application
-    -> MetaData -- ^ The `MetaData` associated with the Fee (optional)
-    -> StripeRequest (StripeList ApplicationFeeRefund)
-updateApplicationFeeRefund
-    (FeeId feeid)
-    (RefundId refundid)
-    metadata = request
-  where
-    request = mkStripeRequest GET url params
-    url     = "application_fees" </> feeid </> "refunds" </> refundid
-    params  = toMetaData metadata

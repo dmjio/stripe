@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Transfer
@@ -26,65 +29,88 @@
 -- @
 module Web.Stripe.Transfer
     ( -- * API
-      createTransfer
+      CreateTransfer
+    , createTransfer
+    , GetTransfer
     , getTransfer
     , getTransferExpandable
+    , UpdateTransfer
+    , updateTransfer
+    , CancelTransfer
+    , cancelTransfer
+    , GetTransfers
     , getTransfers
     , getTransfersExpandable
-    , updateTransfer
-    , cancelTransfer
       -- * Types
+    , Amount          (..)
+    , BankAccountId   (..)
+    , Card            (..)
+    , CardId          (..)
+    , Created         (..)
+    , Currency        (..)
+    , Date            (..)
+    , Description     (..)
+    , EndingBefore    (..)
+    , Recipient       (..)
+    , RecipientId     (..)
+    , StartingAfter   (..)
+    , StatementDescription (..)
+    , StripeList      (..)
     , Transfer        (..)
     , TransferId      (..)
     , TransferStatus  (..)
     , TransferType    (..)
-    , RecipientId     (..)
-    , Recipient       (..)
-    , StripeList      (..)
-    , Currency        (..)
-    , Amount
-    , Limit
+    , Limit           (..)
     ) where
-
-import           Web.Stripe.StripeRequest    (Method (GET, POST),
-                                             StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Util     (getParams, toExpandable, toTextLower,
-                                             toMetaData, toText, (</>))
-import           Web.Stripe.Types           (Amount, Currency (..),
-                                             EndingBefore, ExpandParams, Limit,
-                                             MetaData, RecipientId (..), Recipient(..),
-                                             StartingAfter, StripeList (..),
-                                             Transfer (..), TransferId (..),
-                                             TransferStatus (..),Description,
-                                             TransferType (..))
-import           Web.Stripe.Types.Util      (getRecipientId)
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
+import           Web.Stripe.Util          (toExpandable, (</>))
+import           Web.Stripe.Types         (Amount(..), BankAccountId(..), Card(..),
+                                           CardId(..), Created(..),Currency (..),
+                                           Date(..), EndingBefore(..), ExpandParams,
+                                           Limit(..), MetaData(..), Recipient (..),
+                                           RecipientId(..), StartingAfter(..),
+                                           StatementDescription(..),
+                                           StripeList (..), Transfer (..),
+                                           TransferId (..), TransferStatus (..),
+                                           Description(..), TransferType (..))
+import           Web.Stripe.Types.Util    (getRecipientId)
 
 ------------------------------------------------------------------------------
 -- | Create a `Transfer`
+data CreateTransfer
+type instance StripeReturn CreateTransfer = Transfer
+instance StripeHasParam Transfer Description
+instance StripeHasParam Transfer BankAccountId
+-- instance StripeHasParam Transfer Card -- FIXME
+instance StripeHasParam Transfer CardId
+instance StripeHasParam Transfer StatementDescription
+instance StripeHasParam Transfer MetaData
 createTransfer
     :: RecipientId -- ^ The `RecipientId` of the `Recipient` who will receive the `Transfer`
     -> Amount      -- ^ The `Amount` of money to transfer to the `Recipient`
     -> Currency    -- ^ The `Currency` in which to perform the `Transfer`
-    -> MetaData    -- ^ The `MetaData` associated with the Transfer
-    -> StripeRequest Transfer
+    -> StripeRequest CreateTransfer
 createTransfer
     recipientid
     amount
-    currency
-    metadata    = request
+    currency    = request
   where request = mkStripeRequest POST url params
         url     = "transfers"
-        params  = toMetaData metadata ++ getParams [
-                   ("amount", toText `fmap` Just amount)
-                 , ("currency",  toTextLower `fmap` Just currency)
-                 , ("recipient", getRecipientId `fmap` Just recipientid)
-                 ]
+        params  = toStripeParam recipientid $
+                  toStripeParam amount      $
+                  toStripeParam currency    $
+                  []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Transfer`
+data GetTransfer
+type instance StripeReturn GetTransfer = Transfer
 getTransfer
     :: TransferId -- ^ `TransferId` associated with the `Transfer` to retrieve
-    -> StripeRequest Transfer
+    -> StripeRequest GetTransfer
 getTransfer transferid =
     getTransferExpandable transferid []
 
@@ -93,71 +119,65 @@ getTransfer transferid =
 getTransferExpandable
     :: TransferId   -- ^ `TransferId` associated with the `Transfer` to retrieve
     -> ExpandParams -- ^ The `ExpandParams` of the object to be expanded
-    -> StripeRequest Transfer
+    -> StripeRequest GetTransfer
 getTransferExpandable
     (TransferId transferid)
     expandParams = request
   where request = mkStripeRequest GET url params
         url     = "transfers" </> transferid
         params  = toExpandable expandParams
-
-------------------------------------------------------------------------------
--- | Retrieve StripeList of `Transfers`
-getTransfers
-    :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter TransferId -- ^ Paginate starting after the following `TransferId`
-    -> EndingBefore TransferId  -- ^ Paginate ending before the following `TransferId`
-    -> StripeRequest (StripeList Transfer)
-getTransfers
-    limit
-    startingAfter
-    endingBefore =
-      getTransfersExpandable limit startingAfter endingBefore []
-
-------------------------------------------------------------------------------
--- | Retrieve StripeList of `Transfers` with `ExpandParams`
-getTransfersExpandable
-    :: Limit                    -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter TransferId -- ^ Paginate starting after the following `TransferId`
-    -> EndingBefore TransferId  -- ^ Paginate ending before the following `TransferId`
-    -> ExpandParams             -- ^ The `ExpandParams` of the object to be expanded
-    -> StripeRequest (StripeList Transfer)
-getTransfersExpandable
-    limit
-    startingAfter
-    endingBefore
-    expandParams = request
-  where request = mkStripeRequest GET url params
-        url     = "transfers"
-        params  = getParams [
-            ("limit", toText `fmap` limit )
-          , ("starting_after", (\(TransferId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(TransferId x) -> x) `fmap` endingBefore)
-          ] ++ toExpandable expandParams
-
 ------------------------------------------------------------------------------
 -- | Update a `Transfer`
+data UpdateTransfer
+type instance StripeReturn UpdateTransfer = Transfer
+instance StripeHasParam UpdateTransfer Description
+instance StripeHasParam UpdateTransfer MetaData
 updateTransfer
     :: TransferId        -- ^ The `TransferId` of the `Transfer` to update
-    -> Maybe Description -- ^ The `Description` of the `Transfer` to update
-    -> MetaData          -- ^ The `MetaData` of the `Transfer` to update
-    -> StripeRequest Transfer
+    -> StripeRequest UpdateTransfer
 updateTransfer
     (TransferId transferid)
-    description
-    metadata    = request
+                = request
   where request = mkStripeRequest POST url params
         url     = "transfers" </> transferid
-        params  = toMetaData metadata ++ getParams [
-           ("description", description)
-          ]
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Cancel a `Transfer`
+data CancelTransfer
+type instance StripeReturn CancelTransfer = Transfer
 cancelTransfer
     :: TransferId        -- ^ The `TransferId` of the `Transfer` to cancel
-    -> StripeRequest Transfer
+    -> StripeRequest CancelTransfer
 cancelTransfer (TransferId transferid) = request
   where request = mkStripeRequest POST url params
         url     = "transfers" </> transferid </> "cancel"
         params  = []
+
+
+------------------------------------------------------------------------------
+-- | Retrieve StripeList of `Transfers`
+data GetTransfers
+type instance StripeReturn GetTransfers = StripeList Transfer
+instance StripeHasParam GetTransfers Created
+instance StripeHasParam GetTransfers Date
+instance StripeHasParam GetTransfers (EndingBefore TransferId)
+instance StripeHasParam GetTransfers Limit
+instance StripeHasParam GetTransfers RecipientId
+instance StripeHasParam GetTransfers (StartingAfter TransferId)
+instance StripeHasParam GetTransfers TransferStatus
+getTransfers
+    :: StripeRequest GetTransfers
+getTransfers
+    = getTransfersExpandable []
+
+------------------------------------------------------------------------------
+-- | Retrieve StripeList of `Transfers` with `ExpandParams`
+getTransfersExpandable
+    :: ExpandParams             -- ^ The `ExpandParams` of the object to be expanded
+    -> StripeRequest GetTransfers
+getTransfersExpandable
+    expandParams = request
+  where request = mkStripeRequest GET url params
+        url     = "transfers"
+        params  = toExpandable expandParams

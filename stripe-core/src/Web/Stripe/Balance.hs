@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Balance
@@ -23,35 +26,41 @@
 -- @
 module Web.Stripe.Balance
     ( -- * API
-      getBalance
+      GetBalance
+    , getBalance
+{-
     , getBalanceTransaction
     , getBalanceTransactionExpandable
     , getBalanceTransactionHistory
+-}
       -- * Types
     , Balance                (..)
     , TransactionId          (..)
     , StripeList             (..)
-    , EndingBefore
-    , StartingAfter
-    , Limit
-    , BalanceTransaction
-    , BalanceAmount
+    , EndingBefore           (..)
+    , StartingAfter          (..)
+    , Limit                  (..)
+    , BalanceTransaction     (..)
+    , BalanceAmount          (..)
     ) where
 
-import           Web.Stripe.StripeRequest   (Method (GET), StripeRequest (..),
-                                            mkStripeRequest)
-import           Web.Stripe.Util    (getParams, toExpandable, toText,
-                                             (</>))
-import           Web.Stripe.Types           (Balance (..), BalanceAmount,
-                                             BalanceTransaction, EndingBefore,
-                                             ExpandParams, Limit, StartingAfter,
-                                             StripeList (..),
-                                             TransactionId (..))
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
+import           Web.Stripe.Util          (toExpandable, (</>))
+import           Web.Stripe.Types         (Balance (..), BalanceAmount,
+                                           BalanceTransaction, Created(..), Currency(..), EndingBefore(..),
+                                           ExpandParams, Limit(..), StartingAfter(..),
+                                           StripeList (..),
+                                           TransferId(..), TransactionId (..))
 import           Web.Stripe.Types.Util      (getTransactionId)
 
 ------------------------------------------------------------------------------
 -- | Retrieve the current `Balance` for your Stripe account
-getBalance :: StripeRequest Balance
+data GetBalance
+type instance StripeReturn GetBalance = Balance
+getBalance :: StripeRequest GetBalance
 getBalance = request
   where request = mkStripeRequest GET url params
         url     = "balance"
@@ -59,9 +68,11 @@ getBalance = request
 
 ------------------------------------------------------------------------------
 -- | Retrieve a 'BalanceTransaction' by 'TransactionId'
+data GetBalanceTransaction
+type instance StripeReturn GetBalanceTransaction = BalanceTransaction
 getBalanceTransaction
     :: TransactionId  -- ^ The `TransactionId` of the `Transaction` to retrieve
-    -> StripeRequest BalanceTransaction
+    -> StripeRequest GetBalanceTransaction
 getBalanceTransaction
     transactionid = getBalanceTransactionExpandable transactionid []
 
@@ -70,7 +81,7 @@ getBalanceTransaction
 getBalanceTransactionExpandable
     :: TransactionId -- ^ The `TransactionId` of the `Transaction` to retrieve
     -> ExpandParams  -- ^ The `ExpandParams` of the object to be expanded
-    -> StripeRequest BalanceTransaction
+    -> StripeRequest GetBalanceTransaction
 getBalanceTransactionExpandable
     transactionid expandParams = request
   where request = mkStripeRequest GET url params
@@ -79,19 +90,23 @@ getBalanceTransactionExpandable
 
 ------------------------------------------------------------------------------
 -- | Retrieve the history of `BalanceTransaction`s
+data GetBalanceTransactionHistory
+type instance StripeReturn GetBalanceTransactionHistory = (StripeList BalanceTransaction)
+-- instance StripeHasParam GetBalanceTransactionHistory AvailableOn -- FIXME
+instance StripeHasParam GetBalanceTransactionHistory Created
+instance StripeHasParam GetBalanceTransactionHistory Currency
+instance StripeHasParam GetBalanceTransactionHistory (EndingBefore TransactionId)
+instance StripeHasParam GetBalanceTransactionHistory Limit
+instance StripeHasParam GetBalanceTransactionHistory (StartingAfter TransactionId)
+-- instance StripeHasParam GetBalanceTransactionHistory Source -- FIXME
+instance StripeHasParam GetBalanceTransactionHistory TransferId
+-- instance StripeHasParam GetBalanceTransactionHistory TransactionType -- FIXME
+
 getBalanceTransactionHistory
-    :: Limit                       -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter TransactionId -- ^ Paginate starting after the following `TransactionId`
-    -> EndingBefore TransactionId  -- ^ Paginate ending before the following `TransactionId`
-    -> StripeRequest (StripeList BalanceTransaction)
+    :: StripeRequest GetBalanceTransactionHistory
 getBalanceTransactionHistory
-    limit
-    startingAfter
-    endingBefore = request
+                = request
   where request = mkStripeRequest GET url params
         url     = "balance" </> "history"
-        params  = getParams [
-             ("limit", toText `fmap` limit )
-           , ("starting_after", (\(TransactionId x) -> x) `fmap` startingAfter)
-           , ("ending_before", (\(TransactionId x) -> x) `fmap` endingBefore)
-           ]
+        params  = []
+

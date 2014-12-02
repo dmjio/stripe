@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Recipient
@@ -27,42 +30,33 @@
 -- @
 module Web.Stripe.Recipient
     ( -- * API
-      createRecipient
-    , createRecipientByCard
-    , createRecipientByToken
-    , createRecipientByBank
-    , createRecipientBase
+      CreateRecipient
+    , createRecipient
+    , GetRecipient
     , getRecipient
     , getRecipientExpandable
+    , UpdateRecipient
+    , updateRecipient
+    , DeleteRecipient
+    , deleteRecipient
+    , GetRecipients
     , getRecipients
     , getRecipientsExpandable
-    , updateRecipientName
-    , updateRecipientTaxID
-    , updateRecipientBankAccount
-    , updateRecipientTokenID
-    , updateRecipientDefaultCard
-    , updateRecipientEmail
-    , updateRecipientDescription
-    , updateRecipientMetaData
-    , updateRecipientBase
-    , deleteRecipient
       -- * Types
-    , Recipient     (..)
-    , RecipientId   (..)
-    , FirstName     (..)
-    , LastName      (..)
-    , MiddleInitial
-    , RecipientType (..)
-    , TaxID
-    , BankAccount   (..)
-    , TokenId
-    , CardNumber
-    , ExpMonth
-    , Email (..)
-    , ExpYear
-    , CVC
-    , Description
-    , Limit
+    , CVC            (..)
+    , Description    (..)
+    , Recipient      (..)
+    , RecipientId    (..)
+    , Name           (..)
+    , RecipientType  (..)
+    , TaxID          (..)
+    , BankAccount    (..)
+    , TokenId        (..)
+    , CardNumber     (..)
+    , ExpMonth       (..)
+    , ExpYear        (..)
+    , Email          (..)
+    , Limit          (..)
     , StripeDeleteResult (..)
     , RoutingNumber  (..)
     , AccountNumber  (..)
@@ -75,180 +69,66 @@ module Web.Stripe.Recipient
     , AddressZip     (..)
     , BankAccountId  (..)
     , BankAccountStatus (..)
+    , IsVerified     (..)
     ) where
 
-import           Data.Monoid                ((<>))
-import qualified Data.Text                  as T
-
-import           Web.Stripe.StripeRequest    (Method(POST,GET,DELETE),
-                                             StripeRequest(..), mkStripeRequest)
-import           Web.Stripe.Util     (toMetaData, getParams,
-                                             toText, toExpandable, (</>))
-import           Web.Stripe.Types           (AccountNumber (..),
-                                             BankAccount (..), CVC, CVC (..),
-                                             CardId (..), CardNumber, BankAccountId (..), BankAccountStatus(..),
-                                             CardNumber (..), Country (..),
-                                             Description, Email, Email (..),
-                                             ExpMonth, ExpMonth (..), ExpYear,
-                                             RoutingNumber  (..), AccountNumber  (..),
-                                             Country        (..), AddressCity    (..),
-                                             AddressCountry (..), AddressLine1   (..),
-                                             AddressLine2   (..), AddressState   (..),
-                                             AddressZip     (..), ExpYear (..),
-                                             FirstName (..), LastName (..), Limit,
-                                             MiddleInitial, Recipient (..),
-                                             RecipientId (..), ExpandParams,
-                                             RecipientType (..), StripeDeleteResult(..),
-                                             RoutingNumber (..), EndingBefore, StartingAfter,
-                                             StripeList (..), TaxID, TokenId,
-                                             TokenId (..), MetaData)
-import           Web.Stripe.Types.Util      (getRecipientId)
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
+import           Web.Stripe.Util          (toExpandable, (</>))
+import           Web.Stripe.Types         (AccountNumber (..),
+                                           BankAccount (..), CVC (..),
+                                           CardId (..), CardNumber, BankAccountId (..),
+                                           BankAccountStatus(..),
+                                           CardNumber (..), Country (..),
+                                           Description(..), Email, Email (..),
+                                           ExpMonth (..), ExpYear(..), IsVerified(..),
+                                           RoutingNumber  (..), AccountNumber  (..),
+                                           Country        (..), AddressCity    (..),
+                                           AddressCountry (..), AddressLine1   (..),
+                                           AddressLine2   (..), AddressState   (..),
+                                           AddressZip     (..), ExpYear (..),
+                                           Limit(..), Name(..), Recipient (..),
+                                           RecipientId (..), ExpandParams,
+                                           RecipientType (..), StripeDeleteResult(..),
+                                           RoutingNumber (..), EndingBefore(..),
+                                           StartingAfter(..), StripeList (..),
+                                           TaxID(..), TokenId(..),
+                                           TokenId (..), MetaData(..))
+import           Web.Stripe.Types.Util    (getRecipientId)
 
 ------------------------------------------------------------------------------
 -- | Base Request for issues create `Recipient` requests
-createRecipientBase
-    :: FirstName           -- ^ First Name of `Recipient`
-    -> LastName            -- ^ Last Name of `Recipient`
-    -> Maybe MiddleInitial -- ^ Middle Initial of `Recipient`
-    -> RecipientType       -- ^ `Individual` or `Corporation`
-    -> Maybe TaxID         -- ^ SSN for `Individual`, EIN for `Corporation`
-    -> Maybe Country       -- ^ `Country` of BankAccount to attach to `Recipient`
-    -> Maybe RoutingNumber -- ^ `RoutingNumber` of BankAccount to attach to `Recipient`
-    -> Maybe AccountNumber -- ^ `AccountNumber` of BankAccount to attach to `Recipient`
-    -> Maybe TokenId       -- ^ `TokenId` of `Card` or `BankAccount` to attach to a `Recipient`
-    -> Maybe CardNumber    -- ^ `CardNumber` to attach to `Card` of `Recipient`
-    -> Maybe ExpMonth      -- ^ Expiration Month of `Card`
-    -> Maybe ExpYear       -- ^ Expiration Year of `Card`
-    -> Maybe CVC           -- ^ CVC of Card
-    -> Maybe Email         -- ^ Create `Email` with `Recipient`
-    -> Maybe Description   -- ^ Create `Description` with `Recipient`
-    -> MetaData            -- ^ The `MetaData` associated with the `Recipient`
-    -> StripeRequest Recipient
-createRecipientBase
-    (FirstName firstName)
-    (LastName lastName)
-    middleInitial
+data CreateRecipient
+type instance StripeReturn CreateRecipient = Recipient
+instance StripeHasParam CreateRecipient TaxID
+-- instance StripeHasParam CreateRecipient BankAccount -- FIXME
+instance StripeHasParam CreateRecipient TokenId
+-- instance StripeHasParam CreateRecipient Card -- FIXME
+instance StripeHasParam CreateRecipient CardId
+instance StripeHasParam CreateRecipient Email
+instance StripeHasParam CreateRecipient Description
+instance StripeHasParam CreateRecipient MetaData
+createRecipient
+    :: Name
+    -> RecipientType
+    -> StripeRequest CreateRecipient
+createRecipient
+    name
     recipienttype
-    taxId
-    country
-    routingNumber
-    accountNumber
-    tokenId
-    cardNumber
-    expMonth
-    expYear
-    cvc
-    email
-    description
-    metadata    = request
+                = request
   where request = mkStripeRequest POST url params
         url     = "recipients"
-        params  =
-            let name   = firstName <> middle <> lastName
-                middle = maybe " " (\x -> " " <> T.singleton x <> " ") middleInitial
-            in toMetaData metadata ++ getParams [
-                    ("name", Just name)
-                  , ("type", toText `fmap` Just recipienttype)
-                  , ("tax_id", taxId)
-                  , ("bank_account[country]", (\(Country x) -> x) `fmap` country)
-                  , ("bank_account[routing_number]",  (\(RoutingNumber x ) -> x) `fmap` routingNumber)
-                  , ("bank_account[account_number]",  (\(AccountNumber x ) -> x) `fmap` accountNumber)
-                  , ("card", (\(TokenId x) -> x) `fmap` tokenId)
-                  , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
-                  , ("card[exp_month]", (\(ExpMonth x) -> toText x) `fmap` expMonth)
-                  , ("card[exp_year]", (\(ExpYear x) -> toText x) `fmap` expYear)
-                  , ("card[cvc]", (\(CVC x) -> x) `fmap` cvc)
-                  , ("email", (\(Email x) -> x) `fmap` email)
-                  , ("description", description)
-                  ]
-------------------------------------------------------------------------------
--- | Create a `Recipient`
-createRecipient
-    :: FirstName           -- ^ First Name of 'Recipient'
-    -> LastName            -- ^ Last Name of 'Recipient'
-    -> Maybe MiddleInitial -- ^ Middle Initial of 'Recipient'
-    -> RecipientType       -- ^ 'Individual' or 'Corporation'
-    -> StripeRequest Recipient
-createRecipient
-    firstName
-    lastName
-    middleInitial
-    recipienttype
-    = createRecipientBase firstName lastName middleInitial recipienttype
-      Nothing Nothing Nothing Nothing Nothing Nothing Nothing
-      Nothing Nothing Nothing Nothing []
-------------------------------------------------------------------------------
--- | Create a `Recipient` by a `Card`
-createRecipientByCard
-    :: FirstName           -- ^ First Name of 'Recipient'
-    -> LastName            -- ^ Last Name of 'Recipient'
-    -> Maybe MiddleInitial -- ^ Middle Initial of 'Recipient'
-    -> RecipientType       -- ^ 'Individual' or 'Corporation'
-    -> CardNumber          -- ^ 'Card' Number
-    -> ExpMonth            -- ^ Expiration Month
-    -> ExpYear             -- ^ Expiration Year
-    -> CVC                 -- ^ 'CVC' (i.e. 117)
-    -> StripeRequest Recipient
-createRecipientByCard
-    firstName
-    lastName
-    middleInitial
-    recipienttype
-    cardNumber
-    expMonth
-    expYear
-    cvc
-    = createRecipientBase firstName lastName middleInitial recipienttype
-      Nothing Nothing Nothing Nothing Nothing (Just cardNumber) (Just expMonth)
-      (Just expYear) (Just cvc) Nothing Nothing []
-
-------------------------------------------------------------------------------
--- | Create a `Recipient` by specifying a `TokenId`
-createRecipientByToken
-    :: FirstName           -- ^ First Name of `Recipient`
-    -> LastName            -- ^ Last Name of `Recipient`
-    -> Maybe MiddleInitial -- ^ Middle Initial of `Recipient`
-    -> RecipientType       -- ^ `Individual` or `Corporation`
-    -> TokenId             -- ^ `TokenId` received from stripe.js or Token API
-    -> StripeRequest Recipient
-createRecipientByToken
-    firstName
-    lastName
-    middleInitial
-    recipienttype
-    tokenId
-    = createRecipientBase firstName lastName middleInitial recipienttype
-      Nothing Nothing Nothing Nothing (Just tokenId) Nothing Nothing
-      Nothing Nothing Nothing Nothing []
-
-------------------------------------------------------------------------------
--- | Create a `Recipient` with a `BankAccount`
-createRecipientByBank
-    :: FirstName           -- ^ First Name of `Recipient`
-    -> LastName            -- ^ Last Name of `Recipient`
-    -> Maybe MiddleInitial -- ^ Middle Initial of `Recipient`
-    -> RecipientType       -- ^ `Individual` or `Corporation`
-    -> Country             -- ^ `Country` of BankAccount to attach to `Recipient`
-    -> RoutingNumber       -- ^ `RoutingNumber` of BankAccount to attach to `Recipient`
-    -> AccountNumber       -- ^ `AccountNumber` of BankAccount to attach to `Recipient`
-    -> StripeRequest Recipient
-createRecipientByBank
-    firstName
-    lastName
-    middleInitial
-    recipienttype
-    country
-    routingNumber
-    accountNumber
-    = createRecipientBase firstName lastName middleInitial recipienttype
-      Nothing (Just country) (Just routingNumber) (Just accountNumber) Nothing Nothing
-      Nothing Nothing Nothing Nothing Nothing []
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a 'Recipient'
+data GetRecipient
+type instance StripeReturn GetRecipient = Recipient
 getRecipient
     :: RecipientId -- ^ The `RecipientId` of the `Recipient` to be retrieved
-    -> StripeRequest Recipient
+    -> StripeRequest GetRecipient
 getRecipient
     recipientid = getRecipientExpandable recipientid []
 
@@ -257,7 +137,7 @@ getRecipient
 getRecipientExpandable
     :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be retrieved
     -> ExpandParams  -- ^ `ExpandParams` of the object to be expanded
-    -> StripeRequest Recipient
+    -> StripeRequest GetRecipient
 getRecipientExpandable
     recipientid
     expandParams = request
@@ -266,234 +146,61 @@ getRecipientExpandable
         params  = toExpandable expandParams
 
 ------------------------------------------------------------------------------
--- | Retrieve multiple 'Recipient's
-getRecipients
-    :: Limit                     -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter RecipientId -- ^ Paginate starting after the following `RecipientId`
-    -> EndingBefore RecipientId  -- ^ Paginate ending before the following `RecipientId`
-    -> StripeRequest (StripeList Recipient)
-getRecipients
-  limit
-  startingAfter
-  endingBefore  =
-    getRecipientsExpandable
-      limit startingAfter endingBefore []
-
-------------------------------------------------------------------------------
--- | Retrieve multiple 'Recipient's with `ExpandParams`
-getRecipientsExpandable
-    :: Limit                     -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter RecipientId -- ^ Paginate starting after the following `RecipientId`
-    -> EndingBefore RecipientId  -- ^ Paginate ending before the following `RecipientId`
-    -> ExpandParams              -- ^ `ExpandParams` of the object to be expanded
-    -> StripeRequest (StripeList Recipient)
-getRecipientsExpandable
-  limit
-  startingAfter
-  endingBefore
-  expandParams  = request
-  where request = mkStripeRequest GET url params
-        url     = "recipients"
-        params  = getParams [
-            ("limit", toText `fmap` limit )
-          , ("starting_after", (\(RecipientId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(RecipientId x) -> x) `fmap` endingBefore)
-          ] ++ toExpandable expandParams
-
-
-------------------------------------------------------------------------------
--- | Base Request for updating a `Recipient`, useful for creating custom `Recipient` update functions
-updateRecipientBase
-    :: RecipientId         -- ^ The `RecipientId` of the `Recipient` to be updated
-    -> Maybe FirstName     -- ^ First Name of `Recipient`
-    -> Maybe LastName      -- ^ Last Name of `Recipient`
-    -> Maybe MiddleInitial -- ^ Middle Initial of `Recipient`
-    -> Maybe TaxID         -- ^ SSN for `Individual`, EIN for `Corporation`
-    -> Maybe Country       -- ^ `Country` of BankAccount to attach to `Recipient`
-    -> Maybe RoutingNumber -- ^ `RoutingNumber` of BankAccount to attach to `Recipient`
-    -> Maybe AccountNumber -- ^ `AccountNumber` of BankAccount to attach to `Recipient`
-    -> Maybe TokenId       -- ^ `TokenId` of `Card` to attach to a `Recipient`
-    -> Maybe CardNumber    -- ^ `CardNumber` to attach to `Card` of `Recipient`
-    -> Maybe ExpMonth      -- ^ Expiration Month of `Card`
-    -> Maybe ExpYear       -- ^ Expiration Year of `Card`
-    -> Maybe CVC           -- ^ CVC of Card
-    -> Maybe CardId        -- ^ The Default `Card` for this `Recipient` to use
-    -> Maybe Email         -- ^ Create `Email` with `Recipient`
-    -> Maybe Description   -- ^ Create `Description` with `Recipient`
-    -> MetaData            -- ^ The `MetaData` associated with the `Recipient`
-    -> StripeRequest Recipient
-updateRecipientBase
-    recipientid
-    firstName
-    lastName
-    middleInitial
-    taxId
-    country
-    routingNumber
-    accountNumber
-    tokenId
-    cardNumber
-    expMonth
-    expYear
-    cvc
-    cardId
-    email
-    description
-    metadata    = request
+-- | Update `Recipient`
+data UpdateRecipient
+type instance StripeReturn UpdateRecipient = Recipient
+instance StripeHasParam UpdateRecipient Name
+instance StripeHasParam UpdateRecipient TaxID
+-- instance StripeHasParam UpdateRecipient BankAccount -- FIXME
+instance StripeHasParam UpdateRecipient TokenId
+-- instance StripeHasParam UpdateRecipient Card        -- FIXME
+-- instance StripeHasParam UpdateRecipient DefaultCard -- FIXME
+instance StripeHasParam UpdateRecipient CardId
+instance StripeHasParam UpdateRecipient Email
+instance StripeHasParam UpdateRecipient Description
+instance StripeHasParam UpdateRecipient MetaData
+updateRecipient
+    :: RecipientId
+    -> StripeRequest UpdateRecipient
+updateRecipient
+  recipientid   = request
   where request = mkStripeRequest POST url params
         url     = "recipients" </> getRecipientId recipientid
-        params  =
-            let name = if firstName == Nothing || lastName == Nothing
-                         then Nothing
-                         else do let Just (FirstName f) = firstName
-                                     Just (LastName l)  = lastName
-                                     middle = maybe " " (\x -> " " <> T.singleton x <> " ") middleInitial
-                                 Just $ f <> middle <> l
-            in getParams [
-                    ("name", name)
-                  , ("tax_id", taxId)
-                  , ("bank_account[country]", (\(Country x) -> x) `fmap` country)
-                  , ("bank_account[routing_number]",  (\(RoutingNumber x ) -> x) `fmap` routingNumber)
-                  , ("bank_account[account_number]",  (\(AccountNumber x ) -> x) `fmap` accountNumber)
-                  , ("card", (\(TokenId x) -> x) `fmap` tokenId)
-                  , ("card[number]", (\(CardNumber x) -> x) `fmap` cardNumber)
-                  , ("card[exp_month]", (\(ExpMonth x) -> toText x) `fmap` expMonth)
-                  , ("card[exp_year]", (\(ExpYear x) -> toText x) `fmap` expYear)
-                  , ("card[cvc]", (\(CVC x) -> x) `fmap` cvc)
-                  , ("default_card", (\(CardId x) -> x) `fmap` cardId)
-                  , ("email", (\(Email x) -> x) `fmap` email)
-                  , ("description", description)
-                  ] ++ toMetaData metadata
-
-------------------------------------------------------------------------------
--- | Update a `Recipient` `FirstName`, `LastName` and/or `MiddleInitial`
-updateRecipientName
-    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
-    -> FirstName     -- ^ First Name of `Recipient`
-    -> LastName      -- ^ Last Name of `Recipient`
-    -> MiddleInitial -- ^ Middle Initial of `Recipient`
-    -> StripeRequest Recipient
-updateRecipientName
-    recipientid
-    firstName
-    lastName
-    middleInitial = updateRecipientBase
-                     recipientid (Just firstName) (Just lastName) (Just middleInitial)
-                     Nothing Nothing Nothing Nothing
-                     Nothing Nothing Nothing Nothing
-                     Nothing Nothing Nothing Nothing []
-
-------------------------------------------------------------------------------
--- | Update a 'Recipient' 'BankAccount'
-updateRecipientBankAccount
-    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
-    -> Country       -- ^ `Country` of BankAccount to attach to `Recipient`
-    -> RoutingNumber -- ^ `RoutingNumber` of BankAccount to attach to `Recipient`
-    -> AccountNumber -- ^ `AccountNumber` of BankAccount to attach to `Recipient`
-    -> StripeRequest Recipient
-updateRecipientBankAccount
-    recipientid
-    country
-    routingNumber
-    accountNumber
-     = updateRecipientBase
-         recipientid Nothing Nothing Nothing
-         Nothing (Just country) (Just routingNumber)
-         (Just accountNumber) Nothing Nothing
-         Nothing Nothing Nothing Nothing
-         Nothing Nothing []
-
-------------------------------------------------------------------------------
--- | Update a `Recipient` `TaxID`
-updateRecipientTaxID
-    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
-    -> TaxID         -- ^ `TaxID` of `Recipient` to be updated
-    -> StripeRequest Recipient
-updateRecipientTaxID
-    recipientid
-    taxID = updateRecipientBase
-              recipientid Nothing Nothing Nothing
-              (Just taxID) Nothing Nothing Nothing
-              Nothing Nothing Nothing Nothing
-              Nothing Nothing Nothing Nothing []
-
-------------------------------------------------------------------------------
--- | Update a `Recipient` `Card` by `TokenId`
-updateRecipientTokenID
-    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
-    -> TokenId       -- ^ `TaxID` of `Recipient` to be updated
-    -> StripeRequest Recipient
-updateRecipientTokenID
-    recipientid
-    tokenId = updateRecipientBase
-              recipientid Nothing Nothing Nothing
-              Nothing Nothing Nothing Nothing (Just tokenId) Nothing
-              Nothing Nothing Nothing Nothing Nothing Nothing []
-
-
-------------------------------------------------------------------------------
--- | Update default `Card` of `Recipient`
-updateRecipientDefaultCard
-    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
-    -> CardId        -- ^ `CardId` of `Card` to be made default
-    -> StripeRequest Recipient
-updateRecipientDefaultCard
-    recipientid
-    cardId = updateRecipientBase
-              recipientid Nothing Nothing Nothing Nothing
-                          Nothing Nothing Nothing Nothing
-                          Nothing Nothing Nothing Nothing
-                          (Just cardId) Nothing Nothing []
-
-------------------------------------------------------------------------------
--- | Update a `Recipient` `Email` Address
-updateRecipientEmail
-    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
-    -> Email         -- ^ `Email` of `Recipient` to be updated
-    -> StripeRequest Recipient
-updateRecipientEmail
-    recipientid
-    email = updateRecipientBase
-              recipientid Nothing Nothing Nothing Nothing
-                          Nothing Nothing Nothing Nothing
-                          Nothing Nothing Nothing Nothing
-                          Nothing (Just email) Nothing []
-
-------------------------------------------------------------------------------
--- | Update a `Recipient` `Description`
-updateRecipientDescription
-    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
-    -> Description   -- ^ `Description` of `Recipient` to be updated
-    -> StripeRequest Recipient
-updateRecipientDescription
-    recipientid
-    description = updateRecipientBase
-                   recipientid Nothing Nothing Nothing Nothing
-                               Nothing Nothing Nothing Nothing
-                               Nothing Nothing Nothing Nothing
-                               Nothing Nothing (Just description) []
-
-------------------------------------------------------------------------------
--- | Update a `Recipient` `MetaData`
-updateRecipientMetaData
-    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be updated
-    -> MetaData      -- ^ The `MetaData` associated with the `Recipient`
-    -> StripeRequest Recipient
-updateRecipientMetaData
-    recipientid
-    metadata = updateRecipientBase
-               recipientid Nothing Nothing Nothing Nothing
-               Nothing Nothing Nothing Nothing
-               Nothing Nothing Nothing Nothing
-               Nothing Nothing Nothing metadata
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Delete a `Recipient`
+data DeleteRecipient
+type instance StripeReturn DeleteRecipient = StripeDeleteResult
 deleteRecipient
     :: RecipientId   -- ^ `RecipiendId` of `Recipient` to delete
-    -> StripeRequest StripeDeleteResult
+    -> StripeRequest DeleteRecipient
 deleteRecipient
    recipientid = request
   where request = mkStripeRequest DELETE url params
         url     = "recipients" </> getRecipientId recipientid
         params  = []
+
+------------------------------------------------------------------------------
+-- | Retrieve multiple 'Recipient's
+data GetRecipients
+type instance StripeReturn GetRecipients = StripeList Recipient
+instance StripeHasParam GetRecipients (EndingBefore RecipientId)
+instance StripeHasParam GetRecipients Limit
+instance StripeHasParam GetRecipients (StartingAfter RecipientId)
+instance StripeHasParam GetRecipients IsVerified
+getRecipients
+    :: StripeRequest GetRecipients
+getRecipients
+  = getRecipientsExpandable []
+
+------------------------------------------------------------------------------
+-- | Retrieve multiple 'Recipient's with `ExpandParams`
+getRecipientsExpandable
+    :: ExpandParams              -- ^ `ExpandParams` of the object to be expanded
+    -> StripeRequest GetRecipients
+getRecipientsExpandable
+  expandParams  = request
+  where request = mkStripeRequest GET url params
+        url     = "recipients"
+        params  = toExpandable expandParams

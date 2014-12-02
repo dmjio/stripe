@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Token
@@ -28,26 +31,31 @@
 module Web.Stripe.Token
    ( -- * API
 {-
-     createCardToken
+     createCardToken             -- FIXME
    , createBankAccountToken
+-}
+     GetCardToken
    , getCardToken
+   , GetBankAccountToken
    , getBankAccountToken
      -- * Types
    , CardNumber    (..)
    , ExpMonth      (..)
    , ExpYear       (..)
    , CVC           (..)
-   , Token         (..) -}
-    TokenId       (..)
-{-   , TokenType     (..)
+   , Token         (..)
+   , TokenId       (..)
+   , TokenType     (..)
    , Country       (..)
    , RoutingNumber (..)
    , AccountNumber (..)
-   , Account       (..) -}
+   , Account       (..)
    ) where
 
-import           Web.Stripe.StripeRequest    (Method (GET, POST),
-                                             StripeRequest (..), mkStripeRequest)
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
 import           Web.Stripe.Util     (getParams, toText, (</>))
 import           Web.Stripe.Types           (Account(..), AccountNumber (..),
                                              CVC (..), CardNumber (..),
@@ -97,12 +105,14 @@ createBankAccountToken
                   , ("bank_account[routing_number]", Just routingNumber)
                   , ("bank_account[account_number]", Just accountNumber)
                   ]
-
+-}
 ------------------------------------------------------------------------------
 -- | Retrieve a `Token` by `TokenId`
+data GetCardToken
+type instance StripeReturn GetCardToken = Token Card
 getCardToken
     :: TokenId -- ^ The `TokenId` of the `Card` `Token` to retrieve
-    -> StripeRequest (Token Card)
+    -> StripeRequest GetCardToken
 getCardToken (TokenId token) = request
   where request = mkStripeRequest GET url params
         url     = "tokens" </> token
@@ -110,11 +120,12 @@ getCardToken (TokenId token) = request
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Token` by `TokenId`
+data GetBankAccountToken
+type instance StripeReturn GetBankAccountToken = Token BankAccount
 getBankAccountToken
     :: TokenId -- ^ The `TokenId` of the `BankAccount` `Token` to retrieve
-    -> StripeRequest (Token BankAccount)
+    -> StripeRequest GetBankAccountToken
 getBankAccountToken (TokenId token) = request
   where request = mkStripeRequest GET url params
         url     = "tokens" </> token
         params  = []
--}

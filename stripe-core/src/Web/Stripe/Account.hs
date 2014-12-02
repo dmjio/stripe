@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Account
@@ -23,22 +26,25 @@
 -- @
 module Web.Stripe.Account
     ( -- * API
-      getAccountDetails
+      GetAccountDetails
+    , getAccountDetails
       -- * Types
     , Account   (..)
     , AccountId (..)
     ) where
 
-import           Web.Stripe.StripeRequest    ( Method (GET)
-                                            , StripeRequest (..)
-                                            , mkStripeRequest
-                                            )
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
 import           Web.Stripe.Types           ( Account   (..)
                                             , AccountId (..) )
 
 ------------------------------------------------------------------------------
 -- | Retrieve the object that represents your Stripe account
-getAccountDetails :: StripeRequest Account
+data GetAccountDetails
+type instance StripeReturn GetAccountDetails = Account
+getAccountDetails :: StripeRequest GetAccountDetails
 getAccountDetails = request
   where request = mkStripeRequest GET url params
         url     = "account"

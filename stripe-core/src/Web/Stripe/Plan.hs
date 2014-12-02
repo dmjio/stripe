@@ -66,7 +66,7 @@ import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..)
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
 import           Web.Stripe.Types         (PlanId (..) , Plan (..), PlanName(..), Interval (..), StripeList(..), IntervalCount (..), TrialPeriodDays (..), Limit, StartingAfter, EndingBefore, StripeDeleteResult(..), Currency (..), Name, Amount, StatementDescription, MetaData)
-import           Web.Stripe.Util    ( (</>))
+import           Web.Stripe.Util          ((</>))
 
 ------------------------------------------------------------------------------
 -- | Create a `Plan`

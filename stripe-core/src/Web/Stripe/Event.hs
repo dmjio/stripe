@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 -------------------------------------------
 -- |
 -- Module      : Web.Stripe.Event
@@ -23,9 +26,12 @@
 -- @
 module Web.Stripe.Event
     ( -- * API
-      getEvent
+      GetEvent
+    , getEvent
+    , GetEvents
     , getEvents
       -- * Types
+    , Created    (..)
     , EventId    (..)
     , Event      (..)
     , EventData  (..)
@@ -34,18 +40,22 @@ module Web.Stripe.Event
     , Limit
     ) where
 
-import           Web.Stripe.StripeRequest    (Method (GET), StripeRequest (..),
-                                             mkStripeRequest)
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+                                           StripeHasParam, StripeRequest (..),
+                                           StripeReturn, ToStripeParam(..),
+                                           mkStripeRequest)
 import           Web.Stripe.Util     ((</>), getParams, toText)
-import           Web.Stripe.Types           (Event (..), EventId (..), Limit, EventData(..),
+import           Web.Stripe.Types           (Created(..), Event (..), EventId (..), Limit, EventData(..),
                                              EventType(..), StripeList (..), Limit,
                                              StartingAfter, EndingBefore)
 
 ------------------------------------------------------------------------------
 -- | `Event` to retrieve by `EventId`
+data GetEvent
+type instance StripeReturn GetEvent = Event
 getEvent
     :: EventId -- ^ The ID of the Event to retrieve
-    -> StripeRequest Event
+    -> StripeRequest GetEvent
 getEvent (EventId eventid) = request
   where request = mkStripeRequest GET url params
         url     = "events" </> eventid
@@ -53,19 +63,17 @@ getEvent (EventId eventid) = request
 
 ------------------------------------------------------------------------------
 -- | `StripeList` of `Event`s to retrieve
+data GetEvents
+type instance StripeReturn GetEvents = (StripeList Event)
+instance StripeHasParam GetEvents Created
+instance StripeHasParam GetEvents (EndingBefore EventId)
+instance StripeHasParam GetEvents Limit
+instance StripeHasParam GetEvents (StartingAfter EventId)
+-- instance StripeHasParam GetEvents EventType -- FIXME
 getEvents
-    :: Maybe Limit           -- ^ Defaults to 10 if `Nothing` specified
-    -> StartingAfter EventId -- ^ Paginate starting after the following `EventId`
-    -> EndingBefore EventId  -- ^ Paginate ending before the following `EventId`
-    -> StripeRequest (StripeList Event)
+    :: StripeRequest GetEvents
 getEvents
-  limit
-  startingAfter
-  endingBefore  = request
+                = request
   where request = mkStripeRequest GET url params
         url     = "events"
-        params  = getParams [
-            ("limit", toText `fmap` limit )
-          , ("starting_after", (\(EventId x) -> x) `fmap` startingAfter)
-          , ("ending_before", (\(EventId x) -> x) `fmap` endingBefore)
-          ]
+        params  = []

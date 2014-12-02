@@ -32,7 +32,7 @@ import           Data.Text          (Text)
 import qualified Data.Text.Encoding as Text
 import           Numeric            (showFFloat)
 import           Web.Stripe.Error   (StripeError(..))
-import           Web.Stripe.Types   (AccountBalance(..), AddressCity(..), AddressCountry(..), AddressLine1(..), AddressLine2(..), AddressState(..), AddressZip(..), Amount(..), AmountOff(..), ApplicationFeeAmount(..), ApplicationFeePercent(..), AtPeriodEnd(..), Card(..), CardId(..), CardNumber(..), Capture(..), ChargeId(..), CouponId(..), Created(..), Currency(..), CustomerId(..), CVC(..), Description(..), Duration(..), DurationInMonths(..), Email(..), EndingBefore(..), Evidence(..), ExpMonth(..), ExpYear(..), Interval(..), IntervalCount(..), InvoiceId(..), InvoiceItemId(..), MetaData(..), PlanId(..), PlanName(..), Prorate(..), Limit(..), MaxRedemptions(..), Name(..), PercentOff(..), Quantity(..), ReceiptEmail(..), RedeemBy(..), RefundId(..), RefundApplicationFee(..), RefundReason(..), StartingAfter(..), StatementDescription(..), SubscriptionId(..), TokenId(..), TrialEnd(..), TrialPeriodDays(..))
+import           Web.Stripe.Types   (AccountBalance(..), AddressCity(..), AddressCountry(..), ApplicationFeeId(..), AddressLine1(..), AddressLine2(..), AddressState(..), AddressZip(..), Amount(..), AmountOff(..), ApplicationFeeAmount(..), ApplicationFeePercent(..), AtPeriodEnd(..), BankAccountId(..), Card(..), CardId(..), CardNumber(..), Capture(..), ChargeId(..), CouponId(..), Created(..), Currency(..), CustomerId(..), CVC(..), Date(..), Description(..), Duration(..), DurationInMonths(..), Email(..), EndingBefore(..), EventId(..), Evidence(..), ExpMonth(..), ExpYear(..), Interval(..), IntervalCount(..), InvoiceId(..), InvoiceItemId(..), IsVerified(..), MetaData(..), PlanId(..), PlanName(..), Prorate(..), Limit(..), MaxRedemptions(..), Name(..), PercentOff(..), Quantity(..), ReceiptEmail(..), RecipientId(..), RedeemBy(..), RefundId(..), RefundApplicationFee(..), RefundReason(..), StartingAfter(..), StatementDescription(..), SubscriptionId(..), TaxID(..), TokenId(..), TransactionId(..), TransferId(..), TransferStatus(..), TrialEnd(..), TrialPeriodDays(..))
 import           Web.Stripe.Util    (toBytestring, toMetaData, toSeconds)
 
 ------------------------------------------------------------------------------
@@ -105,6 +105,10 @@ instance ToStripeParam AddressZip where
   toStripeParam (AddressZip txt) =
     (("address_zip", Text.encodeUtf8 txt) :)
 
+instance ToStripeParam ApplicationFeeId where
+  toStripeParam (ApplicationFeeId aid) =
+    (("application_fee", Text.encodeUtf8 aid) :)
+
 instance ToStripeParam ApplicationFeeAmount where
   toStripeParam (ApplicationFeeAmount cents) =
     (("application_fee", toBytestring cents) :)
@@ -116,6 +120,10 @@ instance ToStripeParam ApplicationFeePercent where
 instance ToStripeParam AtPeriodEnd where
   toStripeParam (AtPeriodEnd p) =
     (("prorate", if p then "true" else "false") :)
+
+instance ToStripeParam BankAccountId where
+  toStripeParam (BankAccountId bid) =
+    (("bank_account", Text.encodeUtf8 bid) :)
 
 instance ToStripeParam Capture where
   toStripeParam (Capture b) =
@@ -156,6 +164,10 @@ instance ToStripeParam CVC where
   toStripeParam (CVC cvc) =
     (("cvc", Text.encodeUtf8 cvc) :)
 
+instance ToStripeParam Date where
+  toStripeParam (Date time) =
+    (("created", toBytestring $ toSeconds time) :)
+
 instance ToStripeParam Description where
   toStripeParam (Description txt) =
     (("description", Text.encodeUtf8 txt) :)
@@ -171,6 +183,10 @@ instance ToStripeParam DurationInMonths where
 instance ToStripeParam Email where
   toStripeParam (Email txt) =
     (("email", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam EventId where
+  toStripeParam (EventId eid) =
+    (("event", Text.encodeUtf8 eid) :)
 
 instance ToStripeParam Evidence where
   toStripeParam (Evidence txt) =
@@ -199,6 +215,10 @@ instance ToStripeParam InvoiceId where
 instance ToStripeParam InvoiceItemId where
   toStripeParam (InvoiceItemId txt) =
     (("id", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam IsVerified where
+  toStripeParam (IsVerified b) =
+    (("verified", if b then "true" else "false") :)
 
 instance ToStripeParam Limit where
   toStripeParam (Limit i) =
@@ -236,6 +256,10 @@ instance ToStripeParam Quantity where
   toStripeParam (Quantity i) =
     (("quantity", toBytestring i) :)
 
+instance ToStripeParam RecipientId where
+  toStripeParam (RecipientId rid) =
+    (("recipient", Text.encodeUtf8 rid) :)
+
 instance ToStripeParam RedeemBy where
   toStripeParam (RedeemBy time) =
     (("redeem_by", toBytestring $ toSeconds time) :)
@@ -252,6 +276,10 @@ instance ToStripeParam SubscriptionId where
   toStripeParam (SubscriptionId sid) =
     (("subscription", Text.encodeUtf8 sid) :)
 
+instance ToStripeParam TaxID where
+  toStripeParam (TaxID tid) =
+    (("tax_id", Text.encodeUtf8 tid) :)
+
 instance ToStripeParam TokenId where
   toStripeParam (TokenId tid) =
     (("card", Text.encodeUtf8 tid) :)
@@ -259,6 +287,18 @@ instance ToStripeParam TokenId where
 instance ToStripeParam TrialEnd where
   toStripeParam (TrialEnd time) =
     (("trial_end", toBytestring $ toSeconds time) :)
+
+instance ToStripeParam TransactionId where
+  toStripeParam (TransactionId tid) =
+    (("transaction", Text.encodeUtf8 tid) :)
+
+instance ToStripeParam TransferId where
+  toStripeParam (TransferId tid) =
+    (("transfer", Text.encodeUtf8 tid) :)
+
+instance ToStripeParam TransferStatus where
+  toStripeParam transferStatus =
+    (("status", toBytestring transferStatus) :)
 
 instance ToStripeParam TrialPeriodDays where
   toStripeParam (TrialPeriodDays days) =
