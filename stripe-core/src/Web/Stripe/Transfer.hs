@@ -84,7 +84,6 @@ data CreateTransfer
 type instance StripeReturn CreateTransfer = Transfer
 instance StripeHasParam Transfer Description
 instance StripeHasParam Transfer BankAccountId
--- instance StripeHasParam Transfer Card -- FIXME
 instance StripeHasParam Transfer CardId
 instance StripeHasParam Transfer StatementDescription
 instance StripeHasParam Transfer MetaData

@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -78,7 +79,7 @@ module Web.Stripe.Card
     , ExpMonth        (..)
     , ExpYear         (..)
     , CVC             (..)
-    , Name
+    , Name            (..)
     , AddressLine1    (..)
     , AddressLine2    (..)
     , AddressCity     (..)
@@ -94,7 +95,7 @@ import           Web.Stripe.StripeRequest   (Method (GET, POST, DELETE),
                                              StripeHasParam, StripeRequest (..),
                                              StripeReturn, ToStripeParam(..),
                                              mkStripeRequest)
-import           Web.Stripe.Util            ((</>), toExpandable)
+import           Web.Stripe.Util            ((</>), toExpandable, getParams, toText)
 import           Web.Stripe.Types           (AddressLine1(..), AddressLine2(..)
                                             , AddressCity(..), AddressCountry(..)
                                             , AddressState(..), AddressZip(..)
@@ -102,7 +103,7 @@ import           Web.Stripe.Types           (AddressLine1(..), AddressLine2(..)
                                             , CardNumber(..), CustomerId(..)
                                             , CVC(..), EndingBefore, ExpandParams
                                             , ExpMonth(..), ExpYear(..), ID
-                                            , Limit, Name, RecipientCard(..)
+                                            , Limit(..), Name(..), NewCard(..), RecipientCard(..)
                                             , RecipientId(..), RecipientCardId(..)
                                             , StartingAfter, StripeDeleteResult(..)
                                             , StripeList(..), TokenId(..), URL)
@@ -128,32 +129,17 @@ createCustomerCardByToken
 -- | `Card` creation from card info
 data CreateCustomerCard
 type instance StripeReturn CreateCustomerCard = Card
-instance StripeHasParam CreateCustomerCard CVC
-instance StripeHasParam CreateCustomerCard Name
-instance StripeHasParam CreateCustomerCard AddressLine1
-instance StripeHasParam CreateCustomerCard AddressLine2
-instance StripeHasParam CreateCustomerCard AddressCity
-instance StripeHasParam CreateCustomerCard AddressZip
-instance StripeHasParam CreateCustomerCard AddressState
-instance StripeHasParam CreateCustomerCard AddressCountry
+
 createCustomerCard
     :: CustomerId
-    -> CardNumber
-    -> ExpMonth
-    -> ExpYear
+    -> NewCard
     -> StripeRequest CreateCustomerCard
 createCustomerCard
   customerid
-  cardNumber
-  expMonth
-  expYear       = request
+  newCard       = request
   where request = mkStripeRequest POST url params
         url     = "customers" </> getCustomerId customerid </> "cards"
-        params  = toStripeParam cardNumber $
-                  toStripeParam expMonth   $
-                  toStripeParam expYear    $
-                  []
-
+        params  = toStripeParam newCard []
 
 ------------------------------------------------------------------------------
 -- | Get card by `CustomerId` and `CardId`
@@ -253,46 +239,44 @@ getCustomerCardsExpandable
 ------------------------------------------------------------------------------
 -- | Base request function for `Card` creation, good for making custom create `Card` functions
 createCardBase
-  :: FromJSON a
-  => URL                  -- ^ The `Recipient` or `Customer` on which to make the `Card` value can be "recipients" or "customers" only
-  -> ID                   -- ^ The `RecipientId` or `CustomerId` for which the `Card` can be made
-  -> Maybe TokenId        -- ^ The `TokenId` to be used for `Card` creation
-  -> Maybe CardNumber     -- ^ `CardNumber` for `Card` creation
-  -> Maybe ExpMonth       -- ^ Expiration Month for `Card` creation
-  -> Maybe ExpYear        -- ^ Expiration Year for `Card` creation
+  :: FromJSON (StripeReturn a)
+  => URL
+  -> ID
+  -> CardNumber     -- ^ `CardNumber` for `Card` creation
+  -> ExpMonth       -- ^ Expiration Month for `Card` creation
+  -> ExpYear        -- ^ Expiration Year for `Card` creation
   -> Maybe CVC            -- ^ CVC for `Card` creation
   -> Maybe Name           -- ^ Name of `Recipient` or `Customer` to be used for `Card`
-  -> Maybe AddressCity    -- ^ City associated with `Card`
-  -> Maybe AddressCountry -- ^ Country associated with `Card`
   -> Maybe AddressLine1   -- ^ Address Line 1 associated with `Card`
   -> Maybe AddressLine2   -- ^ Address Line 2 associated with `Card`
-  -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
+  -> Maybe AddressCity    -- ^ City associated with `Card`
   -> Maybe AddressZip     -- ^ Address Zip associated with `Card`
+  -> Maybe AddressState   -- ^ Address State 2 associated with `Card`
+  -> Maybe AddressCountry -- ^ Country associated with `Card`
   -> StripeRequest a
 createCardBase
     requestType
     requestId
-    tokenid
     cardNumber
     expMonth
     expYear
     cvc
     name
-    addressCity
-    addressCountry
     addressLine1
     addressLine2
+    addressCity
+    addressZip
     addressState
-    addressZip  = request
+    addressCountry
+                = request
   where request = mkStripeRequest POST url params
         url     = requestType </> requestId </> "cards"
         params  = getParams [
-                     ("card", (\(TokenId x) -> x) <$> tokenid)
-                   , ("card[number]", (\(CardNumber x) -> x) <$> cardNumber)
-                   , ("card[exp_month]", (\(ExpMonth x) -> toText x) <$> expMonth)
-                   , ("card[exp_year]", (\(ExpYear x) -> toText x) <$> expYear)
+                     ("card[number]", Just $ (\(CardNumber x) -> x) cardNumber)
+                   , ("card[exp_month]", Just $ (\(ExpMonth x) -> toText x) expMonth)
+                   , ("card[exp_year]", Just $ (\(ExpYear x) -> toText x) expYear)
                    , ("card[cvc]", (\(CVC x) -> x) <$> cvc)
-                   , ("name", name)
+                   , ("name", getName <$> name)
                    , ("address_city", (\(AddressCity x) -> x) <$> addressCity)
                    , ("address_country", (\(AddressCountry x) -> x) <$> addressCountry)
                    , ("address_line1", (\(AddressLine1 x) -> x) <$> addressLine1 )
@@ -300,7 +284,8 @@ createCardBase
                    , ("address_state", (\(AddressState x) -> x) <$> addressState )
                    , ("address_zip", (\(AddressZip x) -> x) <$> addressZip )
                   ]
-
+-}
+{-
 ------------------------------------------------------------------------------
 -- | Create a `Customer` card using a `Token`
 createCustomerCardByToken

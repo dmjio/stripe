@@ -51,22 +51,23 @@ module Web.Stripe.Charge
     , CaptureCharge
     , captureCharge
       -- * Types
+    , Amount       (..)
+    , Capture      (..)
+    , CardNumber   (..)
     , Charge       (..)
-    , TokenId      (..)
     , ChargeId     (..)
+    , Currency     (..)
     , CustomerId   (..)
     , Customer     (..)
-    , Currency     (..)
-    , CardNumber   (..)
     , CVC          (..)
+    , Description  (..)
+    , Email        (..)
     , ExpMonth     (..)
     , ExpYear      (..)
+    , NewCard      (..)
+    , StatementDescription (..)
     , StripeList   (..)
-    , Email        (..)
-    , Description
-    , StatementDescription
-    , Amount
-    , Capture
+    , TokenId      (..)
     ) where
 
 import           Web.Stripe.StripeRequest    (Method (GET, POST),
@@ -78,8 +79,8 @@ import           Web.Stripe.Types           (Amount, ApplicationFeeAmount(..), C
                                              ChargeId (..), Created(..), Currency (..),
                                              CustomerId (..), Description(..),
                                              EndingBefore, ExpMonth (..),
-                                             ExpYear (..), Limit, MetaData,
-                                             Email (..), StartingAfter, Customer(..),
+                                             ExpYear (..), Limit(..), MetaData(..),
+                                             NewCard(..), Email (..), StartingAfter, Customer(..),
                                              ReceiptEmail(..), StatementDescription(..), ExpandParams,
                                              StripeList (..), TokenId (..), CardId(..))
 import           Web.Stripe.Types.Util      (getCardId, getChargeId, getCustomerId)
@@ -89,8 +90,7 @@ import           Web.Stripe.Types.Util      (getCardId, getChargeId, getCustomer
 data CreateCharge
 type instance StripeReturn CreateCharge = Charge
 instance StripeHasParam CreateCharge CustomerId
-instance StripeHasParam CreateCharge CardId
-instance StripeHasParam CreateCharge Card
+instance StripeHasParam CreateCharge NewCard
 instance StripeHasParam CreateCharge TokenId
 instance StripeHasParam CreateCharge Description
 instance StripeHasParam CreateCharge MetaData

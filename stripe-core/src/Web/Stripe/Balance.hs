@@ -28,20 +28,27 @@ module Web.Stripe.Balance
     ( -- * API
       GetBalance
     , getBalance
-{-
+    , GetBalanceTransaction
     , getBalanceTransaction
     , getBalanceTransactionExpandable
+    , GetBalanceTransactionHistory
     , getBalanceTransactionHistory
--}
       -- * Types
+    , AvailableOn            (..)
     , Balance                (..)
-    , TransactionId          (..)
-    , StripeList             (..)
-    , EndingBefore           (..)
-    , StartingAfter          (..)
-    , Limit                  (..)
-    , BalanceTransaction     (..)
     , BalanceAmount          (..)
+    , BalanceTransaction     (..)
+    , Created                (..)
+    , Currency               (..)
+    , EndingBefore           (..)
+    , ExpandParams
+    , Limit                  (..)
+    , Source                 (..)
+    , StartingAfter          (..)
+    , StripeList             (..)
+    , TimeRange              (..)
+    , TransactionId          (..)
+    , TransactionType        (..)
     ) where
 
 import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
@@ -49,12 +56,15 @@ import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..)
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
 import           Web.Stripe.Util          (toExpandable, (</>))
-import           Web.Stripe.Types         (Balance (..), BalanceAmount,
-                                           BalanceTransaction, Created(..), Currency(..), EndingBefore(..),
-                                           ExpandParams, Limit(..), StartingAfter(..),
-                                           StripeList (..),
-                                           TransferId(..), TransactionId (..))
-import           Web.Stripe.Types.Util      (getTransactionId)
+import           Web.Stripe.Types         (AvailableOn(..), Balance (..),
+                                           BalanceAmount(..), BalanceTransaction(..),
+                                           Created(..), Currency(..),
+                                           EndingBefore(..), ExpandParams,
+                                           Limit(..), Source(..), StartingAfter(..),
+                                           StripeList (..), TimeRange(..),
+                                           TransferId(..), TransactionId (..),
+                                           TransactionType(..))
+import           Web.Stripe.Types.Util    (getTransactionId)
 
 ------------------------------------------------------------------------------
 -- | Retrieve the current `Balance` for your Stripe account
@@ -92,15 +102,17 @@ getBalanceTransactionExpandable
 -- | Retrieve the history of `BalanceTransaction`s
 data GetBalanceTransactionHistory
 type instance StripeReturn GetBalanceTransactionHistory = (StripeList BalanceTransaction)
--- instance StripeHasParam GetBalanceTransactionHistory AvailableOn -- FIXME
+instance StripeHasParam GetBalanceTransactionHistory AvailableOn
+instance StripeHasParam GetBalanceTransactionHistory (TimeRange AvailableOn)
 instance StripeHasParam GetBalanceTransactionHistory Created
+instance StripeHasParam GetBalanceTransactionHistory (TimeRange Created)
 instance StripeHasParam GetBalanceTransactionHistory Currency
 instance StripeHasParam GetBalanceTransactionHistory (EndingBefore TransactionId)
 instance StripeHasParam GetBalanceTransactionHistory Limit
 instance StripeHasParam GetBalanceTransactionHistory (StartingAfter TransactionId)
--- instance StripeHasParam GetBalanceTransactionHistory Source -- FIXME
+instance (ToStripeParam a) => StripeHasParam GetBalanceTransactionHistory (Source a)
 instance StripeHasParam GetBalanceTransactionHistory TransferId
--- instance StripeHasParam GetBalanceTransactionHistory TransactionType -- FIXME
+instance StripeHasParam GetBalanceTransactionHistory TransactionType
 
 getBalanceTransactionHistory
     :: StripeRequest GetBalanceTransactionHistory

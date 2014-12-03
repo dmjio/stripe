@@ -43,33 +43,37 @@ module Web.Stripe.Recipient
     , getRecipients
     , getRecipientsExpandable
       -- * Types
-    , CVC            (..)
-    , Description    (..)
-    , Recipient      (..)
-    , RecipientId    (..)
-    , Name           (..)
-    , RecipientType  (..)
-    , TaxID          (..)
-    , BankAccount    (..)
-    , TokenId        (..)
-    , CardNumber     (..)
-    , ExpMonth       (..)
-    , ExpYear        (..)
-    , Email          (..)
-    , Limit          (..)
-    , StripeDeleteResult (..)
-    , RoutingNumber  (..)
     , AccountNumber  (..)
-    , Country        (..)
     , AddressCity    (..)
     , AddressCountry (..)
     , AddressLine1   (..)
     , AddressLine2   (..)
     , AddressState   (..)
     , AddressZip     (..)
+    , BankAccount    (..)
     , BankAccountId  (..)
     , BankAccountStatus (..)
+    , CardNumber     (..)
+    , Country        (..)
+    , CVC            (..)
+    , DefaultCard    (..)
+    , Description    (..)
+    , ExpMonth       (..)
+    , ExpYear        (..)
+    , Email          (..)
     , IsVerified     (..)
+    , Limit          (..)
+    , MetaData       (..)
+    , Name           (..)
+    , NewBankAccount (..)
+    , NewCard        (..)
+    , Recipient      (..)
+    , RecipientId    (..)
+    , RecipientType  (..)
+    , RoutingNumber  (..)
+    , StripeDeleteResult (..)
+    , TaxID          (..)
+    , TokenId        (..)
     ) where
 
 import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
@@ -82,14 +86,14 @@ import           Web.Stripe.Types         (AccountNumber (..),
                                            CardId (..), CardNumber, BankAccountId (..),
                                            BankAccountStatus(..),
                                            CardNumber (..), Country (..),
-                                           Description(..), Email, Email (..),
+                                           DefaultCard(..), Description(..), Email(..),
                                            ExpMonth (..), ExpYear(..), IsVerified(..),
                                            RoutingNumber  (..), AccountNumber  (..),
                                            Country        (..), AddressCity    (..),
                                            AddressCountry (..), AddressLine1   (..),
                                            AddressLine2   (..), AddressState   (..),
-                                           AddressZip     (..), ExpYear (..),
-                                           Limit(..), Name(..), Recipient (..),
+                                           AddressZip     (..), Country(..), ExpYear (..),
+                                           Limit(..), Name(..), NewBankAccount(..), NewCard(..), Recipient (..),
                                            RecipientId (..), ExpandParams,
                                            RecipientType (..), StripeDeleteResult(..),
                                            RoutingNumber (..), EndingBefore(..),
@@ -103,9 +107,9 @@ import           Web.Stripe.Types.Util    (getRecipientId)
 data CreateRecipient
 type instance StripeReturn CreateRecipient = Recipient
 instance StripeHasParam CreateRecipient TaxID
--- instance StripeHasParam CreateRecipient BankAccount -- FIXME
+instance StripeHasParam CreateRecipient NewBankAccount
 instance StripeHasParam CreateRecipient TokenId
--- instance StripeHasParam CreateRecipient Card -- FIXME
+instance StripeHasParam CreateRecipient NewCard
 instance StripeHasParam CreateRecipient CardId
 instance StripeHasParam CreateRecipient Email
 instance StripeHasParam CreateRecipient Description
@@ -151,10 +155,10 @@ data UpdateRecipient
 type instance StripeReturn UpdateRecipient = Recipient
 instance StripeHasParam UpdateRecipient Name
 instance StripeHasParam UpdateRecipient TaxID
--- instance StripeHasParam UpdateRecipient BankAccount -- FIXME
+instance StripeHasParam UpdateRecipient NewBankAccount
 instance StripeHasParam UpdateRecipient TokenId
--- instance StripeHasParam UpdateRecipient Card        -- FIXME
--- instance StripeHasParam UpdateRecipient DefaultCard -- FIXME
+instance StripeHasParam UpdateRecipient NewCard
+instance StripeHasParam UpdateRecipient DefaultCard
 instance StripeHasParam UpdateRecipient CardId
 instance StripeHasParam UpdateRecipient Email
 instance StripeHasParam UpdateRecipient Description

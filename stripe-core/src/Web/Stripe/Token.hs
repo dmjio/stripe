@@ -30,11 +30,11 @@
 -- @
 module Web.Stripe.Token
    ( -- * API
-{-
-     createCardToken             -- FIXME
+     CreateCardToken
+   , createCardToken
+   , CreateBankAccountToken
    , createBankAccountToken
--}
-     GetCardToken
+   , GetCardToken
    , getCardToken
    , GetBankAccountToken
    , getBankAccountToken
@@ -58,54 +58,42 @@ import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..)
                                            mkStripeRequest)
 import           Web.Stripe.Util     (getParams, toText, (</>))
 import           Web.Stripe.Types           (Account(..), AccountNumber (..),
-                                             CVC (..), CardNumber (..),
+                                             CVC (..), CardNumber (..), CustomerId(..),
                                              Country (..), ExpMonth (..), BankAccount(..),
-                                             ExpYear (..), RoutingNumber (..), Card(..),
-                                             Token (..), TokenId (..), TokenType(..))
-{-
+                                             ExpYear (..), NewBankAccount(..), NewCard(..),
+                                             RoutingNumber (..), Card(..),
+                                             Token (..), TokenId (..), TokenType(..),
+                                             )
+
 ------------------------------------------------------------------------------
 -- | Create a `Token` by specifiying Credit `Card` information
+data CreateCardToken
+type instance StripeReturn CreateCardToken = Token Card
+instance StripeHasParam CreateCardToken CustomerId
 createCardToken
-    :: CardNumber -- ^ Card Number
-    -> ExpMonth   -- ^ Card Expiration Month
-    -> ExpYear    -- ^ Card Expiration Year
-    -> CVC        -- ^ Card CVC
-    -> StripeRequest (Token Card)
+    :: Maybe NewCard
+    -> StripeRequest CreateCardToken
 createCardToken
-      (CardNumber number)
-      (ExpMonth month)
-      (ExpYear year)
-      (CVC cvc)
-          = request
+  newCard
+                = request
   where request = mkStripeRequest POST url params
         url     = "tokens"
-        params  = getParams [
-                    ("card[number]", Just number)
-                  , ("card[exp_month]", toText `fmap` Just month)
-                  , ("card[exp_year]", toText `fmap` Just year)
-                  , ("card[cvc]", Just cvc)
-                  ]
+        params  = maybe id toStripeParam newCard $ []
 
 ------------------------------------------------------------------------------
 -- | Create a `Token` for a specific `BankAccount`
+data CreateBankAccountToken
+type instance StripeReturn CreateBankAccountToken = Token BankAccount
 createBankAccountToken
-    :: Country        -- ^ Country of the `BankAccount` `Token` to retrieve
-    -> RoutingNumber  -- ^ Routing Number
-    -> AccountNumber  -- ^ Account Number
-    -> StripeRequest (Token BankAccount)
+    :: NewBankAccount
+    -> StripeRequest CreateBankAccountToken
 createBankAccountToken
-    (Country country)
-    (RoutingNumber routingNumber)
-    (AccountNumber accountNumber)
-    = request
+  newBankAccount
+                = request
   where request = mkStripeRequest POST url params
         url     = "tokens"
-        params  = getParams [
-                    ("bank_account[country]", Just country)
-                  , ("bank_account[routing_number]", Just routingNumber)
-                  , ("bank_account[account_number]", Just accountNumber)
-                  ]
--}
+        params  = toStripeParam newBankAccount []
+
 ------------------------------------------------------------------------------
 -- | Retrieve a `Token` by `TokenId`
 data GetCardToken

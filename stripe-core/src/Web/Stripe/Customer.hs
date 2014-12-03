@@ -39,7 +39,7 @@ module Web.Stripe.Customer
       ---- * Delete customer
     , DeleteCustomer
     , deleteCustomer
-      ---- * list customers
+      ---- * List customers
     , GetCustomers
     , getCustomers
     , getCustomersExpandable
@@ -77,11 +77,12 @@ import           Web.Stripe.Util            (toMetaData, getParams, toText, (</>
 import           Web.Stripe.Types           (AccountBalance, CVC (..),
                                              CardId (..), CardNumber (..),
                                              CouponId (..), Created(..), Customer (..),
-                                             CustomerId (..), Description(..),
-                                             Email (..), EndingBefore(..),
-                                             ExpMonth (..), ExpYear (..), Limit(..),
-                                             PlanId (..), Quantity (..), MetaData(..),
-                                             StartingAfter(..),
+                                             CustomerId (..), DefaultCard(..),
+                                             Description(..), Email (..),
+                                             EndingBefore(..), ExpMonth (..),
+                                             ExpYear (..), Limit(..), PlanId (..),
+                                             Quantity (..), MetaData(..),
+                                             NewCard(..), StartingAfter(..),
                                              StripeDeleteResult (..),
                                              StripeList (..), TokenId (..),
                                              TrialEnd(..), ExpandParams)
@@ -92,8 +93,8 @@ import           Web.Stripe.Types.Util
 data CreateCustomer
 type instance StripeReturn CreateCustomer = Customer
 instance StripeHasParam CreateCustomer AccountBalance
-instance StripeHasParam CreateCustomer CardId -- FIXME: is a CardId actually valid or only TokenId?
--- instance StripeHasParam UpdateCustomer Card -- FIXME
+-- instance StripeHasParam CreateCustomer CardId -- FIXME: is a CardId actually valid or only TokenId?
+instance StripeHasParam CreateCustomer NewCard
 instance StripeHasParam CreateCustomer TokenId
 instance StripeHasParam CreateCustomer CouponId
 instance StripeHasParam CreateCustomer Description
@@ -136,11 +137,11 @@ getCustomerExpandable
 data UpdateCustomer
 type instance StripeReturn UpdateCustomer = Customer
 instance StripeHasParam UpdateCustomer AccountBalance
-instance StripeHasParam UpdateCustomer CardId
+-- instance StripeHasParam UpdateCustomer CardId
 instance StripeHasParam UpdateCustomer TokenId
--- instance StripeHasParam UpdateCustomer Card -- FIXME
+instance StripeHasParam UpdateCustomer NewCard
 instance StripeHasParam UpdateCustomer CouponId
--- instance StripeHasParam UpdateCustomer DefaultCard  -- FIXME
+instance StripeHasParam UpdateCustomer DefaultCard
 instance StripeHasParam UpdateCustomer Description
 instance StripeHasParam UpdateCustomer Email
 instance StripeHasParam UpdateCustomer MetaData

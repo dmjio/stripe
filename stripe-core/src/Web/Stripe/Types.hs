@@ -15,7 +15,7 @@ module Web.Stripe.Types where
 
 import           Control.Applicative (pure, (<$>), (<*>), (<|>))
 import           Control.Monad       (mzero)
-import           Data.Aeson          (FromJSON (parseJSON),
+import           Data.Aeson          (FromJSON (parseJSON), ToJSON(..),
                                       Value (String, Object, Bool), (.:),
                                       (.:?))
 import           Data.Data           (Data, Typeable)
@@ -58,6 +58,31 @@ type instance Expand TransactionId   = BalanceTransaction
 instance (FromJSON id,  FromJSON (Expand id)) =>
          FromJSON (Expandable id) where
   parseJSON v = (Id <$> parseJSON v) <|> (Expanded <$> parseJSON v)
+
+------------------------------------------------------------------------------
+-- | specify a `TimeRange`
+--
+-- FIXME: this is a little awkward to use. How can we make it moar better?
+data TimeRange a = TimeRange
+    { gt  :: Maybe a
+    , gte :: Maybe a
+    , lt  :: Maybe a
+    , lte :: Maybe a
+    }
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+emptyTimeRange :: TimeRange a
+emptyTimeRange = TimeRange
+    { gt  = Nothing
+    , gte = Nothing
+    , lt  = Nothing
+    , lte = Nothing
+    }
+
+------------------------------------------------------------------------------
+-- | `AvailableOn`
+newtype AvailableOn = AvailableOn UTCTime
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Created`
@@ -452,6 +477,54 @@ instance FromJSON RecipientCard where
              <*> o .:? "address_zip_check"
              <*> o .:? "recipient"
     parseJSON _ = mzero
+
+
+------------------------------------------------------------------------------
+-- | `NewCard` contains the data needed to create a new `Card`
+data NewCard = NewCard
+    { newCardCardNumber     :: CardNumber
+    , newCardExpMonth       :: ExpMonth
+    , newCardExpYear        :: ExpYear
+    , newCardCVC            :: Maybe CVC
+    , newCardName           :: Maybe Name
+    , newCardAddressLine1   :: Maybe AddressLine1
+    , newCardAddressLine2   :: Maybe AddressLine2
+    , newCardAddressCity    :: Maybe AddressCity
+    , newCardAddressZip     :: Maybe AddressZip
+    , newCardAddressState   :: Maybe AddressState
+    , newCardAddressCountry :: Maybe AddressCountry
+    }
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | create a `NewCard` with only the required fields
+mkNewCard
+    :: CardNumber
+    -> ExpMonth
+    -> ExpYear
+    -> NewCard
+mkNewCard
+    cardNumber
+    expMonth
+    expYear
+    = NewCard
+    { newCardCardNumber     = cardNumber
+    , newCardExpMonth       = expMonth
+    , newCardExpYear        = expYear
+    , newCardCVC            = Nothing
+    , newCardName           = Nothing
+    , newCardAddressLine1   = Nothing
+    , newCardAddressLine2   = Nothing
+    , newCardAddressCity    = Nothing
+    , newCardAddressZip     = Nothing
+    , newCardAddressState   = Nothing
+    , newCardAddressCountry = Nothing
+    }
+
+------------------------------------------------------------------------------
+-- | set the `DefaultCard`
+data DefaultCard = DefaultCard { getDefaultCard :: CardId }
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `SubscriptionId` for a `Subscription`
@@ -1159,6 +1232,15 @@ newtype AccountNumber =
   AccountNumber Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
+-- | create a new `BankAccount`
+data NewBankAccount = NewBankAccount
+    { newBankAccountCountry       :: Country
+    , newBankAccountRoutingNumber :: RoutingNumber
+    , newBankAccountAccountNumber :: AccountNumber
+    }
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
 -- | Recipients
 
 ------------------------------------------------------------------------------
@@ -1451,7 +1533,7 @@ data BalanceTransaction = BalanceTransaction {
     , balanceTransactionAmount         :: Int
     , balanceTransactionCurrency       :: Currency
     , balanceTransactionNet            :: Int
-    , balanceTransactionType           :: Text
+    , balanceTransactionType           :: TransactionType
     , balanceTransactionCreated        :: UTCTime
     , balanceTransactionAvailableOn    :: UTCTime
     , balanceTransactionStatus         :: Text
@@ -1511,6 +1593,46 @@ instance FromJSON FeeDetails where
                   <*> o .: "description"
                   <*> o .:? "application"
    parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | `Source` used for filtering `Balance` transactions. It should contain
+-- an object Id such as a `ChargeId`
+newtype Source a = Source { getSource :: a }
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | transaction type for `BalanceTransaction`
+data TransactionType
+  = ChargeTxn
+  | RefundTxn
+  | AdjustmentTxn
+  | ApplicationFeeTxn
+  | ApplicationFeeRefundTxn
+  | TransferTxn
+  | TransferCancelTxn
+  | TransferFailureTxn
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON TransactionType where
+  parseJSON (String "charge")           = pure ChargeTxn
+  parseJSON (String "refund")           = pure RefundTxn
+  parseJSON (String "adjustment")       = pure AdjustmentTxn
+  parseJSON (String "application_fee")  = pure ApplicationFeeTxn
+  parseJSON (String "application_fee_refund") = pure ApplicationFeeRefundTxn
+  parseJSON (String "transfer")         = pure TransferTxn
+  parseJSON (String "transfer_cancel")  = pure TransferCancelTxn
+  parseJSON (String "transfer_failure") = pure TransferFailureTxn
+  parseJSON _                           = mzero
+
+instance ToJSON TransactionType where
+  toJSON ChargeTxn          = String "charge"
+  toJSON RefundTxn          = String "refund"
+  toJSON AdjustmentTxn      = String "adjustment"
+  toJSON ApplicationFeeTxn  = String "application_fee"
+  toJSON ApplicationFeeRefundTxn = String "application_fee_refund"
+  toJSON TransferTxn        = String "transfer"
+  toJSON TransferCancelTxn  = String "transfer_cancel"
+  toJSON TransferFailureTxn = String "transfer_failure"
 
 ------------------------------------------------------------------------------
 -- | `Event` Types

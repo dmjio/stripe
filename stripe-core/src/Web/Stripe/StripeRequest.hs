@@ -6,6 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 -- |
 -- Module      : Web.Stripe.StripeRequest
 -- Copyright   : (c) David Johnson, 2014
@@ -25,15 +26,18 @@ module Web.Stripe.StripeRequest
   , mkStripeRequest
   ) where
 
-import           Data.Aeson         (FromJSON, eitherDecodeStrict)
+import           Control.Applicative ((<$>))
+import           Data.Aeson         (FromJSON, encode, eitherDecodeStrict)
 import           Data.ByteString    (ByteString)
+import           Data.ByteString.Lazy    (toStrict)
+import           Data.Monoid        ((<>))
 import           Data.String        (fromString)
 import           Data.Text          (Text)
 import qualified Data.Text.Encoding as Text
 import           Numeric            (showFFloat)
 import           Web.Stripe.Error   (StripeError(..))
-import           Web.Stripe.Types   (AccountBalance(..), AddressCity(..), AddressCountry(..), ApplicationFeeId(..), AddressLine1(..), AddressLine2(..), AddressState(..), AddressZip(..), Amount(..), AmountOff(..), ApplicationFeeAmount(..), ApplicationFeePercent(..), AtPeriodEnd(..), BankAccountId(..), Card(..), CardId(..), CardNumber(..), Capture(..), ChargeId(..), CouponId(..), Created(..), Currency(..), CustomerId(..), CVC(..), Date(..), Description(..), Duration(..), DurationInMonths(..), Email(..), EndingBefore(..), EventId(..), Evidence(..), ExpMonth(..), ExpYear(..), Interval(..), IntervalCount(..), InvoiceId(..), InvoiceItemId(..), IsVerified(..), MetaData(..), PlanId(..), PlanName(..), Prorate(..), Limit(..), MaxRedemptions(..), Name(..), PercentOff(..), Quantity(..), ReceiptEmail(..), RecipientId(..), RedeemBy(..), RefundId(..), RefundApplicationFee(..), RefundReason(..), StartingAfter(..), StatementDescription(..), SubscriptionId(..), TaxID(..), TokenId(..), TransactionId(..), TransferId(..), TransferStatus(..), TrialEnd(..), TrialPeriodDays(..))
-import           Web.Stripe.Util    (toBytestring, toMetaData, toSeconds)
+import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..), AddressCity(..), AddressCountry(..), ApplicationFeeId(..), AddressLine1(..), AddressLine2(..), AddressState(..), AddressZip(..), Amount(..), AmountOff(..), ApplicationFeeAmount(..), ApplicationFeePercent(..), AtPeriodEnd(..), AvailableOn(..), BankAccountId(..), Card(..), CardId(..), CardNumber(..), Capture(..), ChargeId(..), CouponId(..), Country(..), Created(..), Currency(..), CustomerId(..), CVC(..), Date(..), DefaultCard(..), Description(..), Duration(..), DurationInMonths(..), Email(..), EndingBefore(..), EventId(..), Evidence(..), ExpMonth(..), ExpYear(..), Interval(..), IntervalCount(..), InvoiceId(..), InvoiceItemId(..), IsVerified(..), MetaData(..), PlanId(..), PlanName(..), Prorate(..), Limit(..), MaxRedemptions(..), Name(..), NewBankAccount(..), NewCard(..), PercentOff(..), Quantity(..), ReceiptEmail(..), RecipientId(..), RedeemBy(..), RefundId(..), RefundApplicationFee(..), RefundReason(..), RoutingNumber(..), StartingAfter(..), StatementDescription(..), Source(..), SubscriptionId(..), TaxID(..), TimeRange(..), TokenId(..), TransactionId(..), TransactionType(..), TransferId(..), TransferStatus(..), TrialEnd(..), TrialPeriodDays(..))
+import           Web.Stripe.Util    (toBytestring, toMetaData, toSeconds, getParams, toText)
 
 ------------------------------------------------------------------------------
 -- | HTTP Method
@@ -117,6 +121,10 @@ instance ToStripeParam ApplicationFeePercent where
   toStripeParam (ApplicationFeePercent fee) =
     (("application_fee_percent", fromString $ showFFloat (Just 2) fee "") :)
 
+instance ToStripeParam AvailableOn where
+  toStripeParam (AvailableOn time) =
+    (("available_on", toBytestring $ toSeconds time) :)
+
 instance ToStripeParam AtPeriodEnd where
   toStripeParam (AtPeriodEnd p) =
     (("prorate", if p then "true" else "false") :)
@@ -128,9 +136,6 @@ instance ToStripeParam BankAccountId where
 instance ToStripeParam Capture where
   toStripeParam (Capture b) =
     (("capture", if b then "true" else "false") :)
-
-instance ToStripeParam Card where
-  toStripeParam _ = error "FIXME: Added ToStripeParam for Card"
 
 instance ToStripeParam CardId where
   toStripeParam (CardId cid) =
@@ -167,6 +172,10 @@ instance ToStripeParam CVC where
 instance ToStripeParam Date where
   toStripeParam (Date time) =
     (("created", toBytestring $ toSeconds time) :)
+
+instance ToStripeParam DefaultCard where
+  toStripeParam (DefaultCard (CardId cid)) =
+    (("default_card", Text.encodeUtf8 cid) :)
 
 instance ToStripeParam Description where
   toStripeParam (Description txt) =
@@ -232,6 +241,30 @@ instance ToStripeParam Name where
   toStripeParam (Name txt) =
     (("name", Text.encodeUtf8 txt) :)
 
+instance ToStripeParam NewBankAccount where
+  toStripeParam NewBankAccount{..} =
+    ((getParams
+        [ ("bank_account[country]", Just $ (\(Country x) -> x) newBankAccountCountry)
+        , ("bank_account[routing_number]", Just $ (\(RoutingNumber x) -> toText x) newBankAccountRoutingNumber)
+        , ("bank_account[account_number]", Just $ (\(AccountNumber x) -> toText x) newBankAccountAccountNumber)
+        ]) ++)
+
+instance ToStripeParam NewCard where
+  toStripeParam NewCard{..} =
+    ((getParams
+        [ ("card[number]", Just $ (\(CardNumber x) -> x) newCardCardNumber)
+        , ("card[exp_month]", Just $ (\(ExpMonth x) -> toText x) newCardExpMonth)
+        , ("card[exp_year]", Just $ (\(ExpYear x) -> toText x) newCardExpYear)
+        , ("card[cvc]", (\(CVC x) -> x) <$> newCardCVC)
+        , ("card[name]", getName <$> newCardName)
+        , ("card[address_city]", (\(AddressCity x) -> x) <$> newCardAddressCity)
+        , ("card[address_country]", (\(AddressCountry x) -> x) <$> newCardAddressCountry)
+        , ("card[address_line1]", (\(AddressLine1 x) -> x) <$> newCardAddressLine1 )
+        , ("card[address_line2]", (\(AddressLine2 x) -> x) <$> newCardAddressLine2 )
+        , ("card[address_state]", (\(AddressState x) -> x) <$> newCardAddressState )
+        , ("card[address_zip]", (\(AddressZip x) -> x) <$> newCardAddressZip )
+        ]) ++)
+
 instance ToStripeParam (Param Text Text) where
   toStripeParam (Param (k,v)) =
     ((Text.encodeUtf8 k, Text.encodeUtf8 v) :)
@@ -272,6 +305,12 @@ instance ToStripeParam ReceiptEmail where
   toStripeParam (ReceiptEmail txt) =
     (("receipt_email", Text.encodeUtf8 txt) :)
 
+instance ToStripeParam a => ToStripeParam (Source a) where
+  toStripeParam (Source param) =
+    case toStripeParam param [] of
+      [(_, p)] -> (("source", p) :)
+      _        -> error "source applied to non-singleton"
+
 instance ToStripeParam SubscriptionId where
   toStripeParam (SubscriptionId sid) =
     (("subscription", Text.encodeUtf8 sid) :)
@@ -279,6 +318,29 @@ instance ToStripeParam SubscriptionId where
 instance ToStripeParam TaxID where
   toStripeParam (TaxID tid) =
     (("tax_id", Text.encodeUtf8 tid) :)
+
+instance ToStripeParam a => ToStripeParam (TimeRange a) where
+  toStripeParam (TimeRange{..}) =
+    (case gt of
+      Nothing -> id
+      Just t  -> toRecord (toStripeParam t) "gt") .
+    (case gte of
+      Nothing -> id
+      Just t  -> toRecord (toStripeParam t) "gte") .
+    (case lt of
+      Nothing -> id
+      Just t  -> toRecord (toStripeParam t) "lt") .
+    (case lte of
+      Nothing -> id
+      Just t  -> toRecord (toStripeParam t) "lte")
+    where
+      toRecord :: ([(ByteString, ByteString)] -> [(ByteString, ByteString)])
+               -> ByteString
+               -> ([(ByteString, ByteString)] -> [(ByteString, ByteString)])
+      toRecord f n =
+        case f [] of
+          [(k,v)] -> ((k <> "[" <> n <> "]", v) :)
+          lst'       -> error $ "toRecord in ToStripeRange (TimeRange a) expected exactly one element in this list. " ++ show lst'
 
 instance ToStripeParam TokenId where
   toStripeParam (TokenId tid) =
@@ -322,6 +384,20 @@ instance ToStripeParam RefundReason where
 instance ToStripeParam StatementDescription where
   toStripeParam (StatementDescription txt) =
     (("statement_description", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam TransactionType where
+  toStripeParam txn =
+    (("type", case txn of
+                ChargeTxn          -> "charge"
+                RefundTxn          -> "refund"
+                AdjustmentTxn      -> "adjustment"
+                ApplicationFeeTxn  -> "application_fee"
+                ApplicationFeeRefundTxn
+                                   -> "application_fee_refund"
+                TransferTxn        -> "transfer"
+                TransferCancelTxn  -> "transfer_cancel"
+                TransferFailureTxn -> "transfer_failure") :)
+
 
 instance (ToStripeParam param) => ToStripeParam (StartingAfter param) where
   toStripeParam (StartingAfter param) =
