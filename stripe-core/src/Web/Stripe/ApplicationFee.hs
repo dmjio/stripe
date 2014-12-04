@@ -46,9 +46,8 @@ module Web.Stripe.ApplicationFee
     , StripeList     (..)
     , ExpandParams
     ) where
-import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
-                                           StripeHasParam, StripeRequest (..),
-                                           StripeReturn, ToStripeParam(..),
+import           Web.Stripe.StripeRequest (Method (GET), StripeHasParam,
+                                           StripeRequest (..), StripeReturn,
                                            mkStripeRequest)
 import           Web.Stripe.Util          ((</>), toExpandable)
 import           Web.Stripe.Types          (ApplicationFee (..),

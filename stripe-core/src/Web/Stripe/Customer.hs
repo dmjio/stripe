@@ -72,9 +72,8 @@ module Web.Stripe.Customer
 import           Web.Stripe.StripeRequest   (Method (GET, POST, DELETE),
                                              StripeHasParam, StripeRequest (..),
                                              StripeReturn, mkStripeRequest)
-import           Web.Stripe.Util            (toMetaData, getParams, toText, (</>),
-                                             toExpandable)
-import           Web.Stripe.Types           (AccountBalance, CVC (..),
+import           Web.Stripe.Util            ((</>), toExpandable)
+import           Web.Stripe.Types           (AccountBalance(..), CVC (..),
                                              CardId (..), CardNumber (..),
                                              CouponId (..), Created(..), Customer (..),
                                              CustomerId (..), DefaultCard(..),
@@ -116,8 +115,8 @@ data GetCustomer
 type instance StripeReturn GetCustomer = Customer
 
 getCustomer :: CustomerId -> StripeRequest GetCustomer
-getCustomer customerId =
-  getCustomerExpandable customerId []
+getCustomer customerid =
+  getCustomerExpandable customerid []
 
 ------------------------------------------------------------------------------
 -- | Retrieves a customer by his/her `CustomerID` with `ExpandParams`

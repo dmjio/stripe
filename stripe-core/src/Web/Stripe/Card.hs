@@ -54,61 +54,46 @@ module Web.Stripe.Card
       -- *** Delete Card
     , DeleteCustomerCard
     , deleteCustomerCard
-{-
-      -- ** Recipients
-      -- *** Create Recipient Card
-    , createRecipientCard
-    , createRecipientCardByToken
-      -- *** Get Recipient Card(s)
-    , getRecipientCard
-    , getRecipientCardExpandable
-    , getRecipientCards
-    , getRecipientCardsExpandable
-      -- *** Updated Recipient Card
-    , updateRecipientCard
-      -- *** Delete Recipient Card
-    , deleteRecipientCard
--}
       -- * Types
-    , Brand           (..)
-    , Card            (..)
-    , RecipientCard   (..)
-    , CardId          (..)
-    , RecipientCardId (..)
-    , CardNumber      (..)
-    , ExpMonth        (..)
-    , ExpYear         (..)
-    , CVC             (..)
-    , Name            (..)
     , AddressLine1    (..)
     , AddressLine2    (..)
     , AddressCity     (..)
     , AddressCountry  (..)
     , AddressState    (..)
     , AddressZip      (..)
+    , Brand           (..)
+    , Card            (..)
+    , CardId          (..)
+    , CardNumber      (..)
+    , CVC             (..)
+    , EndingBefore    (..)
+    , ExpMonth        (..)
+    , ExpYear         (..)
+    , Limit           (..)
+    , Name            (..)
+    , RecipientCard   (..)
+    , RecipientCardId (..)
     , RecipientId     (..)
+    , StartingAfter   (..)
     ) where
 
-import           Control.Applicative        ((<$>))
-import           Data.Aeson                 (FromJSON)
 import           Web.Stripe.StripeRequest   (Method (GET, POST, DELETE),
                                              StripeHasParam, StripeRequest (..),
                                              StripeReturn, ToStripeParam(..),
                                              mkStripeRequest)
-import           Web.Stripe.Util            ((</>), toExpandable, getParams, toText)
+import           Web.Stripe.Util            ((</>), toExpandable)
 import           Web.Stripe.Types           (AddressLine1(..), AddressLine2(..)
                                             , AddressCity(..), AddressCountry(..)
                                             , AddressState(..), AddressZip(..)
                                             , Brand(..), Card(..), CardId(..)
                                             , CardNumber(..), CustomerId(..)
-                                            , CVC(..), EndingBefore, ExpandParams
-                                            , ExpMonth(..), ExpYear(..), ID
+                                            , CVC(..), EndingBefore(..), ExpandParams
+                                            , ExpMonth(..), ExpYear(..)
                                             , Limit(..), Name(..), NewCard(..), RecipientCard(..)
                                             , RecipientId(..), RecipientCardId(..)
-                                            , StartingAfter, StripeDeleteResult(..)
-                                            , StripeList(..), TokenId(..), URL)
-import           Web.Stripe.Types.Util      ( getCardId, getCustomerId
-                                            , getRecipientId, getRecipientCardId)
+                                            , StartingAfter(..), StripeDeleteResult(..)
+                                            , StripeList(..), TokenId(..))
+import           Web.Stripe.Types.Util      (getCardId, getCustomerId)
 
 ------------------------------------------------------------------------------
 -- | `Card` creation from a `TokenId`

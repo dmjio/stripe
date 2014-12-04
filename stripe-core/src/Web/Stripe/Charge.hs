@@ -51,39 +51,52 @@ module Web.Stripe.Charge
     , CaptureCharge
     , captureCharge
       -- * Types
-    , Amount       (..)
-    , Capture      (..)
-    , CardNumber   (..)
-    , Charge       (..)
-    , ChargeId     (..)
-    , Currency     (..)
-    , CustomerId   (..)
-    , Customer     (..)
-    , CVC          (..)
-    , Description  (..)
-    , Email        (..)
-    , ExpMonth     (..)
-    , ExpYear      (..)
-    , NewCard      (..)
+    , Amount        (..)
+    , ApplicationFeeAmount(..)
+    , CardNumber    (..)
+    , Capture       (..)
+    , Charge        (..)
+    , ChargeId      (..)
+    , Created       (..)
+    , Currency      (..)
+    , CustomerId    (..)
+    , Customer      (..)
+    , CVC           (..)
+    , Description   (..)
+    , Email         (..)
+    , EndingBefore  (..)
+    , ExpMonth      (..)
+    , ExpYear       (..)
+    , Limit         (..)
+    , MetaData      (..)
+    , NewCard       (..)
+    , ReceiptEmail  (..)
+    , StartingAfter (..)
     , StatementDescription (..)
-    , StripeList   (..)
-    , TokenId      (..)
+    , StripeList    (..)
+    , TokenId       (..)
     ) where
 
-import           Web.Stripe.StripeRequest    (Method (GET, POST),
-                                             StripeHasParam(..), ToStripeParam(..), StripeRequest (..), StripeReturn, mkStripeRequest)
-import           Web.Stripe.Util     (getParams, toMetaData, toText,
-                                             toExpandable, toTextLower, (</>))
-import           Web.Stripe.Types           (Amount, ApplicationFeeAmount(..), Card(..), CardId(..), CVC (..), Capture,
+import           Web.Stripe.StripeRequest   (Method (GET, POST),
+                                             StripeHasParam, ToStripeParam(..),
+                                             StripeRequest (..), StripeReturn,
+                                             mkStripeRequest)
+import           Web.Stripe.Util            ((</>), toExpandable)
+import           Web.Stripe.Types           (Amount(..), ApplicationFeeAmount(..),
+                                             CVC (..),
+                                             Capture(..),
                                              CardNumber (..), Charge (..),
-                                             ChargeId (..), Created(..), Currency (..),
+                                             ChargeId (..), Created(..),
+                                             Currency (..), Customer(..),
                                              CustomerId (..), Description(..),
-                                             EndingBefore, ExpMonth (..),
+                                             EndingBefore(..), ExpMonth (..),
                                              ExpYear (..), Limit(..), MetaData(..),
-                                             NewCard(..), Email (..), StartingAfter, Customer(..),
-                                             ReceiptEmail(..), StatementDescription(..), ExpandParams,
-                                             StripeList (..), TokenId (..), CardId(..))
-import           Web.Stripe.Types.Util      (getCardId, getChargeId, getCustomerId)
+                                             NewCard(..), Email (..),
+                                             StartingAfter(..),
+                                             ReceiptEmail(..),
+                                             StatementDescription(..), ExpandParams,
+                                             StripeList (..), TokenId (..))
+import           Web.Stripe.Types.Util      (getChargeId)
 
 ------------------------------------------------------------------------------
 -- | Create a `Charge`

@@ -62,7 +62,7 @@ module Web.Stripe.Transfer
     , TransferType    (..)
     , Limit           (..)
     ) where
-import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+import           Web.Stripe.StripeRequest (Method (GET, POST),
                                            StripeHasParam, StripeRequest (..),
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
@@ -76,17 +76,16 @@ import           Web.Stripe.Types         (Amount(..), BankAccountId(..), Card(.
                                            StripeList (..), Transfer (..),
                                            TransferId (..), TransferStatus (..),
                                            Description(..), TransferType (..))
-import           Web.Stripe.Types.Util    (getRecipientId)
 
 ------------------------------------------------------------------------------
 -- | Create a `Transfer`
 data CreateTransfer
 type instance StripeReturn CreateTransfer = Transfer
-instance StripeHasParam Transfer Description
-instance StripeHasParam Transfer BankAccountId
-instance StripeHasParam Transfer CardId
-instance StripeHasParam Transfer StatementDescription
-instance StripeHasParam Transfer MetaData
+instance StripeHasParam CreateTransfer Description
+instance StripeHasParam CreateTransfer BankAccountId
+instance StripeHasParam CreateTransfer CardId
+instance StripeHasParam CreateTransfer StatementDescription
+instance StripeHasParam CreateTransfer MetaData
 createTransfer
     :: RecipientId -- ^ The `RecipientId` of the `Recipient` who will receive the `Transfer`
     -> Amount      -- ^ The `Amount` of money to transfer to the `Recipient`

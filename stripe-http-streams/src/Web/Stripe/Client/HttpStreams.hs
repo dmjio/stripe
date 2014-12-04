@@ -17,6 +17,7 @@ module Web.Stripe.Client.HttpStreams
 
 import           Control.Exception          (SomeException, finally, try)
 import           Control.Monad              (when)
+import           Data.Aeson                 (Value, Result(..), fromJSON, json')
 import           Data.ByteString            (ByteString)
 import qualified Data.ByteString            as S
 import           Data.Monoid                (mempty, (<>))
@@ -33,11 +34,14 @@ import           Network.Http.Client        (Connection,
 import qualified Network.Http.Client        as C
 import           OpenSSL                    (withOpenSSL)
 import qualified System.IO.Streams          as Streams
+import qualified System.IO.Streams.Attoparsec as Streams
+import           System.IO.Streams.Attoparsec (ParseException(..))
 import           Web.Stripe.Client          (APIVersion (..), Method(..), StripeConfig (..),
                                              StripeError (..), StripeErrorHTTPCode (..),
                                              StripeErrorType (..), StripeRequest (..),
-                                             StripeReturn, getStripeKey, handleStream,
-                                             toBytestring, toText, paramsToByteString
+                                             StripeReturn, getStripeKey,
+                                             toBytestring, toText,
+                                             paramsToByteString, attemptDecode, parseFail, unknownCode, handleStream
                                              )
 
 ------------------------------------------------------------------------------
@@ -78,6 +82,8 @@ m2m DELETE = C.DELETE
 -- | Create a request to `Stripe`'s API over an existing connection
 --
 -- see also: 'withConnection'
+-- FIXME: all connection errors should be
+-- turned into a `StripeError`. But that is not yet implemented.
 callAPI
     :: Connection                      -- ^ an open connection to the server (`withConnection`)
     -> StripeConfig                    -- ^ StripeConfig
@@ -102,25 +108,13 @@ callAPI conn StripeConfig {..} StripeRequest{..} = do
   sendRequest conn req $ inputStreamBody body
   receiveResponse conn $ \response inputStream ->
       do when debug $ print response
-         result <- concatHandler response inputStream
-         return $ handleStream decodeJson (getStatusCode response) result
-
-         
---         result <- concatHandler response inputStream
---         undefined
-{-         
-         case getStatusCode response of
-           200 ->
-             do v <- Streams.parseFromJSON decodeJson inputStream
-             case v of
-               (Left err) -> ..
-               (Right obj) ->
-                 return obj
-           _ ->
-             undefined
-
---             handleError (getStatusCode response) result
-
-
---         result <- concatHandler response inputStream
--}
+         let statusCode = getStatusCode response
+         if not (attemptDecode statusCode)
+           then return unknownCode
+           else do -- FIXME: should we check the content-type instead assuming it is application/json?
+                   v <- try (Streams.parseFromStream json' inputStream)
+                   let r =
+                         case v of
+                           (Left (ParseException msg)) -> Error msg
+                           (Right a) -> Success a
+                   return $ handleStream decodeJson statusCode r

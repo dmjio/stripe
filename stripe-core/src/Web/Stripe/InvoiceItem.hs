@@ -58,13 +58,13 @@ module Web.Stripe.InvoiceItem
     , Description        (..)
     , Amount             (..)
     ) where
-import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE),
                                            StripeHasParam, StripeRequest (..),
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
 import           Web.Stripe.Util          ((</>), toExpandable)
-import           Web.Stripe.Types         (Amount, Created(..), Currency (..),
-                                           CustomerId (..), Description,
+import           Web.Stripe.Types         (Amount(..), Created(..), Currency (..),
+                                           CustomerId (..), Description(..),
                                            InvoiceId (..), InvoiceItem (..), Invoice(..),
                                            InvoiceItemId (..), Limit(..), StartingAfter(..), EndingBefore(..),
                                            StripeDeleteResult (..), ExpandParams,

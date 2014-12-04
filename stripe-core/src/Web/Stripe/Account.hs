@@ -33,12 +33,11 @@ module Web.Stripe.Account
     , AccountId (..)
     ) where
 
-import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
-                                           StripeHasParam, StripeRequest (..),
-                                           StripeReturn, ToStripeParam(..),
-                                           mkStripeRequest)
-import           Web.Stripe.Types           ( Account   (..)
-                                            , AccountId (..) )
+import           Web.Stripe.StripeRequest (Method (GET),
+                                           StripeRequest (..),
+                                           StripeReturn, mkStripeRequest)
+import           Web.Stripe.Types         ( Account   (..)
+                                          , AccountId (..) )
 
 ------------------------------------------------------------------------------
 -- | Retrieve the object that represents your Stripe account

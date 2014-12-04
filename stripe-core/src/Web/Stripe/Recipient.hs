@@ -76,9 +76,9 @@ module Web.Stripe.Recipient
     , TokenId        (..)
     ) where
 
-import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE),
                                            StripeHasParam, StripeRequest (..),
-                                           StripeReturn, ToStripeParam(..),
+                                           ToStripeParam(..), StripeReturn,
                                            mkStripeRequest)
 import           Web.Stripe.Util          (toExpandable, (</>))
 import           Web.Stripe.Types         (AccountNumber (..),
@@ -124,7 +124,9 @@ createRecipient
                 = request
   where request = mkStripeRequest POST url params
         url     = "recipients"
-        params  = []
+        params  = toStripeParam name $
+                  toStripeParam recipienttype $
+                  []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a 'Recipient'

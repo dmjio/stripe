@@ -43,9 +43,9 @@ module Web.Stripe.Dispute
     , MetaData      (..)
     ) where
 
-import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+import           Web.Stripe.StripeRequest (Method (POST),
                                            StripeHasParam, StripeRequest (..),
-                                           StripeReturn, ToStripeParam(..),
+                                           StripeReturn,
                                            mkStripeRequest)
 import           Web.Stripe.Util          ((</>))
 import           Web.Stripe.Types         (ChargeId (..), Dispute (..),

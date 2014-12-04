@@ -51,8 +51,8 @@ module Web.Stripe.Balance
     , TransactionType        (..)
     ) where
 
-import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
-                                           StripeHasParam, StripeRequest (..),
+import           Web.Stripe.StripeRequest (Method (GET), StripeHasParam,
+                                           StripeRequest (..),
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
 import           Web.Stripe.Util          (toExpandable, (</>))

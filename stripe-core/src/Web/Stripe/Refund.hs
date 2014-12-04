@@ -46,21 +46,27 @@ module Web.Stripe.Refund
     , UpdateRefund
     , updateRefund
       -- * Types
-    , Refund     (..)
-    , RefundId   (..)
-    , ChargeId   (..)
-    , Charge     (..)
-    , StripeList (..)
+    , Amount       (..)
+    , Charge       (..)
+    , ChargeId     (..)
+    , EndingBefore (..)
+    , Refund       (..)
+    , RefundApplicationFee(..)
+    , RefundReason(..)
+    , RefundId     (..)
+    , StripeList   (..)
     ) where
 
-import           Web.Stripe.StripeRequest    (Method (GET, POST),
-                                             StripeHasParam, StripeReturn, StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Util     (getParams, toMetaData, toText,
-                                             (</>), toExpandable)
+import           Web.Stripe.StripeRequest   (Method (GET, POST),
+                                             StripeHasParam, StripeReturn,
+                                             StripeRequest (..), mkStripeRequest)
+import           Web.Stripe.Util            ((</>), toExpandable)
 import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..),
-                                             EndingBefore, Limit, MetaData,
-                                             Refund (..), RefundApplicationFee(..),
-                                             RefundId (..), RefundReason(..), StartingAfter, ExpandParams,
+                                             EndingBefore(..), Limit(..),
+                                             MetaData(..), Refund (..),
+                                             RefundApplicationFee(..),
+                                             RefundId (..), RefundReason(..),
+                                             StartingAfter(..), ExpandParams,
                                              StripeList (..))
 import           Web.Stripe.Types.Util      (getChargeId)
 

@@ -69,15 +69,15 @@ import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..)
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
 import           Web.Stripe.Util          ((</>))
-import           Web.Stripe.Types          (AmountOff (..), Coupon (..),
-                                            CouponId (..), Currency (..),
-                                            Duration(..), DurationInMonths (..),
-                                            EndingBefore(..), Limit(..),
-                                            MaxRedemptions (..), MetaData(..),
-                                            PercentOff (..), RedeemBy (..),
-                                            StartingAfter(..),
-                                            StripeDeleteResult (..),
-                                            StripeList (..))
+import           Web.Stripe.Types         (AmountOff (..), Coupon (..),
+                                           CouponId (..), Currency (..),
+                                           Duration(..), DurationInMonths (..),
+                                           EndingBefore(..), Limit(..),
+                                           MaxRedemptions (..), MetaData(..),
+                                           PercentOff (..), RedeemBy (..),
+                                           StartingAfter(..),
+                                           StripeDeleteResult (..),
+                                           StripeList (..))
 
 ------------------------------------------------------------------------------
 -- | Create `Coupon`
@@ -101,7 +101,9 @@ createCoupon
         url     = "coupons"
         params  = case mcouponid of
                     Just (CouponId name) ->
-                      toStripeParam (Param ("id"::Text, name)) []
+                      toStripeParam (Param ("id"::Text, name)) $
+                      toStripeParam duration                   $
+                      []
                     Nothing   -> []
 
 ------------------------------------------------------------------------------

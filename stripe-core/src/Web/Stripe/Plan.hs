@@ -24,7 +24,7 @@
 --                  (0 :: Amount)
 --                  (USD :: Currency)
 --                  (Month :: Interval)
---                  ("a sample free plan" :: Name)
+--                  ("a sample free plan" :: PlanName)
 --                  ([] :: MetaData)
 --   case result of
 --     Right plan     -> print plan
@@ -43,21 +43,21 @@ module Web.Stripe.Plan
     , GetPlans
     , getPlans
       -- * Types
-    , PlanId              (..)
-    , Plan                (..)
-    , Interval            (..)
-    , StripeList          (..)
-    , IntervalCount       (..)
-    , TrialPeriodDays     (..)
-    , StripeDeleteResult  (..)
-    , Currency            (..)
-    , Limit               (..)
-    , StartingAfter       (..)
-    , EndingBefore        (..)
-    , PlanName            (..)
     , Amount              (..)
-    , StatementDescription(..)
+    , Currency            (..)
+    , EndingBefore        (..)
+    , Interval            (..)
+    , IntervalCount       (..)
+    , Limit               (..)
     , MetaData            (..)
+    , Plan                (..)
+    , PlanId              (..)
+    , PlanName            (..)
+    , StartingAfter       (..)
+    , StatementDescription(..)
+    , StripeDeleteResult  (..)
+    , StripeList          (..)
+    , TrialPeriodDays     (..)
     ) where
 
 import           Data.Text                (Text)
@@ -65,7 +65,13 @@ import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..)
                                            StripeHasParam, StripeRequest (..),
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
-import           Web.Stripe.Types         (PlanId (..) , Plan (..), PlanName(..), Interval (..), StripeList(..), IntervalCount (..), TrialPeriodDays (..), Limit, StartingAfter, EndingBefore, StripeDeleteResult(..), Currency (..), Name, Amount, StatementDescription, MetaData)
+import           Web.Stripe.Types         (PlanId (..) , Plan (..), PlanName(..),
+                                           Interval (..), StripeList(..),
+                                           IntervalCount (..), TrialPeriodDays (..),
+                                           Limit(..), StartingAfter(..),
+                                           EndingBefore(..), StripeDeleteResult(..),
+                                           Currency (..), Amount(..),
+                                           StatementDescription(..), MetaData(..))
 import           Web.Stripe.Util          ((</>))
 
 ------------------------------------------------------------------------------

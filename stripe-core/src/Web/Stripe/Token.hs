@@ -52,18 +52,19 @@ module Web.Stripe.Token
    , Account       (..)
    ) where
 
-import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+import           Web.Stripe.StripeRequest (Method (GET, POST),
                                            StripeHasParam, StripeRequest (..),
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
-import           Web.Stripe.Util     (getParams, toText, (</>))
-import           Web.Stripe.Types           (Account(..), AccountNumber (..),
-                                             CVC (..), CardNumber (..), CustomerId(..),
-                                             Country (..), ExpMonth (..), BankAccount(..),
-                                             ExpYear (..), NewBankAccount(..), NewCard(..),
-                                             RoutingNumber (..), Card(..),
-                                             Token (..), TokenId (..), TokenType(..),
-                                             )
+import           Web.Stripe.Util          ((</>))
+import           Web.Stripe.Types         (Account(..), AccountNumber (..),
+                                           CVC (..), CardNumber (..), CustomerId(..),
+                                           Country (..), ExpMonth (..),
+                                           BankAccount(..), ExpYear (..),
+                                           NewBankAccount(..), NewCard(..),
+                                           RoutingNumber (..), Card(..),
+                                           Token (..), TokenId (..), TokenType(..),
+                                          )
 
 ------------------------------------------------------------------------------
 -- | Create a `Token` by specifiying Credit `Card` information

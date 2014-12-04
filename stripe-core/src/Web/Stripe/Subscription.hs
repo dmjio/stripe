@@ -49,25 +49,37 @@ module Web.Stripe.Subscription
     , getSubscriptions
     , getSubscriptionsExpandable
       -- * Types
-    , Subscription       (..)
-    , SubscriptionId     (..)
-    , SubscriptionStatus (..)
+    , ApplicationFeePercent (..)
+    , AtPeriodEnd        (..)
     , CustomerId         (..)
     , CouponId           (..)
     , Coupon             (..)
+    , EndingBefore       (..)
+    , Limit              (..)
+    , MetaData           (..)
     , PlanId             (..)
+    , Prorate            (..)
+    , Quantity           (..)
+    , StartingAfter      (..)
     , StripeList         (..)
+    , Subscription       (..)
+    , SubscriptionId     (..)
+    , SubscriptionStatus (..)
+    , TrialEnd           (..)
     ) where
 
 import           Web.Stripe.StripeRequest   (Method (GET, POST, DELETE),
-                                             StripeHasParam, StripeReturn, StripeRequest (..),
+                                             StripeHasParam, StripeReturn,
+                                             StripeRequest (..),
                                              ToStripeParam(..), mkStripeRequest)
-import           Web.Stripe.Util            (getParams, toExpandable,
-                                             toMetaData, toText, (</>))
-import           Web.Stripe.Types           (ApplicationFeePercent(..), AtPeriodEnd(..), CardId(..), CustomerId (..), Coupon(..), CouponId(..),
-                                             EndingBefore,
-                                             ExpandParams, Limit, MetaData,
-                                             PlanId (..), Prorate(..), Quantity(..), StartingAfter,
+import           Web.Stripe.Util            (toExpandable, (</>))
+import           Web.Stripe.Types           (ApplicationFeePercent(..),
+                                             AtPeriodEnd(..), CardId(..),
+                                             CustomerId (..), Coupon(..),
+                                             CouponId(..), EndingBefore(..),
+                                             ExpandParams, Limit(..), MetaData(..),
+                                             PlanId (..), Prorate(..), Quantity(..),
+                                             StartingAfter(..),
                                              Subscription (..), StripeList(..),
                                              SubscriptionId (..),
                                              SubscriptionStatus (..), TrialEnd(..))

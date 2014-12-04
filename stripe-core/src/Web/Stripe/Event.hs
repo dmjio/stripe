@@ -31,23 +31,28 @@ module Web.Stripe.Event
     , GetEvents
     , getEvents
       -- * Types
-    , Created    (..)
-    , EventId    (..)
-    , Event      (..)
-    , EventData  (..)
-    , EventType  (..)
-    , StripeList (..)
-    , Limit
+    , Created       (..)
+    , EndingBefore  (..)
+    , EventId       (..)
+    , Event         (..)
+    , EventData     (..)
+    , EventType     (..)
+    , StripeList    (..)
+    , Limit         (..)
+    , StartingAfter (..)
     ) where
 
-import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE), Param(..),
+import           Web.Stripe.StripeRequest (Method (GET),
                                            StripeHasParam, StripeRequest (..),
-                                           StripeReturn, ToStripeParam(..),
+                                           StripeReturn,
                                            mkStripeRequest)
-import           Web.Stripe.Util     ((</>), getParams, toText)
-import           Web.Stripe.Types           (Created(..), Event (..), EventId (..), Limit, EventData(..),
-                                             EventType(..), StripeList (..), Limit,
-                                             StartingAfter, EndingBefore)
+import           Web.Stripe.Util          ((</>))
+import           Web.Stripe.Types         (Created(..), Event (..),
+                                           EventId (..), Limit,
+                                           EventData(..),
+                                           EventType(..), StripeList (..),
+                                           Limit(..), StartingAfter(..),
+                                           EndingBefore(..))
 
 ------------------------------------------------------------------------------
 -- | `Event` to retrieve by `EventId`

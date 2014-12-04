@@ -998,6 +998,19 @@ instance FromJSON InvoiceLineItem where
                        <*> o .: "metadata"
    parseJSON _ = mzero
 
+
+------------------------------------------------------------------------------
+-- | `Closed` - invoice closed or not
+newtype Closed =
+  Closed { getClosed :: Bool }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | `Forgiven` - invoice forgiven or not
+newtype Forgiven =
+  Forgiven { getForgiven :: Bool }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
 ------------------------------------------------------------------------------
 -- | Status of a `Dispute`
 data DisputeStatus

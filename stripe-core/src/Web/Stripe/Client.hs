@@ -10,14 +10,16 @@ module Web.Stripe.Client
     , module Web.Stripe.Error
     , module Web.Stripe.Util
     , handleStream
+    , parseFail
+    , attemptDecode
+    , unknownCode
     , StripeConfig  (..)
     , StripeKey     (..)
     , APIVersion    (..)
     ) where
 
-import           Data.Aeson      (eitherDecodeStrict)
+import           Data.Aeson      (Value, Result(..), fromJSON)
 import           Data.ByteString (ByteString)
-import qualified Data.ByteString as S
 import           Data.Data       (Data, Typeable)
 import           Data.Monoid     (mempty)
 import           Data.Text       as T
@@ -62,34 +64,60 @@ instance Read APIVersion where
 -- This function is used by the backends such as @stripe-http-client@ to
 -- decode the results of an API request.
 handleStream
-    :: (ByteString -> Either String a) -- ^ function to decode JSON result (typically the 'decodeJson' field from 'StripeRequest')
+    :: (Value -> Result a)
     -> Int                             -- ^ HTTP response code
-    -> S.ByteString                    -- ^ HTTP request body
+    -> Result Value                    -- ^ result of attempting to decode body
     -> Either StripeError a
-handleStream eitherDecodeStrict_a statusCode x =
+handleStream decodeValue statusCode r =
   case statusCode of
-    200 -> case eitherDecodeStrict_a x of
-      Left message ->
-        -- when debug $ print (eitherDecodeStrict x :: Either String Value)
-        parseFail message
-      Right json   -> (Right json)
+    200 -> case r of
+      Error message -> parseFail message
+      (Success value) ->
+        case decodeValue value of
+          (Error message) -> parseFail message
+          (Success a)     -> (Right a)
     code | code >= 400 ->
-      case eitherDecodeStrict x :: Either String StripeError of
-        Left message -> parseFail message
-        Right json ->
-          Left $ case code of
-            400 -> json { errorHTTP = Just BadRequest        }
-            401 -> json { errorHTTP = Just UnAuthorized      }
-            402 -> json { errorHTTP = Just RequestFailed     }
-            404 -> json { errorHTTP = Just NotFound          }
-            500 -> json { errorHTTP = Just StripeServerError }
-            502 -> json { errorHTTP = Just StripeServerError }
-            503 -> json { errorHTTP = Just StripeServerError }
-            504 -> json { errorHTTP = Just StripeServerError }
-            _   -> json { errorHTTP = Just UnknownHTTPCode   }
+      case r of
+      Error message -> parseFail message
+      (Success value) ->
+        case fromJSON value of
+          (Error message) -> parseFail message
+          (Success stripeError) ->
+            Left $ setErrorHTTP code stripeError
     _ -> unknownCode
-  where
-    parseFail errorMessage  =
+
+------------------------------------------------------------------------------
+-- | check the HTTP status code and see if it is one we can deal with or not
+attemptDecode :: Int -> Bool
+attemptDecode code = code == 200 || code >= 400
+
+------------------------------------------------------------------------------
+-- | lift a parser error to be a StripeError
+parseFail :: String -> Either StripeError a
+parseFail errorMessage  =
       Left $ StripeError ParseFailure (T.pack errorMessage) Nothing Nothing Nothing
-    unknownCode =
+
+------------------------------------------------------------------------------
+-- | `StripeError` to return when we don't know what to do with the
+-- received HTTP status code.
+unknownCode :: Either StripeError a
+unknownCode =
       Left $ StripeError UnknownErrorType mempty Nothing Nothing Nothing
+
+------------------------------------------------------------------------------
+-- | set the `errorHTTP` field of the `StripeError` based on the HTTP
+-- response code.
+setErrorHTTP :: Int
+             -> StripeError
+             -> StripeError
+setErrorHTTP statusCode stripeError =
+  case statusCode of
+    400 -> stripeError { errorHTTP = Just BadRequest        }
+    401 -> stripeError { errorHTTP = Just UnAuthorized      }
+    402 -> stripeError { errorHTTP = Just RequestFailed     }
+    404 -> stripeError { errorHTTP = Just NotFound          }
+    500 -> stripeError { errorHTTP = Just StripeServerError }
+    502 -> stripeError { errorHTTP = Just StripeServerError }
+    503 -> stripeError { errorHTTP = Just StripeServerError }
+    504 -> stripeError { errorHTTP = Just StripeServerError }
+    _   -> stripeError { errorHTTP = Just UnknownHTTPCode   }

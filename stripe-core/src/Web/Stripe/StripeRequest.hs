@@ -27,16 +27,50 @@ module Web.Stripe.StripeRequest
   ) where
 
 import           Control.Applicative ((<$>))
-import           Data.Aeson         (FromJSON, encode, eitherDecodeStrict)
+import           Data.Aeson         (FromJSON(..), Value, Result, fromJSON)
 import           Data.ByteString    (ByteString)
-import           Data.ByteString.Lazy    (toStrict)
 import           Data.Monoid        ((<>))
 import           Data.String        (fromString)
 import           Data.Text          (Text)
 import qualified Data.Text.Encoding as Text
 import           Numeric            (showFFloat)
-import           Web.Stripe.Error   (StripeError(..))
-import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..), AddressCity(..), AddressCountry(..), ApplicationFeeId(..), AddressLine1(..), AddressLine2(..), AddressState(..), AddressZip(..), Amount(..), AmountOff(..), ApplicationFeeAmount(..), ApplicationFeePercent(..), AtPeriodEnd(..), AvailableOn(..), BankAccountId(..), Card(..), CardId(..), CardNumber(..), Capture(..), ChargeId(..), CouponId(..), Country(..), Created(..), Currency(..), CustomerId(..), CVC(..), Date(..), DefaultCard(..), Description(..), Duration(..), DurationInMonths(..), Email(..), EndingBefore(..), EventId(..), Evidence(..), ExpMonth(..), ExpYear(..), Interval(..), IntervalCount(..), InvoiceId(..), InvoiceItemId(..), IsVerified(..), MetaData(..), PlanId(..), PlanName(..), Prorate(..), Limit(..), MaxRedemptions(..), Name(..), NewBankAccount(..), NewCard(..), PercentOff(..), Quantity(..), ReceiptEmail(..), RecipientId(..), RedeemBy(..), RefundId(..), RefundApplicationFee(..), RefundReason(..), RoutingNumber(..), StartingAfter(..), StatementDescription(..), Source(..), SubscriptionId(..), TaxID(..), TimeRange(..), TokenId(..), TransactionId(..), TransactionType(..), TransferId(..), TransferStatus(..), TrialEnd(..), TrialPeriodDays(..))
+import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
+                                     AddressCity(..), AddressCountry(..),
+                                     ApplicationFeeId(..), AddressLine1(..),
+                                     AddressLine2(..), AddressState(..),
+                                     AddressZip(..), Amount(..), AmountOff(..),
+                                     ApplicationFeeAmount(..),
+                                     ApplicationFeePercent(..),
+                                     AtPeriodEnd(..),
+                                     AvailableOn(..), BankAccountId(..),
+                                     CardId(..), CardNumber(..),
+                                     Capture(..), ChargeId(..), Closed(..),
+                                     CouponId(..),
+                                     Country(..), Created(..), Currency(..),
+                                     CustomerId(..), CVC(..), Date(..),
+                                     DefaultCard(..), Description(..),
+                                     Duration(..), DurationInMonths(..),
+                                     Email(..), EndingBefore(..), EventId(..),
+                                     Evidence(..), ExpMonth(..), ExpYear(..),
+                                     Forgiven(..), Interval(..),
+                                     IntervalCount(..),
+                                     InvoiceId(..), InvoiceItemId(..),
+                                     InvoiceLineItemId(..),
+                                     IsVerified(..), MetaData(..), PlanId(..),
+                                     PlanName(..), Prorate(..), Limit(..),
+                                     MaxRedemptions(..), Name(..),
+                                     NewBankAccount(..), NewCard(..),
+                                     PercentOff(..), Quantity(..), ReceiptEmail(..),
+                                     RecipientId(..), RecipientType(..), RedeemBy(..),
+                                     RefundId(..),
+                                     RefundApplicationFee(..), RefundReason(..),
+                                     RoutingNumber(..), StartingAfter(..),
+                                     StatementDescription(..), Source(..),
+                                     SubscriptionId(..), TaxID(..), TimeRange(..),
+                                     TokenId(..), TransactionId(..),
+                                     TransactionType(..), TransferId(..),
+                                     TransferStatus(..), TrialEnd(..),
+                                     TrialPeriodDays(..))
 import           Web.Stripe.Util    (toBytestring, toMetaData, toSeconds, getParams, toText)
 
 ------------------------------------------------------------------------------
@@ -65,8 +99,8 @@ data StripeRequest a = StripeRequest
     { method      :: Method -- ^ Method of StripeRequest (i.e. `GET`, `PUT`, `POST`, `PUT`)
     , endpoint    :: Text   -- ^ Endpoint of StripeRequest
     , queryParams :: Params -- ^ Query Parameters of StripeRequest
-    , decodeJson  :: ByteString -> Either String (StripeReturn a)
-    } -- deriving Functor
+    , decodeJson  :: Value -> Result (StripeReturn a)
+    }
 
 ------------------------------------------------------------------------------
 -- | convert a parameter to a key/value
@@ -149,6 +183,10 @@ instance ToStripeParam ChargeId where
   toStripeParam (ChargeId cid) =
     (("charge", Text.encodeUtf8 cid) :)
 
+instance ToStripeParam Closed where
+  toStripeParam (Closed b) =
+    (("closed", if b then "true" else "false") :)
+
 instance ToStripeParam Created where
   toStripeParam (Created time) =
     (("created", toBytestring $ toSeconds time) :)
@@ -209,6 +247,10 @@ instance ToStripeParam ExpYear where
   toStripeParam (ExpYear y) =
     (("exp_year", toBytestring y) :)
 
+instance ToStripeParam Forgiven where
+  toStripeParam (Forgiven b) =
+    (("forgiven", if b then "true" else "false") :)
+
 instance ToStripeParam Interval where
   toStripeParam interval =
     (("interval", toBytestring interval) :)
@@ -224,6 +266,10 @@ instance ToStripeParam InvoiceId where
 instance ToStripeParam InvoiceItemId where
   toStripeParam (InvoiceItemId txt) =
     (("id", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam InvoiceLineItemId where
+  toStripeParam (InvoiceLineItemId txt) =
+    (("line_item", Text.encodeUtf8 txt) :)
 
 instance ToStripeParam IsVerified where
   toStripeParam (IsVerified b) =
@@ -304,6 +350,10 @@ instance ToStripeParam RefundId where
 instance ToStripeParam ReceiptEmail where
   toStripeParam (ReceiptEmail txt) =
     (("receipt_email", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam RecipientType where
+  toStripeParam recipientType =
+    (("recipient_type", toBytestring recipientType) :)
 
 instance ToStripeParam a => ToStripeParam (Source a) where
   toStripeParam (Source param) =
@@ -439,4 +489,4 @@ mkStripeRequest :: forall a. (FromJSON (StripeReturn a)) =>
                 -> Text
                 -> Params
                 -> StripeRequest a
-mkStripeRequest m e q = StripeRequest m e q eitherDecodeStrict
+mkStripeRequest m e q = StripeRequest m e q fromJSON
