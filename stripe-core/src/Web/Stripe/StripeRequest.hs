@@ -17,6 +17,7 @@ module Web.Stripe.StripeRequest
   ( -- * Types
     Method(..)
   , Expandable(..)
+  , ExpandParams(..)
   , Param(..)
   , Params
   , StripeRequest (..)
@@ -51,9 +52,9 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      DefaultCard(..), Description(..),
                                      Duration(..), DurationInMonths(..),
                                      Email(..), EndingBefore(..), EventId(..),
-                                     Evidence(..), Expandable(..), ExpMonth(..),
-                                     ExpYear(..),
-                                     Forgiven(..), Interval(..),
+                                     Evidence(..), Expandable(..),
+                                     ExpandParams(..), ExpMonth(..),
+                                     ExpYear(..), Forgiven(..), Interval(..),
                                      IntervalCount(..),
                                      InvoiceId(..), InvoiceItemId(..),
                                      InvoiceLineItemId(..),
@@ -72,7 +73,8 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      TransactionType(..), TransferId(..),
                                      TransferStatus(..), TrialEnd(..),
                                      TrialPeriodDays(..))
-import           Web.Stripe.Util    (toBytestring, toMetaData, toSeconds, getParams, toText)
+import           Web.Stripe.Util    (toBytestring, toExpandable,toMetaData,
+                                     toSeconds, getParams, toText)
 
 ------------------------------------------------------------------------------
 -- | HTTP Method
@@ -238,6 +240,10 @@ instance ToStripeParam EventId where
 instance ToStripeParam Evidence where
   toStripeParam (Evidence txt) =
     (("evidence", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam ExpandParams where
+  toStripeParam (ExpandParams params) =
+    (toExpandable params ++)
 
 instance ToStripeParam ExpMonth where
   toStripeParam (ExpMonth m) =

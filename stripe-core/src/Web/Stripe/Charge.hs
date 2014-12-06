@@ -40,10 +40,8 @@ module Web.Stripe.Charge
       ---- * Get Charge(s)
     , GetCharge
     , getCharge
-    , getChargeExpandable
     , GetCharges
     , getCharges
-    , getChargesExpandable
       ---- * Update Charge
     , UpdateCharge
     , updateCharge
@@ -65,6 +63,7 @@ module Web.Stripe.Charge
     , Description   (..)
     , Email         (..)
     , EndingBefore  (..)
+    , ExpandParams  (..)
     , ExpMonth      (..)
     , ExpYear       (..)
     , Limit         (..)
@@ -81,7 +80,7 @@ import           Web.Stripe.StripeRequest   (Method (GET, POST),
                                              StripeHasParam, ToStripeParam(..),
                                              StripeRequest (..), StripeReturn,
                                              mkStripeRequest)
-import           Web.Stripe.Util            ((</>), toExpandable)
+import           Web.Stripe.Util            ((</>))
 import           Web.Stripe.Types           (Amount(..), ApplicationFeeAmount(..),
                                              CVC (..),
                                              Capture(..),
@@ -94,7 +93,8 @@ import           Web.Stripe.Types           (Amount(..), ApplicationFeeAmount(..
                                              NewCard(..), Email (..),
                                              StartingAfter(..),
                                              ReceiptEmail(..),
-                                             StatementDescription(..), ExpandParams,
+                                             StatementDescription(..),
+                                             ExpandParams(..),
                                              StripeList (..), TokenId (..))
 import           Web.Stripe.Types.Util      (getChargeId)
 
@@ -128,23 +128,15 @@ createCharge
 -- | Retrieve a `Charge` by `ChargeId`
 data GetCharge
 type instance StripeReturn GetCharge = Charge
+instance StripeHasParam GetCharge ExpandParams
 getCharge
     :: ChargeId -- ^ The `Charge` to retrive
     -> StripeRequest GetCharge
-getCharge chargeid = getChargeExpandable chargeid []
-
-------------------------------------------------------------------------------
--- | Retrieve a `Charge` by `ChargeId` with `ExpandParams`
-getChargeExpandable
-    :: ChargeId     -- ^ The `Charge` retrive
-    -> ExpandParams -- ^ The `ExpandParams` to retrive
-    -> StripeRequest GetCharge
-getChargeExpandable
-    chargeid
-    expandParams = request
+getCharge
+    chargeid    = request
   where request = mkStripeRequest GET url params
         url     = "charges" </> getChargeId chargeid
-        params  = toExpandable expandParams
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | A `Charge` to be updated
@@ -180,6 +172,7 @@ captureCharge
 -- | Retrieve all `Charge`s
 data GetCharges
 type instance StripeReturn GetCharges = StripeList Charge
+instance StripeHasParam GetCharges ExpandParams
 instance StripeHasParam GetCharges Created
 instance StripeHasParam GetCharges CustomerId
 instance StripeHasParam GetCharges (EndingBefore ChargeId)
@@ -187,16 +180,7 @@ instance StripeHasParam GetCharges Limit
 instance StripeHasParam GetCharges (StartingAfter ChargeId)
 getCharges
     :: StripeRequest GetCharges
-getCharges =
-      getChargesExpandable []
-
-------------------------------------------------------------------------------
--- | Retrieve all `Charge`s
-getChargesExpandable
-    :: ExpandParams             -- ^ Get Charges with `ExpandParams`
-    -> StripeRequest GetCharges
-getChargesExpandable
-    expandParams = request
+getCharges = request
   where request = mkStripeRequest GET url params
         url     = "charges"
-        params  = toExpandable expandParams
+        params  = []

@@ -39,10 +39,8 @@ module Web.Stripe.Refund
     , createRefund
     , GetRefund
     , getRefund
-    , getRefundExpandable
     , GetRefunds
     , getRefunds
-    , getRefundsExpandable
     , UpdateRefund
     , updateRefund
       -- * Types
@@ -50,9 +48,10 @@ module Web.Stripe.Refund
     , Charge       (..)
     , ChargeId     (..)
     , EndingBefore (..)
+    , ExpandParams (..)
     , Refund       (..)
     , RefundApplicationFee(..)
-    , RefundReason(..)
+    , RefundReason (..)
     , RefundId     (..)
     , StripeList   (..)
     ) where
@@ -60,13 +59,13 @@ module Web.Stripe.Refund
 import           Web.Stripe.StripeRequest   (Method (GET, POST),
                                              StripeHasParam, StripeReturn,
                                              StripeRequest (..), mkStripeRequest)
-import           Web.Stripe.Util            ((</>), toExpandable)
+import           Web.Stripe.Util            ((</>))
 import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..),
                                              EndingBefore(..), Limit(..),
                                              MetaData(..), Refund (..),
                                              RefundApplicationFee(..),
                                              RefundId (..), RefundReason(..),
-                                             StartingAfter(..), ExpandParams,
+                                             StartingAfter(..), ExpandParams(..),
                                              StripeList (..))
 import           Web.Stripe.Types.Util      (getChargeId)
 
@@ -91,27 +90,17 @@ createRefund
 -- | Retrieve a `Refund` by `ChargeId` and `RefundId`
 data GetRefund
 type instance StripeReturn GetRefund = Refund
+instance StripeHasParam GetRefund ExpandParams
 getRefund
     :: ChargeId -- ^ `ChargeId` associated with the `Refund` to be retrieved
     -> RefundId -- ^ `RefundId` associated with the `Refund` to be retrieved
     -> StripeRequest GetRefund
-getRefund chargeid refundid =
-  getRefundExpandable chargeid refundid []
-
-------------------------------------------------------------------------------
--- | Retrieve a `Refund` by `ChargeId` and `RefundId` with `ExpandParams`
-getRefundExpandable
-    :: ChargeId     -- ^ `ChargeId` associated with the `Charge` to be retrieved
-    -> RefundId     -- ^ `RefundId` associated with the `Refund` to be retrieved
-    -> ExpandParams -- ^ `ExpandParams` of object for expansion
-    -> StripeRequest GetRefund
-getRefundExpandable
-    chargeid
-    (RefundId refundid)
-    expandParams = request
+getRefund
+   chargeid
+   (RefundId refundid) = request
    where request = mkStripeRequest GET url params
          url     = "charges" </> getChargeId chargeid </> "refunds" </> refundid
-         params  = toExpandable expandParams
+         params  = []
 
 ------------------------------------------------------------------------------
 -- | Update a `Refund` by `ChargeId` and `RefundId`
@@ -134,6 +123,7 @@ updateRefund
 -- | Retrieve a lot of Refunds by `ChargeId`
 data GetRefunds
 type instance StripeReturn GetRefunds = StripeList Refund
+instance StripeHasParam GetRefunds ExpandParams
 instance StripeHasParam GetRefunds (EndingBefore RefundId)
 instance StripeHasParam GetRefunds Limit
 instance StripeHasParam GetRefunds (StartingAfter RefundId)
@@ -141,19 +131,7 @@ getRefunds
     :: ChargeId               -- ^ `ChargeId` associated with the `Charge` to be updated
     -> StripeRequest GetRefunds
 getRefunds
-  chargeid =
-    getRefundsExpandable chargeid []
-
-------------------------------------------------------------------------------
--- | Retrieve a lot of Refunds by `ChargeId` with `ExpandParams`
-getRefundsExpandable
-    :: ChargeId               -- ^ `ChargeId` associated with the `Charge` to be updated
-    -> ExpandParams           -- ^ `MetaData` associated with a `Refund`
-    -> StripeRequest GetRefunds
-getRefundsExpandable
-  chargeid
-  expandParams  = request
+  chargeid = request
   where request = mkStripeRequest GET url params
         url     = "charges" </> getChargeId chargeid </> "refunds"
-        params  = toExpandable expandParams
-
+        params  = []

@@ -40,14 +40,12 @@ module Web.Stripe.Subscription
     , createSubscription
     , GetSubscription
     , getSubscription
-    , getSubscriptionExpandable
     , UpdateSubscription
     , updateSubscription
     , CancelSubscription
     , cancelSubscription
     , GetSubscriptions
     , getSubscriptions
-    , getSubscriptionsExpandable
       -- * Types
     , ApplicationFeePercent (..)
     , AtPeriodEnd        (..)
@@ -55,6 +53,7 @@ module Web.Stripe.Subscription
     , CouponId           (..)
     , Coupon             (..)
     , EndingBefore       (..)
+    , ExpandParams       (..)
     , Limit              (..)
     , MetaData           (..)
     , PlanId             (..)
@@ -72,12 +71,12 @@ import           Web.Stripe.StripeRequest   (Method (GET, POST, DELETE),
                                              StripeHasParam, StripeReturn,
                                              StripeRequest (..),
                                              ToStripeParam(..), mkStripeRequest)
-import           Web.Stripe.Util            (toExpandable, (</>))
+import           Web.Stripe.Util            ((</>))
 import           Web.Stripe.Types           (ApplicationFeePercent(..),
                                              AtPeriodEnd(..), CardId(..),
                                              CustomerId (..), Coupon(..),
                                              CouponId(..), EndingBefore(..),
-                                             ExpandParams, Limit(..), MetaData(..),
+                                             ExpandParams(..), Limit(..), MetaData(..),
                                              PlanId (..), Prorate(..), Quantity(..),
                                              StartingAfter(..),
                                              Subscription (..), StripeList(..),
@@ -111,31 +110,21 @@ createSubscription
 -- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId`
 data GetSubscription
 type instance StripeReturn GetSubscription = Subscription
+instance StripeHasParam GetSubscription ExpandParams
 getSubscription
     :: CustomerId       -- ^ The `CustomerId` of the `Subscription`
     -> SubscriptionId   -- ^ The `SubscriptionId` of the `Subscription` to retrieve
     -> StripeRequest GetSubscription
 getSubscription
     customerid
-    subscriptionid =
-      getSubscriptionExpandable
-        customerid subscriptionid []
+    (SubscriptionId subscriptionid)
+                = request
+  where request = mkStripeRequest GET url params
+        url     = "customers" </> getCustomerId customerid </>
+                  "subscriptions" </> subscriptionid
+        params  = []
 
 ------------------------------------------------------------------------------
--- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId` with `ExpandParams`
-getSubscriptionExpandable
-    :: CustomerId      -- ^ The `CustomerId` of the `Subscription` to retrieve
-    -> SubscriptionId  -- ^ The `SubscriptionId` of the `Subscription` to retrieve
-    -> ExpandParams    -- ^ The `ExpandParams` of the object to expand
-    -> StripeRequest GetSubscription
-getSubscriptionExpandable
-    customerid
-    (SubscriptionId subscriptionid)
-    expandParams = request
-  where request = mkStripeRequest GET url params
-        url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
-        params  = toExpandable expandParams
-
 -- | Update a `Subscription` by `CustomerId` and `SubscriptionId`
 data UpdateSubscription
 type instance StripeReturn UpdateSubscription = Subscription
@@ -180,6 +169,7 @@ cancelSubscription
 -- | Retrieve active `Subscription`s
 data GetSubscriptions
 type instance StripeReturn GetSubscriptions = StripeList Subscription
+instance StripeHasParam GetSubscriptions ExpandParams
 instance StripeHasParam GetSubscriptions (EndingBefore SubscriptionId)
 instance StripeHasParam GetSubscriptions Limit
 instance StripeHasParam GetSubscriptions (StartingAfter SubscriptionId)
@@ -187,19 +177,7 @@ getSubscriptions
     :: CustomerId                   -- ^ The `CustomerId` of the `Subscription`s to retrieve
     -> StripeRequest GetSubscriptions
 getSubscriptions
-    customerid =
-      getSubscriptionsExpandable customerid []
-
-------------------------------------------------------------------------------
--- | Retrieve active `Subscription`s
-getSubscriptionsExpandable
-    :: CustomerId                   -- ^ The `CustomerId` of the `Subscription`s to retrieve
-    -> ExpandParams                 -- ^ The `ExpandParams` of the object to expand
-    -> StripeRequest GetSubscriptions
-getSubscriptionsExpandable
-    customerid
-    expandParams = request
+  customerid = request
   where request = mkStripeRequest GET url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions"
-        params  =
-          toExpandable expandParams
+        params  = []

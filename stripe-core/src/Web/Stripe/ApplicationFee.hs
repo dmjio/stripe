@@ -28,64 +28,54 @@ module Web.Stripe.ApplicationFee
     (  -- * API
       GetApplicationFee
     , getApplicationFee
-    , getApplicationFeeExpanded
     , GetApplicationFees
     , getApplicationFees
-    , getApplicationFeesExpanded
        -- * Types
-    , ApplicationId  (..)
-    , ApplicationFee (..)
+    , ApplicationId    (..)
+    , ApplicationFee   (..)
     , ApplicationFeeId (..)
-    , ChargeId       (..)
-    , ConnectApp     (..)
-    , Created        (..)
-    , EndingBefore   (..)
-    , FeeId          (..)
-    , Limit          (..)
-    , StartingAfter  (..)
-    , StripeList     (..)
-    , ExpandParams
+    , ChargeId         (..)
+    , ConnectApp       (..)
+    , Created          (..)
+    , EndingBefore     (..)
+    , FeeId            (..)
+    , Limit            (..)
+    , StartingAfter    (..)
+    , StripeList       (..)
+    , ExpandParams     (..)
     ) where
 import           Web.Stripe.StripeRequest (Method (GET), StripeHasParam,
                                            StripeRequest (..), StripeReturn,
                                            mkStripeRequest)
-import           Web.Stripe.Util          ((</>), toExpandable)
-import           Web.Stripe.Types          (ApplicationFee (..),
-                                            ApplicationFeeId (..),
-                                            ApplicationId (..), ChargeId(..),
-                                            ConnectApp (..), Created(..),
-                                            EndingBefore(..), FeeId (..),
-                                            Limit(..), StartingAfter(..),
-                                            ExpandParams,
-                                            StripeList (..))
+import           Web.Stripe.Util          ((</>))
+import           Web.Stripe.Types         (ApplicationFee (..),
+                                           ApplicationFeeId (..),
+                                           ApplicationId (..), ChargeId(..),
+                                           ConnectApp (..), Created(..),
+                                           EndingBefore(..), ExpandParams(..),
+                                           FeeId (..), Limit(..),
+                                           StartingAfter(..), ExpandParams(..),
+                                           StripeList (..))
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee' retrieval
 data GetApplicationFee
 type instance StripeReturn GetApplicationFee = ApplicationFee
+instance StripeHasParam GetApplicationFee ExpandParams
 getApplicationFee
     :: FeeId        -- ^ The `FeeId` associated with the Application
     -> StripeRequest GetApplicationFee
 getApplicationFee
-    feeid = getApplicationFeeExpanded feeid []
-
-------------------------------------------------------------------------------
--- | 'ApplicationFee' retrieval with `ExpandParams`
-getApplicationFeeExpanded
-    :: FeeId        -- ^ The `FeeId` associated with the application
-    -> ExpandParams -- ^ The `ExpandParams` for an `ApplicationFee`
-    -> StripeRequest GetApplicationFee
-getApplicationFeeExpanded
-    (FeeId feeid)
-    expandParams = request
+    (FeeId feeid) = request
   where request = mkStripeRequest GET url params
         url     = "application_fees" </> feeid
-        params  = toExpandable expandParams
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | 'ApplicationFee's retrieval
 data GetApplicationFees
 type instance StripeReturn GetApplicationFees =  (StripeList ApplicationFee)
+instance StripeHasParam GetApplicationFees ExpandParams
 instance StripeHasParam GetApplicationFees ChargeId
 instance StripeHasParam GetApplicationFees Created
 instance StripeHasParam GetApplicationFees (EndingBefore ApplicationFeeId)
@@ -94,15 +84,7 @@ instance StripeHasParam GetApplicationFees (StartingAfter ApplicationFeeId)
 getApplicationFees
     :: StripeRequest GetApplicationFees
 getApplicationFees
-    = getApplicationFeesExpanded []
-
-------------------------------------------------------------------------------
--- | 'ApplicationFee's retrieval with `ExpandParams`
-getApplicationFeesExpanded
-    :: ExpandParams        -- ^ The `ExpandParams` for `ApplicationFee`s
-    -> StripeRequest GetApplicationFees
-getApplicationFeesExpanded
-   expandParams = request
+    = request
   where request = mkStripeRequest GET url params
         url     = "application_fees"
-        params  = toExpandable expandParams
+        params  = []

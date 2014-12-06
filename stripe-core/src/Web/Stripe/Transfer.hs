@@ -33,14 +33,12 @@ module Web.Stripe.Transfer
     , createTransfer
     , GetTransfer
     , getTransfer
-    , getTransferExpandable
     , UpdateTransfer
     , updateTransfer
     , CancelTransfer
     , cancelTransfer
     , GetTransfers
     , getTransfers
-    , getTransfersExpandable
       -- * Types
     , Amount          (..)
     , BankAccountId   (..)
@@ -51,6 +49,7 @@ module Web.Stripe.Transfer
     , Date            (..)
     , Description     (..)
     , EndingBefore    (..)
+    , ExpandParams    (..)
     , Recipient       (..)
     , RecipientId     (..)
     , StartingAfter   (..)
@@ -66,10 +65,11 @@ import           Web.Stripe.StripeRequest (Method (GET, POST),
                                            StripeHasParam, StripeRequest (..),
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
-import           Web.Stripe.Util          (toExpandable, (</>))
+import           Web.Stripe.Util          ((</>))
 import           Web.Stripe.Types         (Amount(..), BankAccountId(..), Card(..),
                                            CardId(..), Created(..),Currency (..),
-                                           Date(..), EndingBefore(..), ExpandParams,
+                                           Date(..), EndingBefore(..),
+                                           ExpandParams(..),
                                            Limit(..), MetaData(..), Recipient (..),
                                            RecipientId(..), StartingAfter(..),
                                            StatementDescription(..),
@@ -106,24 +106,17 @@ createTransfer
 -- | Retrieve a `Transfer`
 data GetTransfer
 type instance StripeReturn GetTransfer = Transfer
+instance StripeHasParam GetTransfer ExpandParams
 getTransfer
     :: TransferId -- ^ `TransferId` associated with the `Transfer` to retrieve
     -> StripeRequest GetTransfer
-getTransfer transferid =
-    getTransferExpandable transferid []
-
-------------------------------------------------------------------------------
--- | Retrieve a `Transfer` with `ExpandParams`
-getTransferExpandable
-    :: TransferId   -- ^ `TransferId` associated with the `Transfer` to retrieve
-    -> ExpandParams -- ^ The `ExpandParams` of the object to be expanded
-    -> StripeRequest GetTransfer
-getTransferExpandable
+getTransfer
     (TransferId transferid)
-    expandParams = request
+                = request
   where request = mkStripeRequest GET url params
         url     = "transfers" </> transferid
-        params  = toExpandable expandParams
+        params  = []
+
 ------------------------------------------------------------------------------
 -- | Update a `Transfer`
 data UpdateTransfer
@@ -152,11 +145,11 @@ cancelTransfer (TransferId transferid) = request
         url     = "transfers" </> transferid </> "cancel"
         params  = []
 
-
 ------------------------------------------------------------------------------
 -- | Retrieve StripeList of `Transfers`
 data GetTransfers
 type instance StripeReturn GetTransfers = StripeList Transfer
+instance StripeHasParam GetTransfers ExpandParams
 instance StripeHasParam GetTransfers Created
 instance StripeHasParam GetTransfers Date
 instance StripeHasParam GetTransfers (EndingBefore TransferId)
@@ -167,15 +160,7 @@ instance StripeHasParam GetTransfers TransferStatus
 getTransfers
     :: StripeRequest GetTransfers
 getTransfers
-    = getTransfersExpandable []
-
-------------------------------------------------------------------------------
--- | Retrieve StripeList of `Transfers` with `ExpandParams`
-getTransfersExpandable
-    :: ExpandParams             -- ^ The `ExpandParams` of the object to be expanded
-    -> StripeRequest GetTransfers
-getTransfersExpandable
-    expandParams = request
+    = request
   where request = mkStripeRequest GET url params
         url     = "transfers"
-        params  = toExpandable expandParams
+        params  = []

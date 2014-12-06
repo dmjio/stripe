@@ -34,14 +34,12 @@ module Web.Stripe.Recipient
     , createRecipient
     , GetRecipient
     , getRecipient
-    , getRecipientExpandable
     , UpdateRecipient
     , updateRecipient
     , DeleteRecipient
     , deleteRecipient
     , GetRecipients
     , getRecipients
-    , getRecipientsExpandable
       -- * Types
     , AccountNumber  (..)
     , AddressCity    (..)
@@ -58,6 +56,7 @@ module Web.Stripe.Recipient
     , CVC            (..)
     , DefaultCard    (..)
     , Description    (..)
+    , ExpandParams   (..)
     , ExpMonth       (..)
     , ExpYear        (..)
     , Email          (..)
@@ -80,7 +79,7 @@ import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE),
                                            StripeHasParam, StripeRequest (..),
                                            ToStripeParam(..), StripeReturn,
                                            mkStripeRequest)
-import           Web.Stripe.Util          (toExpandable, (</>))
+import           Web.Stripe.Util          ((</>))
 import           Web.Stripe.Types         (AccountNumber (..),
                                            BankAccount (..), CVC (..),
                                            CardId (..), CardNumber, BankAccountId (..),
@@ -94,7 +93,7 @@ import           Web.Stripe.Types         (AccountNumber (..),
                                            AddressLine2   (..), AddressState   (..),
                                            AddressZip     (..), Country(..), ExpYear (..),
                                            Limit(..), Name(..), NewBankAccount(..), NewCard(..), Recipient (..),
-                                           RecipientId (..), ExpandParams,
+                                           RecipientId (..), ExpandParams(..),
                                            RecipientType (..), StripeDeleteResult(..),
                                            RoutingNumber (..), EndingBefore(..),
                                            StartingAfter(..), StripeList (..),
@@ -132,24 +131,15 @@ createRecipient
 -- | Retrieve a 'Recipient'
 data GetRecipient
 type instance StripeReturn GetRecipient = Recipient
+instance StripeHasParam GetRecipient ExpandParams
 getRecipient
     :: RecipientId -- ^ The `RecipientId` of the `Recipient` to be retrieved
     -> StripeRequest GetRecipient
 getRecipient
-    recipientid = getRecipientExpandable recipientid []
-
-------------------------------------------------------------------------------
--- | Retrieve a `Recipient`
-getRecipientExpandable
-    :: RecipientId   -- ^ The `RecipientId` of the `Recipient` to be retrieved
-    -> ExpandParams  -- ^ `ExpandParams` of the object to be expanded
-    -> StripeRequest GetRecipient
-getRecipientExpandable
-    recipientid
-    expandParams = request
+  recipientid   = request
   where request = mkStripeRequest GET url params
         url     = "recipients" </> getRecipientId recipientid
-        params  = toExpandable expandParams
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Update `Recipient`
@@ -191,6 +181,7 @@ deleteRecipient
 -- | Retrieve multiple 'Recipient's
 data GetRecipients
 type instance StripeReturn GetRecipients = StripeList Recipient
+instance StripeHasParam GetRecipients ExpandParams
 instance StripeHasParam GetRecipients (EndingBefore RecipientId)
 instance StripeHasParam GetRecipients Limit
 instance StripeHasParam GetRecipients (StartingAfter RecipientId)
@@ -198,15 +189,7 @@ instance StripeHasParam GetRecipients IsVerified
 getRecipients
     :: StripeRequest GetRecipients
 getRecipients
-  = getRecipientsExpandable []
-
-------------------------------------------------------------------------------
--- | Retrieve multiple 'Recipient's with `ExpandParams`
-getRecipientsExpandable
-    :: ExpandParams              -- ^ `ExpandParams` of the object to be expanded
-    -> StripeRequest GetRecipients
-getRecipientsExpandable
-  expandParams  = request
+  = request
   where request = mkStripeRequest GET url params
         url     = "recipients"
-        params  = toExpandable expandParams
+        params  = []

@@ -30,12 +30,10 @@ module Web.Stripe.ApplicationFeeRefund
     , createApplicationFeeRefund
     , GetApplicationFeeRefund
     , getApplicationFeeRefund
-    , getApplicationFeeRefundExpandable
     , UpdateApplicationFeeRefund
     , updateApplicationFeeRefund
     , GetApplicationFeeRefunds
     , getApplicationFeeRefunds
-    , getApplicationFeeRefundsExpandable
       -- * Types
     , FeeId                  (..)
     , RefundId               (..)
@@ -45,7 +43,7 @@ module Web.Stripe.ApplicationFeeRefund
     , EndingBefore           (..)
     , StartingAfter          (..)
     , Limit                  (..)
-    , ExpandParams
+    , ExpandParams           (..)
     , MetaData               (..)
     , Amount                 (..)
     ) where
@@ -53,10 +51,10 @@ module Web.Stripe.ApplicationFeeRefund
 import           Web.Stripe.StripeRequest (Method (GET, POST), StripeHasParam,
                                            StripeRequest (..), StripeReturn,
                                            mkStripeRequest)
-import           Web.Stripe.Util          (toExpandable, (</>))
+import           Web.Stripe.Util          ((</>))
 import           Web.Stripe.Types         (Amount(..), ApplicationFee (..),
                                            ApplicationFeeRefund (..),
-                                           EndingBefore(..), ExpandParams,
+                                           EndingBefore(..), ExpandParams(..),
                                            FeeId (..), Limit(..), MetaData(..),
                                            RefundId (..), StartingAfter(..),
                                            StripeList (..))
@@ -81,25 +79,18 @@ createApplicationFeeRefund
 -- | Retrieve an existing 'ApplicationFeeRefund'
 data GetApplicationFeeRefund
 type instance StripeReturn GetApplicationFeeRefund = ApplicationFeeRefund
+instance StripeHasParam GetApplicationFeeRefund ExpandParams
 getApplicationFeeRefund
     :: FeeId     -- ^ The `FeeID` associated with the `ApplicationFee`
     -> RefundId  -- ^ The `ReufndId` associated with the `ApplicationFeeRefund`
     -> StripeRequest GetApplicationFeeRefund
-getApplicationFeeRefund feeid refundid =
-  getApplicationFeeRefundExpandable feeid refundid []
-
-------------------------------------------------------------------------------
--- | Retrieve an existing 'ApplicationFeeRefund'
-getApplicationFeeRefundExpandable
-    :: FeeId          -- ^ The `FeeID` associated with the `ApplicationFee`
-    -> RefundId       -- ^ The `ReufndId` associated with the `ApplicationFeeRefund`
-    -> ExpandParams   -- ^ The `ExpandParams` to be used for object expansion
-    -> StripeRequest GetApplicationFeeRefund
-getApplicationFeeRefundExpandable (FeeId feeid) (RefundId refundid) expansion
-    = request
+getApplicationFeeRefund
+  (FeeId feeid)
+  (RefundId refundid)
+                = request
   where request = mkStripeRequest GET url params
         url     = "application_fees" </> feeid </> "refunds" </> refundid
-        params  = toExpandable expansion
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Update an `ApplicationFeeRefund` for a given Application `FeeId` and `RefundId`
@@ -123,6 +114,7 @@ updateApplicationFeeRefund
 -- | Retrieve a list of all 'ApplicationFeeRefund's for a given Application 'FeeId'
 data GetApplicationFeeRefunds
 type instance StripeReturn GetApplicationFeeRefunds = (StripeList ApplicationFeeRefund)
+instance StripeHasParam GetApplicationFeeRefunds ExpandParams
 instance StripeHasParam GetApplicationFeeRefunds (EndingBefore RefundId)
 instance StripeHasParam GetApplicationFeeRefunds Limit
 instance StripeHasParam GetApplicationFeeRefunds (StartingAfter RefundId)
@@ -130,21 +122,8 @@ getApplicationFeeRefunds
     :: FeeId               -- ^ The `FeeID` associated with the application
     -> StripeRequest GetApplicationFeeRefunds
 getApplicationFeeRefunds
-   feeid =
-     getApplicationFeeRefundsExpandable
-       feeid []
-
-------------------------------------------------------------------------------
--- | Retrieve a list of all 'ApplicationFeeRefund's for a given Application 'FeeId'
-getApplicationFeeRefundsExpandable
-    :: FeeId               -- ^ The `FeeID` associated with the `ApplicationFee`
-    -> ExpandParams        -- ^ The `ExpandParams` to be used for object expansion
-    -> StripeRequest GetApplicationFeeRefunds
-getApplicationFeeRefundsExpandable
-  (FeeId feeid)
-   expandParams = request
+   (FeeId feeid) = request
   where
     request = mkStripeRequest GET url params
     url     = "application_fees" </> feeid </> "refunds"
-    params  = toExpandable expandParams
-
+    params  = []

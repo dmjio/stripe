@@ -30,7 +30,6 @@ module Web.Stripe.Balance
     , getBalance
     , GetBalanceTransaction
     , getBalanceTransaction
-    , getBalanceTransactionExpandable
     , GetBalanceTransactionHistory
     , getBalanceTransactionHistory
       -- * Types
@@ -41,7 +40,7 @@ module Web.Stripe.Balance
     , Created                (..)
     , Currency               (..)
     , EndingBefore           (..)
-    , ExpandParams
+    , ExpandParams           (..)
     , Limit                  (..)
     , Source                 (..)
     , StartingAfter          (..)
@@ -55,11 +54,11 @@ import           Web.Stripe.StripeRequest (Method (GET), StripeHasParam,
                                            StripeRequest (..),
                                            StripeReturn, ToStripeParam(..),
                                            mkStripeRequest)
-import           Web.Stripe.Util          (toExpandable, (</>))
+import           Web.Stripe.Util          ((</>))
 import           Web.Stripe.Types         (AvailableOn(..), Balance (..),
                                            BalanceAmount(..), BalanceTransaction(..),
                                            Created(..), Currency(..),
-                                           EndingBefore(..), ExpandParams,
+                                           EndingBefore(..), ExpandParams(..),
                                            Limit(..), Source(..), StartingAfter(..),
                                            StripeList (..), TimeRange(..),
                                            TransferId(..), TransactionId (..),
@@ -80,23 +79,15 @@ getBalance = request
 -- | Retrieve a 'BalanceTransaction' by 'TransactionId'
 data GetBalanceTransaction
 type instance StripeReturn GetBalanceTransaction = BalanceTransaction
+instance StripeHasParam GetBalanceTransaction ExpandParams
 getBalanceTransaction
     :: TransactionId  -- ^ The `TransactionId` of the `Transaction` to retrieve
     -> StripeRequest GetBalanceTransaction
 getBalanceTransaction
-    transactionid = getBalanceTransactionExpandable transactionid []
-
-------------------------------------------------------------------------------
--- | Retrieve a `BalanceTransaction` by `TransactionId` with `ExpandParams`
-getBalanceTransactionExpandable
-    :: TransactionId -- ^ The `TransactionId` of the `Transaction` to retrieve
-    -> ExpandParams  -- ^ The `ExpandParams` of the object to be expanded
-    -> StripeRequest GetBalanceTransaction
-getBalanceTransactionExpandable
-    transactionid expandParams = request
+    transactionid = request
   where request = mkStripeRequest GET url params
         url     = "balance" </> "history" </> getTransactionId transactionid
-        params  = toExpandable expandParams
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Retrieve the history of `BalanceTransaction`s

@@ -31,31 +31,31 @@ import           Web.Stripe.Util     (fromSeconds)
 ------------------------------------------------------------------------------
 -- | `Expandable` values
 
-type family Expand id :: *
+type family ExpandsTo id :: *
 
 data Expandable id
   = Id id
-  | Expanded (Expand id)
+  | Expanded (ExpandsTo id)
     deriving (Typeable)
-deriving instance (Data id, Data (Expand id)) => Data (Expandable id)
-deriving instance (Show id, Show (Expand id)) => Show (Expandable id)
-deriving instance (Read id, Read (Expand id)) => Read (Expandable id)
-deriving instance (Eq   id, Eq   (Expand id)) => Eq   (Expandable id)
-deriving instance (Ord  id, Ord  (Expand id)) => Ord  (Expandable id)
+deriving instance (Data id, Data (ExpandsTo id)) => Data (Expandable id)
+deriving instance (Show id, Show (ExpandsTo id)) => Show (Expandable id)
+deriving instance (Read id, Read (ExpandsTo id)) => Read (Expandable id)
+deriving instance (Eq   id, Eq   (ExpandsTo id)) => Eq   (Expandable id)
+deriving instance (Ord  id, Ord  (ExpandsTo id)) => Ord  (Expandable id)
 
-type instance Expand AccountId       = Account
-type instance Expand CardId          = Card
-type instance Expand ChargeId        = Charge
-type instance Expand CustomerId      = Customer
-type instance Expand InvoiceId       = Invoice
-type instance Expand InvoiceItemId   = InvoiceItem
-type instance Expand RecipientId     = Recipient
-type instance Expand RecipientCardId = RecipientCard
-type instance Expand TransactionId   = BalanceTransaction
+type instance ExpandsTo AccountId       = Account
+type instance ExpandsTo CardId          = Card
+type instance ExpandsTo ChargeId        = Charge
+type instance ExpandsTo CustomerId      = Customer
+type instance ExpandsTo InvoiceId       = Invoice
+type instance ExpandsTo InvoiceItemId   = InvoiceItem
+type instance ExpandsTo RecipientId     = Recipient
+type instance ExpandsTo RecipientCardId = RecipientCard
+type instance ExpandsTo TransactionId   = BalanceTransaction
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Expandable`
-instance (FromJSON id,  FromJSON (Expand id)) =>
+instance (FromJSON id,  FromJSON (ExpandsTo id)) =>
          FromJSON (Expandable id) where
   parseJSON v = (Id <$> parseJSON v) <|> (Expanded <$> parseJSON v)
 
@@ -1997,7 +1997,8 @@ instance FromJSON MetaData where
 
 ------------------------------------------------------------------------------
 -- | Type of Expansion Parameters for use on `Stripe` objects
-type ExpandParams = [Text]
+newtype ExpandParams = ExpandParams { getExpandParams :: [Text] }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Generic ID for use in constructing API Calls

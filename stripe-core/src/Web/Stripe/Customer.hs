@@ -32,7 +32,6 @@ module Web.Stripe.Customer
       ---- * Retrieve customer
     , GetCustomer
     , getCustomer
-    , getCustomerExpandable
       ---- * Update customer
     , UpdateCustomer
     , updateCustomer
@@ -42,7 +41,6 @@ module Web.Stripe.Customer
       ---- * List customers
     , GetCustomers
     , getCustomers
-    , getCustomersExpandable
       -- * Types
     , AccountBalance     (..)
     , CardId             (..)
@@ -55,11 +53,13 @@ module Web.Stripe.Customer
     , Description        (..)
     , Email              (..)
     , EndingBefore       (..)
-    , ExpandParams
+    , ExpandParams       (..)
     , ExpMonth           (..)
     , ExpYear            (..)
     , Limit              (..)
     , MetaData           (..)
+    , mkNewCard
+    , NewCard            (..)
     , PlanId             (..)
     , Quantity           (..)
     , StartingAfter      (..)
@@ -72,7 +72,7 @@ module Web.Stripe.Customer
 import           Web.Stripe.StripeRequest   (Method (GET, POST, DELETE),
                                              StripeHasParam, StripeRequest (..),
                                              StripeReturn, mkStripeRequest)
-import           Web.Stripe.Util            ((</>), toExpandable)
+import           Web.Stripe.Util            ((</>))
 import           Web.Stripe.Types           (AccountBalance(..), CVC (..),
                                              CardId (..), CardNumber (..),
                                              CouponId (..), Created(..), Customer (..),
@@ -81,10 +81,10 @@ import           Web.Stripe.Types           (AccountBalance(..), CVC (..),
                                              EndingBefore(..), ExpMonth (..),
                                              ExpYear (..), Limit(..), PlanId (..),
                                              Quantity (..), MetaData(..),
-                                             NewCard(..), StartingAfter(..),
+                                             mkNewCard, NewCard(..), StartingAfter(..),
                                              StripeDeleteResult (..),
                                              StripeList (..), TokenId (..),
-                                             TrialEnd(..), ExpandParams)
+                                             TrialEnd(..), ExpandParams(..))
 import           Web.Stripe.Types.Util
 
 ------------------------------------------------------------------------------
@@ -113,23 +113,14 @@ createCustomer = request
 -- | Retrieve a customer
 data GetCustomer
 type instance StripeReturn GetCustomer = Customer
+instance StripeHasParam GetCustomer ExpandParams
 
 getCustomer :: CustomerId -> StripeRequest GetCustomer
-getCustomer customerid =
-  getCustomerExpandable customerid []
-
-------------------------------------------------------------------------------
--- | Retrieves a customer by his/her `CustomerID` with `ExpandParams`
-getCustomerExpandable
-    :: CustomerId   -- ^ The `CustomerId` of the `Customer` to retrieve
-    -> ExpandParams -- ^ The `ExpandParams` of the object to expand
-    -> StripeRequest GetCustomer
-getCustomerExpandable
-    customerid
-    expandParams = request
+getCustomer
+  customerid = request
   where request = mkStripeRequest GET url params
         url     = "customers" </> getCustomerId customerid
-        params  = toExpandable expandParams
+        params  = []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Customer`
@@ -171,26 +162,17 @@ deleteCustomer customerid = request
 -- | Retrieve up to 100 customers at a time
 data GetCustomers
 type instance StripeReturn GetCustomers = (StripeList Customer)
+instance StripeHasParam GetCustomers ExpandParams
 instance StripeHasParam GetCustomers Created
 instance StripeHasParam GetCustomers (EndingBefore CustomerId)
 instance StripeHasParam GetCustomers Limit
 instance StripeHasParam GetCustomers (StartingAfter CustomerId)
 
-------------------------------------------------------------------------------
 -- | Retrieve up to 100 customers at a time
 getCustomers
     :: StripeRequest GetCustomers
 getCustomers =
-    getCustomersExpandable []
-
-------------------------------------------------------------------------------
--- | Retrieve up to 100 customers at a time
-getCustomersExpandable
-    :: ExpandParams             -- ^ Get Customers with `ExpandParams`
-    -> StripeRequest GetCustomers
-getCustomersExpandable
-    expandParams = request
+  request
   where request = mkStripeRequest GET url params
         url     = "customers"
-        params  = toExpandable expandParams
-
+        params  = []
