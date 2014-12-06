@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 -- |
@@ -17,7 +18,7 @@ module Web.Stripe.Client.HttpStreams
 
 import           Control.Exception          (SomeException, finally, try)
 import           Control.Monad              (when)
-import           Data.Aeson                 (Value, Result(..), fromJSON, json')
+import           Data.Aeson                 (Value, Result(..), FromJSON, fromJSON, json')
 import           Data.ByteString            (ByteString)
 import qualified Data.ByteString            as S
 import           Data.Monoid                (mempty, (<>))
@@ -47,7 +48,8 @@ import           Web.Stripe.Client          (APIVersion (..), Method(..), Stripe
 ------------------------------------------------------------------------------
 -- | Create a request to `Stripe`'s API
 stripe
-    :: StripeConfig
+    :: (FromJSON (StripeReturn a)) =>
+       StripeConfig
     -> StripeRequest a
     -> IO (Either StripeError (StripeReturn a))
 stripe config request =
@@ -85,7 +87,8 @@ m2m DELETE = C.DELETE
 -- FIXME: all connection errors should be
 -- turned into a `StripeError`. But that is not yet implemented.
 callAPI
-    :: Connection                      -- ^ an open connection to the server (`withConnection`)
+    :: (FromJSON (StripeReturn a)) =>
+       Connection                      -- ^ an open connection to the server (`withConnection`)
     -> StripeConfig                    -- ^ StripeConfig
     -> StripeRequest a                 -- ^ StripeRequest
     -> IO (Either StripeError (StripeReturn a))
@@ -117,4 +120,4 @@ callAPI conn StripeConfig {..} StripeRequest{..} = do
                          case v of
                            (Left (ParseException msg)) -> Error msg
                            (Right a) -> Success a
-                   return $ handleStream decodeJson statusCode r
+                   return $ handleStream fromJSON statusCode r

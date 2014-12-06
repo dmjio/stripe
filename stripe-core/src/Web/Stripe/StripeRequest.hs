@@ -16,6 +16,7 @@
 module Web.Stripe.StripeRequest
   ( -- * Types
     Method(..)
+  , Expandable(..)
   , Param(..)
   , Params
   , StripeRequest (..)
@@ -27,7 +28,6 @@ module Web.Stripe.StripeRequest
   ) where
 
 import           Control.Applicative ((<$>))
-import           Data.Aeson         (FromJSON(..), Value, Result, fromJSON)
 import           Data.ByteString    (ByteString)
 import           Data.Monoid        ((<>))
 import           Data.String        (fromString)
@@ -51,7 +51,8 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      DefaultCard(..), Description(..),
                                      Duration(..), DurationInMonths(..),
                                      Email(..), EndingBefore(..), EventId(..),
-                                     Evidence(..), ExpMonth(..), ExpYear(..),
+                                     Evidence(..), Expandable(..), ExpMonth(..),
+                                     ExpYear(..),
                                      Forgiven(..), Interval(..),
                                      IntervalCount(..),
                                      InvoiceId(..), InvoiceItemId(..),
@@ -99,7 +100,6 @@ data StripeRequest a = StripeRequest
     { method      :: Method -- ^ Method of StripeRequest (i.e. `GET`, `PUT`, `POST`, `PUT`)
     , endpoint    :: Text   -- ^ Endpoint of StripeRequest
     , queryParams :: Params -- ^ Query Parameters of StripeRequest
-    , decodeJson  :: Value -> Result (StripeReturn a)
     }
 
 ------------------------------------------------------------------------------
@@ -484,9 +484,9 @@ type family StripeReturn a :: *
 -- | HTTP Params
 --
 -- helper function for building a 'StripeRequest'
-mkStripeRequest :: forall a. (FromJSON (StripeReturn a)) =>
+mkStripeRequest :: -- forall a. (FromJSON (StripeReturn a)) =>
                    Method
                 -> Text
                 -> Params
                 -> StripeRequest a
-mkStripeRequest m e q = StripeRequest m e q fromJSON
+mkStripeRequest m e q = StripeRequest m e q -- fromJSON
