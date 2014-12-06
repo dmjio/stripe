@@ -37,6 +37,7 @@ data Expandable id
   = Id id
   | Expanded (ExpandsTo id)
     deriving (Typeable)
+
 deriving instance (Data id, Data (ExpandsTo id)) => Data (Expandable id)
 deriving instance (Show id, Show (ExpandsTo id)) => Show (Expandable id)
 deriving instance (Read id, Read (ExpandsTo id)) => Read (Expandable id)
@@ -2382,3 +2383,4 @@ currencyDivisor cur =
   where
     zeroCurrency = fromIntegral
     hundred v    = fromRat $ (fromIntegral v) % (100 :: Integer)
+

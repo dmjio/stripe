@@ -82,6 +82,7 @@ module Web.Stripe.Card
     , StartingAfter   (..)
     ) where
 
+import           Data.Text                (Text)
 import           Web.Stripe.StripeRequest (Method (GET, POST, DELETE),
                                            StripeHasParam, StripeRequest (..),
                                            StripeReturn, ToStripeParam(..),
@@ -181,15 +182,15 @@ instance StripeHasParam GetCard ExpandParams
 getCard
   :: URL
   -> ID
-  -> CardId
+  -> Text -- card id
   -> StripeRequest GetCard
 getCard
   prefix
   id_
-  cardid      = request
+  cardid_      = request
   where request = mkStripeRequest GET url params
         url     = prefix </> id_ </>
-                  "cards" </> getCardId cardid
+                  "cards" </> cardid_
         params  = []
 
 getCustomerCard
@@ -198,15 +199,16 @@ getCustomerCard
     -> StripeRequest GetCard
 getCustomerCard
   customerid
-  cardid = getCard "customers" (getCustomerId customerid) cardid
+  (CardId cardid) = getCard "customers" (getCustomerId customerid) cardid
 
 getRecipientCard
     :: RecipientId -- ^ `RecipientId` of the `Card` to retrieve
-    -> CardId     -- ^ `CardId` of the card to retrieve
+    -> RecipientCardId     -- ^ `CardId` of the card to retrieve
     -> StripeRequest GetCard
 getRecipientCard
   recipientid
-  cardid = getCard "recipients" (getRecipientId recipientid) cardid
+  (RecipientCardId cardid)
+    = getCard "recipients" (getRecipientId recipientid) cardid
 
 ------------------------------------------------------------------------------
 -- | Update a `Card`
@@ -225,15 +227,15 @@ instance StripeHasParam UpdateCard Name
 updateCard
   :: URL
   -> ID
-  -> CardId
+  -> Text -- ^ cardid
   -> StripeRequest UpdateCard
 updateCard
   prefix
   id_
-  cardid       = request
+  cardid_       = request
   where request = mkStripeRequest POST url params
         url     = prefix </> id_ </>
-                  "cards" </> getCardId cardid
+                  "cards" </> cardid_
         params  = []
 
 updateCustomerCard
@@ -242,15 +244,17 @@ updateCustomerCard
     -> StripeRequest UpdateCard
 updateCustomerCard
   customerid
-  cardid = updateCard "customers" (getCustomerId customerid) cardid
+  (CardId cardid)
+    = updateCard "customers" (getCustomerId customerid) cardid
 
 updateRecipientCard
     :: RecipientId
-    -> CardId
+    -> RecipientCardId
     -> StripeRequest UpdateCard
 updateRecipientCard
   recipientid
-  cardid = updateCard "recipients" (getRecipientId recipientid) cardid
+  (RecipientCardId cardid)
+    = updateCard "recipients" (getRecipientId recipientid) cardid
 
 ------------------------------------------------------------------------------
 -- | Removes a card from a `Customer`
@@ -259,14 +263,14 @@ type instance StripeReturn DeleteCard = StripeDeleteResult
 deleteCard
     :: URL
     -> ID
-    -> CardId     -- ^ `CardId` associated with `Card` to be deleted
+    -> Text     -- ^ `CardId` associated with `Card` to be deleted
     -> StripeRequest DeleteCard
 deleteCard
     prefix
     id_
-    cardid = request
+    cardid_ = request
   where request = mkStripeRequest DELETE url params
-        url     = prefix </> id_ </> "cards" </> getCardId cardid
+        url     = prefix </> id_ </> "cards" </> cardid_
         params  = []
 
 deleteCustomerCard
@@ -275,15 +279,16 @@ deleteCustomerCard
     -> StripeRequest DeleteCard
 deleteCustomerCard
     customerid
-    cardid = deleteCard "customers" (getCustomerId customerid) cardid
+    (CardId cardid) = deleteCard "customers" (getCustomerId customerid) cardid
 
 deleteRecipientCard
-    :: RecipientId -- ^ `RecipientId` of the `Card` to retrieve
-    -> CardId     -- ^ `CardId` associated with `Card` to be deleted
+    :: RecipientId     -- ^ `RecipientId` of the `Card` to retrieve
+    -> RecipientCardId -- ^ `CardId` associated with `Card` to be deleted
     -> StripeRequest DeleteCard
 deleteRecipientCard
     recipientid
-    cardid = deleteCard "recipients" (getRecipientId recipientid) cardid
+    (RecipientCardId cardid)
+      = deleteCard "recipients" (getRecipientId recipientid) cardid
 
 ------------------------------------------------------------------------------
 -- | Retrieve all cards associated with a `Customer`
