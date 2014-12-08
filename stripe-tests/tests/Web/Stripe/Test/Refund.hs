@@ -24,6 +24,9 @@ ey  = ExpYear 2015
 cvc :: CVC
 cvc = CVC "123"
 
+cardinfo :: NewCard
+cardinfo = (mkNewCard cn em ey) { newCardCVC = Just cvc }
+
 ------------------------------------------------------------------------------
 -- | Refund Tests
 refundTests :: StripeSpec
@@ -31,46 +34,46 @@ refundTests stripe = do
     describe "Refund Tests" $ do
       it "Creates a refund succesfully" $ do
         result <- stripe $ do
-          Customer { customerId = cid }  <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
-          refund <- createRefund chid []
+          Customer { customerId = cid }  <- createCustomer -&- cardinfo
+          Charge   { chargeId   = chid } <- createCharge (Amount 100) USD -&- cid
+          refund <- createRefund chid
           void $ deleteCustomer cid
           return refund
         result `shouldSatisfy` isRight
       it "Retrieves a refund succesfully" $ do
         result <- stripe $ do
-          Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
-          Refund   { refundId   = rid  } <- createRefund chid []
+          Customer { customerId = cid  } <- createCustomer -&- cardinfo
+          Charge   { chargeId   = chid } <- createCharge (Amount 100) USD -&- cid
+          Refund   { refundId   = rid  } <- createRefund chid
           void $ deleteCustomer cid
           void $ getRefund chid rid
         result `shouldSatisfy` isRight
       it "Retrieves a refund succesfully with expansion" $ do
         result <- stripe $ do
-          Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
-          Refund   { refundId   = rid  } <- createRefund chid []
-          r <- getRefundExpandable chid rid  ["balance_transaction"]
+          Customer { customerId = cid  } <- createCustomer -&- cardinfo
+          Charge   { chargeId   = chid } <- createCharge (Amount 100) USD -&- cid
+          Refund   { refundId   = rid  } <- createRefund chid
+          r <- getRefund chid rid -&- ExpandParams  ["balance_transaction"]
           void $ deleteCustomer cid
           return r
         result `shouldSatisfy` isRight
       it "Updates a refund succesfully" $ do
         result <- stripe $ do
-          Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
-          Refund   { refundId   = rid  } <- createRefund chid []
-          ref <- updateRefund chid rid [("hello","there")]
+          Customer { customerId = cid  } <- createCustomer -&- cardinfo
+          Charge   { chargeId   = chid } <- createCharge (Amount 100) USD -&- cid
+          Refund   { refundId   = rid  } <- createRefund chid
+          ref <- updateRefund chid rid -&- (MetaData [("hello","there")])
           void $ deleteCustomer cid
           return ref
         result `shouldSatisfy` isRight
         let Right Refund{..} = result
-        refundMetaData `shouldBe` [("hello","there")]
+        refundMetaData `shouldBe` (MetaData [("hello","there")])
       it "Retrieves all refunds for a Charge" $ do
         result <- stripe $ do
-          Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
-          Refund { } <- createRefund chid []
-          r <- getRefunds chid Nothing Nothing Nothing
+          Customer { customerId = cid  } <- createCustomer -&- cardinfo
+          Charge   { chargeId   = chid } <- createCharge (Amount 100) USD -&- cid
+          Refund { } <- createRefund chid
+          r <- getRefunds chid
           void $ deleteCustomer cid
           return r
         result `shouldSatisfy` isRight
@@ -78,10 +81,10 @@ refundTests stripe = do
         length list `shouldBe` 1
       it "Retrieves all refunds for a Charge with expansion" $ do
         result <- stripe $ do
-          Customer { customerId = cid  } <- createCustomerByCard cn em ey cvc
-          Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
-          Refund { } <- createRefund chid []
-          r <- getRefundsExpandable chid Nothing Nothing Nothing ["data.balance_transaction"]
+          Customer { customerId = cid  } <- createCustomer -&- cardinfo
+          Charge   { chargeId   = chid } <- createCharge (Amount 100) USD -&- cid
+          Refund { } <- createRefund chid
+          r <- getRefunds chid -&- ExpandParams ["data.balance_transaction"]
           void $ deleteCustomer cid
           return r
         result `shouldSatisfy` isRight

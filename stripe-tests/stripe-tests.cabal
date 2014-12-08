@@ -111,7 +111,7 @@ library
                      , free
                      , mtl >= 2.1.2
                      , random >= 1.1
-                     , hspec
+                     , hspec < 2.0
                      , stripe-core
                      , template-haskell
                      , text

@@ -13,63 +13,57 @@ customerTests stripe =
   describe "Customer tests" $ do
     it "Creates an empty customer" $ do
       result <- stripe $ do
-        c@Customer{..} <- createEmptyCustomer
+        c@Customer{..} <- createCustomer
         _ <- deleteCustomer customerId
         return c
       result `shouldSatisfy` isRight
-
     it "Deletes a customer" $ do
       result <- stripe $ do
-        c@Customer{..} <- createEmptyCustomer
+        c@Customer{..} <- createCustomer
         _ <- deleteCustomer customerId
         return c
       result `shouldSatisfy` isRight
     it "Gets a customer" $ do
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
+        Customer { customerId = cid } <- createCustomer
         customer <- getCustomer cid
         _ <- deleteCustomer cid
         return customer
       result `shouldSatisfy` isRight
     it "Gets a customer expandable" $ do
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
-        customer <- getCustomerExpandable cid ["default_card"]
+        Customer { customerId = cid } <- createCustomer
+        customer <- getCustomer cid -&- ExpandParams ["default_card"]
         _ <- deleteCustomer cid
         return customer
       result `shouldSatisfy` isRight
     it "Gets customers" $ do
-      result <- stripe $ void $ getCustomers (Just 100) Nothing Nothing
+      result <- stripe $ void $ getCustomers -&- Limit 100
       result `shouldSatisfy` isRight
     it "Gets customers expandable" $ do
-      result <- stripe $ void $ getCustomersExpandable
-                 Nothing Nothing Nothing ["data.default_card"]
+      result <- stripe $ void $ getCustomers
+                 -&- ExpandParams ["data.default_card"]
       result `shouldSatisfy` isRight
     it "Updates a customer" $ do
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
-        customer <- updateCustomerBase cid
-                      bal
-                      Nothing
-                      Nothing
-                      Nothing
-                      Nothing
-                      Nothing
-                      Nothing
-                      Nothing
-                      desc
-                      email
-                      meta
+        Customer { customerId = cid } <- createCustomer
+        customer <- updateCustomer cid
+                      -&- bal
+                      -&- desc
+                      -&- email
+                      -&- meta
         _ <- deleteCustomer cid
         return customer
       result `shouldSatisfy` isRight
       let Right Customer{..} = result
-      customerAccountBalance `shouldBe` (fromJust bal)
-      customerDescription `shouldBe` desc
-      customerEmail `shouldBe` email
+      (AccountBalance customerAccountBalance) `shouldBe` bal
+      customerDescription `shouldBe` (Just desc)
+      customerEmail `shouldBe` (Just email)
       customerMetaData `shouldBe` meta
   where
-    bal = Just 100
-    desc = Just "hey"
-    email = Just $ Email "djohnson.m@gmail.com"
-    meta = [("hey","there")]
+    bal   = AccountBalance 100
+    desc  = Description "hey"
+    email = Email "djohnson.m@gmail.com"
+    meta  = MetaData [("hey","there")]
+
+

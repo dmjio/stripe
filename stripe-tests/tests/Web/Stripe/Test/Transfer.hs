@@ -17,35 +17,20 @@ import           Web.Stripe.Transfer
 transferTests :: StripeSpec
 transferTests stripe =
   describe "Transfer tests" $ do
-
     it "Create a new transfer" $ do
       result <- stripe $ do
         Recipient { recipientId = rid } <-
-          createRecipientByBank
-            firstname
-            lastname
-            Nothing
-            Individual
-            country
-            routingnumber
-            accountnumber
-        transfer <- createTransfer rid (100 :: Amount) USD []
+          createRecipient name Individual -&- bankinfo
+        transfer <- createTransfer rid (Amount 100) USD
         void $ deleteRecipient rid
         return transfer
       result `shouldSatisfy` isRight
     it "Retrieves a transfer" $ do
       result <- stripe $ do
         Recipient { recipientId = rid } <-
-          createRecipientByBank
-            firstname
-            lastname
-            Nothing
-            Individual
-            country
-            routingnumber
-            accountnumber
+          createRecipient name Individual -&- bankinfo
         Transfer { transferId = tid }
-           <- createTransfer rid (100 :: Amount) USD []
+           <- createTransfer rid (Amount 100) USD
         t <- getTransfer tid
         void $ deleteRecipient rid
         return t
@@ -53,26 +38,19 @@ transferTests stripe =
     it "Retrieves a transfer expandable" $ do
       result <- stripe $ do
         Recipient { recipientId = rid } <-
-          createRecipientByBank
-            firstname
-            lastname
-            Nothing
-            Individual
-            country
-            routingnumber
-            accountnumber
+          createRecipient name Individual -&- bankinfo
         Transfer { transferId = tid }
-           <- createTransfer rid (100 :: Amount) USD []
-        t <- getTransferExpandable tid ["recipient", "balance_transaction"]
+           <- createTransfer rid (Amount 100) USD
+        t <- getTransfer tid -&- ExpandParams ["recipient", "balance_transaction"]
         void $ deleteRecipient rid
         return t
       result `shouldSatisfy` isRight
     it "Retrieves transfers" $ do
-      result <- stripe $ do t <- getTransfers Nothing Nothing Nothing
+      result <- stripe $ do t <- getTransfers
                             return t
       result `shouldSatisfy` isRight
     it "Retrieves transfers expandable" $ do
-      result <- stripe $ do t <- getTransfersExpandable Nothing Nothing Nothing
+      result <- stripe $ do t <- getTransfers -&- ExpandParams
                                    [ "data.recipient"
                                    , "data.balance_transaction"
                                    ]
@@ -81,36 +59,27 @@ transferTests stripe =
     it "Updates a transfer" $ do
       result <- stripe $ do
         Recipient { recipientId = rid } <-
-          createRecipientByBank
-            firstname
-            lastname
-            Nothing
-            Individual
-            country
-            routingnumber
-            accountnumber
+          createRecipient name Individual -&- bankinfo
         Transfer { transferId = tid }
-           <- createTransfer rid (100 :: Amount) USD []
-        t <- updateTransfer tid (Just "hey there") [("hey", "there")]
+           <- createTransfer rid (Amount 100) USD
+        t <- updateTransfer tid
+              -&- (Description "hey there")
+              -&- (MetaData [("hey", "there")])
         void $ deleteRecipient rid
         return t
       result `shouldSatisfy` isRight
       let Right Transfer {..} = result
-      transferMetaData `shouldBe` [("hey", "there")]
-      transferDescription `shouldBe` Just "hey there"
+      transferMetaData `shouldBe` (MetaData [("hey", "there")])
+      transferDescription `shouldBe` (Just (Description "hey there"))
     it "Can't Cancel a committed transfer" $ do
       result <- stripe $ do
         Recipient { recipientId = rid } <-
-          createRecipientByBank
-            firstname
-            lastname
-            Nothing
+          createRecipient
+            name
             Individual
-            country
-            routingnumber
-            accountnumber
+            -&- bankinfo
         Transfer { transferId = tid }
-           <- createTransfer rid (100 :: Amount) USD []
+           <- createTransfer rid (Amount 100) USD
         t <- cancelTransfer tid
         void $ deleteRecipient rid
         return t
@@ -119,5 +88,5 @@ transferTests stripe =
     country       = Country "US"
     routingnumber = RoutingNumber "110000000"
     accountnumber = AccountNumber "000123456789"
-    firstname     = FirstName "David"
-    lastname      = LastName "Johnson"
+    name          = Name "David Johnson"
+    bankinfo      = NewBankAccount country routingnumber accountnumber

@@ -17,84 +17,103 @@ invoiceTests stripe = do
   describe "Invoice tests" $ do
     it "Create an Invoice via Invoice item on a Customer" $ do
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
-        InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
-        i <- createInvoice cid meta
+        Customer { customerId = cid } <- createCustomer
+        InvoiceItem { invoiceItemId = iiid } <- createInvoiceItem cid (Amount 100) USD
+        i <- createInvoice cid -&- meta
+        void $ deleteInvoiceItem iiid
         void $ deleteCustomer cid
         return i
       result `shouldSatisfy` isRight
     it "Retrieve an Invoice" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
-        Plan { } <- createPlan planid 20 USD Day "testplan" []
-        InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
-        Invoice { invoiceId = Just iid } <- createInvoice cid meta
+        Customer { customerId = cid } <- createCustomer
+        Plan { planId = pid} <- createPlan planid (Amount 20) USD Day (PlanName "testplan")
+        InvoiceItem { invoiceItemId = iiid } <- createInvoiceItem cid (Amount 100) USD
+        Invoice { invoiceId = Just iid } <- createInvoice cid -&- meta
         i <- getInvoice iid
+        void $ deleteInvoiceItem iiid
+        void $ deletePlan pid
+        void $ deleteCustomer cid
         return i
       result `shouldSatisfy` isRight
     it "Retrieve an Invoice Expanded" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
-        Plan { } <- createPlan planid 20 USD Day "testplan" []
-        InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
-        Invoice { invoiceId = Just iid } <- createInvoice cid meta
-        i <- getInvoiceExpandable iid ["customer", "charge"]
+        Customer { customerId = cid } <- createCustomer
+        Plan { planId = pid} <- createPlan planid (Amount 20) USD Day (PlanName "testplan")
+        InvoiceItem { invoiceItemId = iiid } <- createInvoiceItem cid (Amount 100) USD
+        Invoice { invoiceId = Just iid } <- createInvoice cid -&- meta
+        i <- getInvoice iid -&- ExpandParams ["customer", "charge"]
+        void $ deleteInvoiceItem iiid
+        void $ deletePlan pid
+        void $ deleteCustomer cid
         return i
       result `shouldSatisfy` isRight
     it "Retrieve an Invoice's Line Items" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
-        Plan { } <- createPlan planid 20 USD Day "testplan" []
-        InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
-        Invoice { invoiceId = Just iid } <- createInvoice cid meta
-        i <- getInvoiceLineItems iid Nothing Nothing Nothing
+        Customer { customerId = cid } <- createCustomer
+        Plan { planId = pid } <- createPlan planid (Amount 20) USD Day (PlanName "testplan")
+        InvoiceItem { invoiceItemId = iiid } <- createInvoiceItem cid (Amount 100) USD
+        Invoice { invoiceId = Just iid } <- createInvoice cid -&- meta
+        i <- getInvoiceLineItems iid
+        void $ deleteInvoiceItem iiid
+        void $ deletePlan pid
+        void $ deleteCustomer cid
         return i
       result `shouldSatisfy` isRight
     it "Retrieve Invoices" $ do
-      result <- stripe $ void $ getInvoices Nothing Nothing Nothing
+      result <- stripe $ void $ getInvoices
       result `shouldSatisfy` isRight
     it "Retrieve Invoices Expandable" $ do
-      result <- stripe $ void $ getInvoicesExpandable Nothing Nothing Nothing
-                ["data.customer", "data.charge"]
+      result <- stripe $ void $ getInvoices
+                  -&- ExpandParams ["data.customer", "data.charge"]
       result `shouldSatisfy` isRight
     it "Updates an Invoice" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
-        Plan { } <- createPlan planid 20 USD Day "testplan" []
-        InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
-        Invoice { invoiceId = Just iid } <- createInvoice cid meta
-        i <- updateInvoice iid [("some", "thing")]
+        Customer { customerId = cid } <- createCustomer
+        Plan { planId = pid } <- createPlan planid (Amount 20) USD Day (PlanName "testplan")
+        InvoiceItem { invoiceItemId = iiid } <- createInvoiceItem cid (Amount 100) USD
+        Invoice { invoiceId = Just iid } <- createInvoice cid -&- meta
+        i <- updateInvoice iid -&- (MetaData [("some", "thing")])
+        void $ deleteInvoiceItem iiid
+        void $ deletePlan pid
+        void $ deleteCustomer cid
         return i
       result `shouldSatisfy` isRight
       let Right Invoice {..} = result
-      invoiceMetaData `shouldBe` [("some", "thing")]
+      invoiceMetaData `shouldBe` (MetaData [("some", "thing")])
     it "Retrieve an Upcoming Invoice" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
-        Plan { } <- createPlan planid 20 USD Day "testplan" []
-        InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
+        Customer { customerId = cid } <- createCustomer
+        Plan { planId = pid } <- createPlan planid (Amount 20) USD Day (PlanName "testplan")
+        InvoiceItem { invoiceItemId = iiid } <- createInvoiceItem cid (Amount 100) USD
         i <- getUpcomingInvoice cid
+        void $ deleteInvoiceItem iiid
+        void $ deletePlan pid
+        void $ deleteCustomer cid
         return i
       result `shouldSatisfy` isRight
     it "Pay an Invoice" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createCustomerByCard credit em ey cvc
-        Plan { } <- createPlan planid 20 USD Day "testplan" []
-        InvoiceItem { } <- createInvoiceItem cid 100 USD Nothing Nothing Nothing []
-        Invoice { invoiceId = Just iid } <- createInvoice cid meta
+        Customer { customerId = cid } <- createCustomer -&- cardinfo
+        Plan { planId = pid } <- createPlan planid (Amount 20) USD Day (PlanName "testplan")
+        InvoiceItem { } <- createInvoiceItem cid (Amount 100) USD
+        Invoice { invoiceId = Just iid } <- createInvoice cid -&- meta
         i <- payInvoice iid
+        void $ deletePlan pid
+        void $ deleteCustomer cid
         return i
       result `shouldSatisfy` isRight
       let Right Invoice{..} = result
       invoicePaid `shouldBe` True
   where
-    meta = [ ("some","metadata") ]
+    cardinfo = (mkNewCard credit em ey) { newCardCVC = Just cvc }
+    meta = MetaData [ ("some","metadata") ]
     credit = CardNumber "4242424242424242"
     em  = ExpMonth 12
     ey  = ExpYear 2015

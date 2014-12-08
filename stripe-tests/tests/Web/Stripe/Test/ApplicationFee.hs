@@ -14,5 +14,5 @@ applicationFeeTests stripe = do
       result <- stripe $ void $ getApplicationFee (FeeId "fee_unknown")
       result `shouldSatisfy` isLeft
     it "Succesfully retrieves all application fees" $ do
-      result <- stripe $ void $ getApplicationFees Nothing Nothing Nothing
+      result <- stripe $ void $ getApplicationFees
       result `shouldSatisfy` isRight

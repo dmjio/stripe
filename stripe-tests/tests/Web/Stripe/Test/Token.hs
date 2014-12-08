@@ -12,25 +12,20 @@ tokenTests :: StripeSpec
 tokenTests stripe = do
   describe "Token tests" $ do
     it "Can create a Card Token" $ do
-      result <- stripe $ void $ createCardToken cn em ey cvc
+      result <- stripe $ void $ createCardToken (Just cardinfo)
       result `shouldSatisfy` isRight
     it "Can create a Bank Account Token" $ do
       result <- stripe $ void $ createBankAccountToken
-                                  (Country "US")
-                                  (RoutingNumber "110000000")
-                                  (AccountNumber "000123456789")
+                                  (Just bankinfo)
       result `shouldSatisfy` isRight
     it "Can retrieve an Existing Card Token" $ do
       result <- stripe $ do
-        Token { tokenId = tkid } <- createCardToken cn em ey cvc
+        Token { tokenId = tkid } <- createCardToken (Just cardinfo)
         void $ getCardToken tkid
       result `shouldSatisfy` isRight
     it "Can retrieve an Existing Bank Account Token" $ do
       result <- stripe $ do
-        Token { tokenId = tkid } <- createBankAccountToken
-                 (Country "US")
-                 (RoutingNumber "110000000")
-                 (AccountNumber "000123456789")
+        Token { tokenId = tkid } <- createBankAccountToken (Just bankinfo)
         void $ getBankAccountToken tkid
       result `shouldSatisfy` isRight
   where
@@ -38,3 +33,8 @@ tokenTests stripe = do
     em  = ExpMonth 12
     ey  = ExpYear 2015
     cvc = CVC "123"
+    cardinfo = (mkNewCard cn em ey) { newCardCVC = Just cvc }
+    bankinfo = NewBankAccount
+                  (Country "US")
+                  (RoutingNumber "110000000")
+                  (AccountNumber "000123456789")

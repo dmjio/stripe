@@ -14,9 +14,7 @@ recipientTests stripe = do
     it "Succesfully creates an Individual Recipient" $ do
       result <- stripe $ do
         recipient@Recipient { recipientId = rid } <- createRecipient
-          firstName
-          lastName
-          initial
+          name
           Individual
         void $ deleteRecipient rid
         return recipient
@@ -27,9 +25,7 @@ recipientTests stripe = do
       result <- stripe $ do
         recipient@Recipient { recipientId = rid } <-
            createRecipient
-             firstName
-             lastName
-             initial
+             name
              Corporation
         void $ deleteRecipient rid
         return recipient
@@ -40,9 +36,7 @@ recipientTests stripe = do
       result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipient
-            firstName
-            lastName
-            initial
+            name
             Corporation
         recipient <- getRecipient rid
         void $ deleteRecipient rid
@@ -54,9 +48,7 @@ recipientTests stripe = do
       result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipient
-            firstName
-            lastName
-            initial
+            name
             Corporation
         recipient <- getRecipient rid
         void $ deleteRecipient rid
@@ -68,47 +60,36 @@ recipientTests stripe = do
       result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipient
-            firstName
-            lastName
-            initial
+            name
             Corporation
-        recipient <- updateRecipientBase rid
-                     (Just firstName)
-                     (Just lastName)
-                     initial
-                     taxid
-                     country
-                     routingnumber
-                     accountnumber
-                     Nothing Nothing Nothing Nothing Nothing
-                     Nothing email description meta
+        recipient <- updateRecipient rid
+                       -&- (Name "David R. Johnson")
+                       -&- taxid
+                       -&- (NewBankAccount country routingnumber accountnumber)
+                       -&- email
+                       -&- description
+                       -&- meta
         void $ deleteRecipient rid
         return recipient
       result `shouldSatisfy` isRight
       let Right Recipient {..} = result
       recipientType `shouldBe` Corporation
-      recipientName `shouldBe` "david M johnson"
-      recipientDescription `shouldBe` description
-      recipientEmail `shouldBe` email
+      recipientName `shouldBe` (Name "David R. Johnson")
+      recipientDescription `shouldBe` (Just description)
+      recipientEmail `shouldBe` (Just email)
     it "Succesfully deletes a Recipient" $ do
       result <- stripe $ do
         Recipient { recipientId = rid } <-
           createRecipient
-            firstName
-            lastName
-            initial
+            name
             Corporation
         void $ deleteRecipient rid
       result `shouldSatisfy` isRight
-
-
-  where firstName = FirstName "david"
-        lastName  = LastName "johnson"
-        initial   = Just 'M'
-        meta      = [("this", "thing")]
-        email     = Just $ Email "djohnson.m@gmail.com"
-        country   = Just $ Country "US"
-        description = Just "description"
-        routingnumber = Just $ RoutingNumber "110000000"
-        accountnumber = Just $ AccountNumber "000123456789"
-        taxid = Just "000000000"
+  where name      = Name "David M. Johnson"
+        meta      = MetaData [("this", "thing")]
+        email     = Email "djohnson.m@gmail.com"
+        country   = Country "US"
+        description = Description "description"
+        routingnumber = RoutingNumber "110000000"
+        accountnumber = AccountNumber "000123456789"
+        taxid = TaxID "000000000"

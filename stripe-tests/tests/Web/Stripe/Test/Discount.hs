@@ -24,28 +24,10 @@ discountTests stripe = do
           createCoupon
              (Just coupon)
              Once
-             (Just $ AmountOff 1)
-             (Just USD)
-             Nothing
-             Nothing
-             Nothing
-             Nothing
-             []
+             -&- (AmountOff 1)
+             -&- USD
         Customer { customerId = customerid } <-
-          createCustomerBase
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            (Just coupon)
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            []
+          createCustomer -&- couponid
         r <- deleteCustomerDiscount customerid
         c <- getCustomer customerid
         void $ deleteCustomer customerid
@@ -56,44 +38,26 @@ discountTests stripe = do
       customerDiscount `shouldBe` Nothing
     it "Succesfully deletes a discount from a Subscription" $ do
       coupon <- makeCouponId
-      plan <- makePlanId
+      plan   <- makePlanId
       result <- stripe $ do
         Plan { planId = planid } <-
           createPlan plan
-          0 -- free plan
+          (Amount 0) -- free plan
           USD
           Month
-          "sample plan"
-          []
+          (PlanName "sample plan")
         Coupon { couponId = couponid } <-
           createCoupon
              (Just coupon)
              Once
-             (Just $ AmountOff 1)
-             (Just USD)
-             Nothing
-             Nothing
-             Nothing
-             Nothing
-             []
+             -&- (AmountOff 1)
+             -&- USD
         Customer { customerId = customerid } <-
-          createCustomerBase
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            (Just coupon)
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            []
+          createCustomer
+            -&- coupon
         Subscription { subscriptionId = sid } <-
-          createSubscription customerid plan []
-        void $ updateSubscription customerid sid (Just coupon) []
+          createSubscription customerid plan
+        void $ updateSubscription customerid sid -&- coupon
         result <- deleteSubscriptionDiscount customerid sid
         void $ deletePlan planid
         void $ deleteCustomer customerid

@@ -21,14 +21,13 @@ subscriptionTests stripe = do
     it "Succesfully creates a Subscription" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
+        Customer { customerId = cid } <- createCustomer
         void $ createPlan planid
-                        0 -- free plan
+                        (Amount 0) -- free plan
                         USD
                         Month
-                        "sample plan"
-                        []
-        sub <- createSubscription cid planid []
+                        (PlanName "sample plan")
+        sub <- createSubscription cid planid
         void $ deletePlan planid
         void $ deleteCustomer cid
         return sub
@@ -36,14 +35,13 @@ subscriptionTests stripe = do
     it "Succesfully retrieves a Subscription" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
+        Customer { customerId = cid } <- createCustomer
         void $ createPlan planid
-                        0 -- free plan
+                        (Amount 0) -- free plan
                         USD
                         Month
-                        "sample plan"
-                        []
-        Subscription { subscriptionId = sid } <- createSubscription cid planid []
+                        (PlanName "sample plan")
+        Subscription { subscriptionId = sid } <- createSubscription cid planid
         sub <- getSubscription cid sid
         void $ deletePlan planid
         void $ deleteCustomer cid
@@ -52,15 +50,14 @@ subscriptionTests stripe = do
     it "Succesfully retrieves a Subscription expanded" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
+        Customer { customerId = cid } <- createCustomer
         void $ createPlan planid
-                        0 -- free plan
+                        (Amount 0) -- free plan
                         USD
                         Month
-                        "sample plan"
-                        []
-        Subscription { subscriptionId = sid } <- createSubscription cid planid []
-        sub <- getSubscriptionExpandable cid sid ["customer"]
+                        (PlanName "sample plan")
+        Subscription { subscriptionId = sid } <- createSubscription cid planid
+        sub <- getSubscription cid sid -&- ExpandParams ["customer"]
         void $ deletePlan planid
         void $ deleteCustomer cid
         return sub
@@ -68,15 +65,14 @@ subscriptionTests stripe = do
     it "Succesfully retrieves a Customer's Subscriptions expanded" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
+        Customer { customerId = cid } <- createCustomer
         void $ createPlan planid
-                        0 -- free plan
+                        (Amount 0) -- free plan
                         USD
                         Month
-                        "sample plan"
-                        []
-        void $ createSubscription cid planid []
-        sub <- getSubscriptionsExpandable cid Nothing Nothing Nothing ["data.customer"]
+                        (PlanName "sample plan")
+        void $ createSubscription cid planid
+        sub <- getSubscriptions cid -&- ExpandParams ["data.customer"]
         void $ deletePlan planid
         void $ deleteCustomer cid
         return sub
@@ -84,15 +80,14 @@ subscriptionTests stripe = do
     it "Succesfully retrieves a Customer's Subscriptions" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
+        Customer { customerId = cid } <- createCustomer
         void $ createPlan planid
-                        0 -- free plan
+                        (Amount 0) -- free plan
                         USD
                         Month
-                        "sample plan"
-                        []
-        void $ createSubscription cid planid []
-        sub <- getSubscriptions cid Nothing Nothing Nothing 
+                        (PlanName "sample plan")
+        void $ createSubscription cid planid
+        sub <- getSubscriptions cid
         void $ deletePlan planid
         void $ deleteCustomer cid
         return sub
@@ -105,41 +100,36 @@ subscriptionTests stripe = do
           createCoupon
              (Just couponid)
              Once
-             (Just $ AmountOff 1)
-             (Just USD)
-             Nothing
-             Nothing
-             Nothing
-             Nothing
-             []
-        Customer { customerId = cid } <- createEmptyCustomer
+             -&- (AmountOff 1)
+             -&- USD
+        Customer { customerId = cid } <- createCustomer
         void $ createPlan planid
-                        0 -- free plan
+                        (Amount 0) -- free plan
                         USD
                         Month
-                        "sample plan"
-                        []
-        Subscription { subscriptionId = sid } <- createSubscription cid planid []
-        sub <- updateSubscription cid sid (Just couponid) [("hi","there")]
+                        (PlanName "sample plan")
+        Subscription { subscriptionId = sid } <- createSubscription cid planid
+        sub <- updateSubscription cid sid
+                -&- couponid
+                -&- MetaData [("hi","there")]
         void $ deletePlan planid
         void $ deleteCustomer cid
         return sub
       result `shouldSatisfy` isRight
       let Right Subscription {..} = result
-      subscriptionMetaData `shouldBe` [("hi", "there")]
+      subscriptionMetaData `shouldBe` (MetaData [("hi", "there")])
       subscriptionDiscount `shouldSatisfy` isJust
     it "Succesfully cancels a Customer's Subscription" $ do
       planid <- makePlanId
       result <- stripe $ do
-        Customer { customerId = cid } <- createEmptyCustomer
+        Customer { customerId = cid } <- createCustomer
         void $ createPlan planid
-                        0 -- free plan
+                        (Amount 0) -- free plan
                         USD
                         Month
-                        "sample plan"
-                        []
-        Subscription { subscriptionId = sid } <- createSubscription cid planid []
-        sub <- cancelSubscription cid sid False
+                        (PlanName "sample plan")
+        Subscription { subscriptionId = sid } <- createSubscription cid planid
+        sub <- cancelSubscription cid sid -&- AtPeriodEnd False
         void $ deletePlan planid
         void $ deleteCustomer cid
         return sub

@@ -11,7 +11,5 @@ eventTests :: StripeSpec
 eventTests stripe = do
   describe "Event tests" $ do
     it "Succesfully retrieves events" $ do
-      result <- stripe $ void $ getEvents Nothing Nothing Nothing
+      result <- stripe $ void $ getEvents
       result `shouldSatisfy` isRight
-
-

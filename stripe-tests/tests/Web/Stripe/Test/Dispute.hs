@@ -19,8 +19,8 @@ disputeTests stripe = do
   describe "Dispute Tests" $ do
     it "Creates a Dispute" $ do
       result <- stripe $ do
-        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-        Charge   { chargeId = chid } <- chargeCustomer cid USD 100 Nothing
+        Customer { customerId = cid } <- createCustomer -&- cardinfo
+        Charge   { chargeId = chid } <- createCharge (Amount 100) USD -&- cid
         liftIO $ threadDelay (secs 20) -- Sleep to allow the thread to dispute to happen
         Charge { chargeDispute = cd } <- getCharge chid
         void $ deleteCustomer cid
@@ -28,12 +28,13 @@ disputeTests stripe = do
       result `shouldSatisfy` isRight
       let Right (Just Dispute{..}) = result
       disputeStatus `shouldBe` NeedsResponse
+
     it "Makes Dispute Under Review" $ do
       result <- stripe $ do
-        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-        Charge   { chargeId = chid  } <- chargeCustomer cid USD 100 Nothing
+        Customer { customerId = cid } <- createCustomer -&- cardinfo
+        Charge   { chargeId = chid  } <- createCharge (Amount 100) USD -&- cid
         liftIO $ threadDelay (secs 10)
-        void $ updateDispute chid evi meta
+        void $ updateDispute chid -&- evi -&- meta
         liftIO $ threadDelay (secs 10)
         Charge { chargeDispute = Just dispute } <- getCharge chid
         void $ deleteCustomer cid
@@ -41,14 +42,14 @@ disputeTests stripe = do
       result `shouldSatisfy` isRight
       let Right Dispute {..} = result
       disputeMetaData `shouldBe` meta
-      disputeEvidence `shouldBe` evi
+      disputeEvidence `shouldBe` (Just evi)
       disputeStatus `shouldBe` UnderReview
     it "Wins a Dispute" $ do
       result <- stripe $ do
-        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-        Charge   { chargeId = chid  } <- chargeCustomer cid USD 100 Nothing
+        Customer { customerId = cid } <- createCustomer -&- cardinfo
+        Charge   { chargeId = chid  } <- createCharge (Amount 100) USD -&- cid
         liftIO $ threadDelay (secs 10)
-        void $ updateDispute chid win meta
+        void $ updateDispute chid -&- win -&- meta
         liftIO $ threadDelay (secs 10)
         Charge { chargeDispute = Just dispute } <- getCharge chid
         void $ deleteCustomer cid
@@ -56,14 +57,14 @@ disputeTests stripe = do
       result `shouldSatisfy` isRight
       let Right Dispute {..} = result
       disputeMetaData `shouldBe` meta
-      disputeEvidence `shouldBe` win
+      disputeEvidence `shouldBe` (Just win)
       disputeStatus `shouldBe` Won
     it "Loses a Dispute" $ do
       result <- stripe $ do
-        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-        Charge   { chargeId = chid  } <- chargeCustomer cid USD 100 Nothing
+        Customer { customerId = cid } <- createCustomer -&- cardinfo
+        Charge   { chargeId = chid  } <- createCharge (Amount 100) USD -&- cid
         liftIO $ threadDelay (secs 10) -- Sleep to allow the thread to dispute to happen
-        void $ updateDispute chid lose meta
+        void $ updateDispute chid -&- lose -&- meta
         liftIO $ threadDelay (secs 10)
         Charge { chargeDispute = Just dispute } <- getCharge chid
         void $ deleteCustomer cid
@@ -71,12 +72,12 @@ disputeTests stripe = do
       result `shouldSatisfy` isRight
       let Right Dispute {..} = result
       disputeMetaData `shouldBe` meta
-      disputeEvidence `shouldBe` lose
+      disputeEvidence `shouldBe` (Just lose)
       disputeStatus `shouldBe` Lost
     it "Closes a Dispute" $ do
       result <- stripe $ do
-        Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
-        Charge   { chargeId = chid  } <- chargeCustomer cid USD 100 Nothing
+        Customer { customerId = cid } <- createCustomer -&- cardinfo
+        Charge   { chargeId = chid  } <- createCharge (Amount 100)  USD -&- cid
         liftIO $ threadDelay (secs 10) -- Sleep to allow the thread to dispute to happen
         dispute <- closeDispute chid
         void $ deleteCustomer cid
@@ -89,7 +90,9 @@ disputeTests stripe = do
     em  = ExpMonth 12
     ey  = ExpYear 2015
     cvc = CVC "123"
-    win  = Just $ Evidence "winning_evidence"
-    lose = Just $ Evidence "losing_evidence"
-    evi = Just $ Evidence "some evidence"
-    meta = [ ("some", "metadata") ]
+    win  = Evidence "winning_evidence"
+    lose = Evidence "losing_evidence"
+    evi = Evidence "some evidence"
+    meta = MetaData [ ("some", "metadata") ]
+    cardinfo =
+      (mkNewCard cn em ey) { newCardCVC = Just cvc }

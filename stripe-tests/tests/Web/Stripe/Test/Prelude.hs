@@ -1,12 +1,16 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RebindableSyntax #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RankNTypes #-}
 module Web.Stripe.Test.Prelude
        ( ($)
+       , (-&-)
        , Char
        , Functor
        , IO
@@ -30,9 +34,11 @@ module Web.Stripe.Test.Prelude
        , Bool(..)
        , Maybe(..)
        , Stripe
+       , StripeRequestF(..)
        , StripeSpec
        ) where
 
+import           Data.Aeson      (Value, Result(..), FromJSON, fromJSON)
 import           Data.Either     (Either)
 import           Data.String     (fromString)
 import           Data.Maybe      (Maybe(..))
@@ -47,8 +53,23 @@ import           Web.Stripe
 
 ------------------------------------------------------------------------------
 -- Stripe free monad
-type Stripe  = FreeT StripeRequest IO
 
+data StripeRequestF ret = forall req. StripeRequestF
+    { getStripeRequest :: StripeRequest req
+    , decode           :: Value -> Result ret
+    }
+
+instance Functor StripeRequestF where
+  fmap f (StripeRequestF req d) = StripeRequestF req (fmap f . d)
+
+toStripeRequestF
+    :: (FromJSON ret, StripeReturn req ~ ret)
+    => StripeRequest req
+    -> StripeRequestF ret
+toStripeRequestF (StripeRequest m e q) =
+  StripeRequestF (StripeRequest m e q) fromJSON
+
+type Stripe = FreeT StripeRequestF IO
 type StripeSpec = (forall a. Stripe a -> IO (Either StripeError a)) -> Spec
 
 ------------------------------------------------------------------------------
@@ -59,9 +80,9 @@ class StripeLift a where
   type LiftedType a
   stripeLift :: a -> (LiftedType a)
 
-instance StripeLift (StripeRequest a) where
-  type LiftedType (StripeRequest a) = Stripe a
-  stripeLift req = liftF req
+instance (FromJSON (StripeReturn req)) => StripeLift (StripeRequest req) where
+    type LiftedType (StripeRequest req) = Stripe (StripeReturn req)
+    stripeLift req = liftF $ toStripeRequestF req
 
 instance StripeLift (Stripe a) where
   type LiftedType (Stripe a) = Stripe a
@@ -90,8 +111,8 @@ m >>= f = (stripeLift m) M.>>= f
 (>>) :: (StripeLift t, M.Monad m, LiftedType t ~ m a) => t -> m b -> m b
 (>>) m n = m >>= \_ -> n
 
-void :: StripeRequest a -> Stripe ()
-void req = M.void (liftF req)
+void :: (FromJSON (StripeReturn a)) => StripeRequest a -> Stripe ()
+void req = M.void (stripeLift req)
 
 fail :: (M.Monad m) => String -> m a
 fail = M.fail

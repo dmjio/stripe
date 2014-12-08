@@ -15,32 +15,21 @@ couponTests stripe = do
       couponName <- makeCouponId
       result <- stripe $ do
         c@(Coupon { couponId = cid }) <-
-          createCoupon
-             (Just couponName)
-             Once
-             (Just $ AmountOff 1)
-             (Just USD)
-             Nothing
-             Nothing
-             Nothing
-             Nothing
-             []
+          createCoupon (Just couponName) Once
+            -&- (AmountOff 1)
+            -&- USD
         void $ deleteCoupon cid
         return c
       result `shouldSatisfy` isRight
+
     it "Succesfully retrieve a coupon" $ do
       couponName <- makeCouponId
       result <- stripe $ do
-                Coupon { couponId = cid } <- createCoupon
-                                  (Just couponName)
-                                  Once
-                                  (Just $ AmountOff 1)
-                                  (Just USD)
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  []
+                Coupon { couponId = cid } <-
+                  createCoupon (Just couponName)
+                               Once
+                   -&- (AmountOff 1)
+                   -&- USD
                 res <- getCoupon cid
                 void $ deleteCoupon cid
                 return res
@@ -51,40 +40,27 @@ couponTests stripe = do
                 Coupon { couponId = cid } <- createCoupon
                                   (Just couponName)
                                   Once
-                                  (Just $ AmountOff 1)
-                                  (Just USD)
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  []
+                                  -&- (AmountOff 1)
+                                  -&- USD
                 void $ deleteCoupon cid
       result `shouldSatisfy` isRight
+
     it "Succesfully update a coupon" $ do
       couponName <- makeCouponId
       result <- stripe $ do
                 Coupon { couponId = cid } <- createCoupon
                                   (Just couponName)
                                   Once
-                                  (Just $ AmountOff 1)
-                                  (Just USD)
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  []
-                r <- updateCoupon cid [("hi", "there")]
+                                  -&-(AmountOff 1)
+                                  -&- USD
+                r <- updateCoupon cid -&- MetaData [("hi", "there")]
                 void $ deleteCoupon cid
                 return r
       result `shouldSatisfy` isRight
       let Right (Coupon { couponMetaData = cmd }) = result
-      cmd `shouldBe` [("hi", "there")]
+      cmd `shouldBe` (MetaData [("hi", "there")])
+
     it "Succesfully retrieves all coupons" $ do
-      result <- stripe $ do void $ getCoupons Nothing Nothing Nothing
+      result <- stripe $ do void $ getCoupons
       result `shouldSatisfy` isRight
-
-
-
-
-
 
