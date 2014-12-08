@@ -39,17 +39,23 @@ module Web.Stripe.Token
    , GetBankAccountToken
    , getBankAccountToken
      -- * Types
-   , CardNumber    (..)
-   , ExpMonth      (..)
-   , ExpYear       (..)
-   , CVC           (..)
-   , Token         (..)
-   , TokenId       (..)
-   , TokenType     (..)
-   , Country       (..)
-   , RoutingNumber (..)
-   , AccountNumber (..)
-   , Account       (..)
+   , Account        (..)
+   , AccountNumber  (..)
+   , BankAccount    (..)
+   , Card           (..)
+   , CardNumber     (..)
+   , Country        (..)
+   , CustomerId     (..)
+   , CVC            (..)
+   , ExpMonth       (..)
+   , ExpYear        (..)
+   , NewBankAccount (..)
+   , mkNewCard
+   , NewCard        (..)
+   , RoutingNumber  (..)
+   , Token          (..)
+   , TokenId        (..)
+   , TokenType      (..)
    ) where
 
 import           Web.Stripe.StripeRequest (Method (GET, POST),
@@ -61,9 +67,10 @@ import           Web.Stripe.Types         (Account(..), AccountNumber (..),
                                            CVC (..), CardNumber (..), CustomerId(..),
                                            Country (..), ExpMonth (..),
                                            BankAccount(..), ExpYear (..),
-                                           NewBankAccount(..), NewCard(..),
-                                           RoutingNumber (..), Card(..),
-                                           Token (..), TokenId (..), TokenType(..),
+                                           NewBankAccount(..), mkNewCard,
+                                           NewCard(..), RoutingNumber (..),
+                                           Card(..), Token (..),
+                                           TokenId (..), TokenType(..)
                                           )
 
 ------------------------------------------------------------------------------
@@ -86,14 +93,14 @@ createCardToken
 data CreateBankAccountToken
 type instance StripeReturn CreateBankAccountToken = Token BankAccount
 createBankAccountToken
-    :: NewBankAccount
+    :: Maybe NewBankAccount
     -> StripeRequest CreateBankAccountToken
 createBankAccountToken
   newBankAccount
                 = request
   where request = mkStripeRequest POST url params
         url     = "tokens"
-        params  = toStripeParam newBankAccount []
+        params  = maybe id toStripeParam newBankAccount $ []
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Token` by `TokenId`

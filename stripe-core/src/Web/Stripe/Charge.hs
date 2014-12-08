@@ -107,6 +107,7 @@ instance StripeHasParam CreateCharge NewCard
 instance StripeHasParam CreateCharge TokenId
 instance StripeHasParam CreateCharge Description
 instance StripeHasParam CreateCharge MetaData
+instance StripeHasParam CreateCharge Capture
 instance StripeHasParam CreateCharge StatementDescription
 instance StripeHasParam CreateCharge ReceiptEmail
 instance StripeHasParam CreateCharge ApplicationFeeAmount

@@ -297,7 +297,7 @@ newtype CardId = CardId Text
 ------------------------------------------------------------------------------
 -- | CardId for a `Recipient`
 newtype RecipientCardId = RecipientCardId Text
-                     deriving (Eq, Ord, Read, Show, Data, Typeable)
+  deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `CardId`
@@ -615,7 +615,7 @@ data Plan = Plan {
     , planIntervalCount   :: Maybe Int -- optional, max of 1 year intervals allowed, default 1
     , planTrialPeriodDays :: Maybe Int
     , planMetaData        :: MetaData
-    , planDescription     :: Maybe Description
+    , planDescription     :: Maybe StatementDescription
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------

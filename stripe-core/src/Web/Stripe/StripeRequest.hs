@@ -297,8 +297,8 @@ instance ToStripeParam NewBankAccount where
   toStripeParam NewBankAccount{..} =
     ((getParams
         [ ("bank_account[country]", Just $ (\(Country x) -> x) newBankAccountCountry)
-        , ("bank_account[routing_number]", Just $ (\(RoutingNumber x) -> toText x) newBankAccountRoutingNumber)
-        , ("bank_account[account_number]", Just $ (\(AccountNumber x) -> toText x) newBankAccountAccountNumber)
+        , ("bank_account[routing_number]", Just $ (\(RoutingNumber x) -> x) newBankAccountRoutingNumber)
+        , ("bank_account[account_number]", Just $ (\(AccountNumber x) -> x) newBankAccountAccountNumber)
         ]) ++)
 
 instance ToStripeParam NewCard where
@@ -359,7 +359,7 @@ instance ToStripeParam ReceiptEmail where
 
 instance ToStripeParam RecipientType where
   toStripeParam recipientType =
-    (("recipient_type", toBytestring recipientType) :)
+    (("type", toBytestring recipientType) :)
 
 instance ToStripeParam a => ToStripeParam (Source a) where
   toStripeParam (Source param) =
