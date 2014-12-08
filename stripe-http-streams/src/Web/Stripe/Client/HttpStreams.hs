@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TypeFamilies   #-}
 -- |
 -- Module      : Web.Stripe.Client.Internal
 -- Copyright   : (c) David Johnson, 2014
@@ -8,25 +9,25 @@
 -- Stability   : experimental
 -- Portability : POSIX
 module Web.Stripe.Client.HttpStreams
-    ( callAPI
-    , stripe
+    ( stripe
+    , stripeConn
     , withConnection
     , StripeRequest      (..)
     , StripeError        (..)
     , StripeConfig       (..)
+    -- * low-level
+    , callAPI
     ) where
 
 import           Control.Exception          (SomeException, finally, try)
 import           Control.Monad              (when)
-import           Data.Aeson                 (Value, Result(..), FromJSON, fromJSON, json')
-import           Data.ByteString            (ByteString)
+import           Data.Aeson                 (Result(..), FromJSON, Value, fromJSON, json')
 import qualified Data.ByteString            as S
 import           Data.Monoid                (mempty, (<>))
 import qualified Data.Text.Encoding         as T
-import qualified Data.Text as T
 import           Network.Http.Client        (Connection,
                                              baselineContextSSL, buildRequest,
-                                             closeConnection, concatHandler,
+                                             closeConnection,
                                              getStatusCode, http,
                                              inputStreamBody, openConnectionSSL,
                                              receiveResponse, sendRequest,
@@ -38,11 +39,12 @@ import qualified System.IO.Streams          as Streams
 import qualified System.IO.Streams.Attoparsec as Streams
 import           System.IO.Streams.Attoparsec (ParseException(..))
 import           Web.Stripe.Client          (APIVersion (..), Method(..), StripeConfig (..),
-                                             StripeError (..), StripeErrorHTTPCode (..),
+                                             StripeError (..),
                                              StripeErrorType (..), StripeRequest (..),
                                              StripeReturn, getStripeKey,
                                              toBytestring, toText,
-                                             paramsToByteString, attemptDecode, parseFail, unknownCode, handleStream
+                                             paramsToByteString, attemptDecode, unknownCode,
+                                             handleStream
                                              )
 
 ------------------------------------------------------------------------------
@@ -54,7 +56,19 @@ stripe
     -> IO (Either StripeError (StripeReturn a))
 stripe config request =
   withConnection $ \conn -> do
-    callAPI conn config request
+    stripeConn conn config request
+
+------------------------------------------------------------------------------
+-- | Create a request to `Stripe`'s API using a connection opened
+-- with `withConnection`
+stripeConn
+    :: (FromJSON (StripeReturn a)) =>
+       Connection
+    -> StripeConfig
+    -> StripeRequest a
+    -> IO (Either StripeError (StripeReturn a))
+stripeConn conn config request =
+    callAPI conn fromJSON config request
 
 ------------------------------------------------------------------------------
 -- | Open a connection to the stripe API server
@@ -86,13 +100,21 @@ m2m DELETE = C.DELETE
 -- see also: 'withConnection'
 -- FIXME: all connection errors should be
 -- turned into a `StripeError`. But that is not yet implemented.
+--
+-- NOTES: this a pretty low-level function. You probably want `stripe`
+-- or `stripeConn`. If you call this function directly, you are
+-- responsible for ensuring the JSON conversion function supplied is
+-- correct for `StripeRequest`. In the rest of the library this
+-- property is enforced automatically by the type-system. But adding
+-- that constraint here made implementing the `Stripe` testing monad
+-- difficult.
 callAPI
-    :: (FromJSON (StripeReturn a)) =>
-       Connection                      -- ^ an open connection to the server (`withConnection`)
+    :: Connection                      -- ^ an open connection to the server (`withConnection`)
+    -> (Value -> Result b)             -- ^ function to convert JSON result to Haskell Value
     -> StripeConfig                    -- ^ StripeConfig
     -> StripeRequest a                 -- ^ StripeRequest
-    -> IO (Either StripeError (StripeReturn a))
-callAPI conn StripeConfig {..} StripeRequest{..} = do
+    -> IO (Either StripeError b)
+callAPI conn fromJSON' StripeConfig {..} StripeRequest{..} = do
   let reqBody | method == GET = mempty
               | otherwise     = paramsToByteString queryParams
       reqURL  | method == GET = S.concat [
@@ -120,4 +142,4 @@ callAPI conn StripeConfig {..} StripeRequest{..} = do
                          case v of
                            (Left (ParseException msg)) -> Error msg
                            (Right a) -> Success a
-                   return $ handleStream fromJSON statusCode r
+                   return $ handleStream fromJSON' statusCode r
