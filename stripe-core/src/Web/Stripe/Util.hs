@@ -78,7 +78,7 @@ fromSeconds = posixSecondsToUTCTime . fromInteger
 toSeconds
     :: UTCTime
     -> Integer
-toSeconds = read . takeWhile (/='.') . show . utcTimeToPOSIXSeconds
+toSeconds = round . utcTimeToPOSIXSeconds
 
 ------------------------------------------------------------------------------
 -- | Retrieve and encode the optional parameters
