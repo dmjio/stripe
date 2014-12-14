@@ -22,8 +22,13 @@
 -- @
 module Web.Stripe (
     module Web.Stripe.Client
+  , module Web.Stripe.StripeRequest
+  , stripe
   , showAmount
   ) where
 
-import Web.Stripe.Client
-import Web.Stripe.Types
+import Web.Stripe.Client (StripeConfig(..), StripeKey(..))
+import Web.Stripe.StripeRequest
+import Web.Stripe.Types (showAmount)
+import Web.Stripe.Client.Stripe (stripe)
+
