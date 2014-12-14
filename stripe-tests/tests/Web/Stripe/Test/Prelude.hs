@@ -49,7 +49,7 @@ import           Test.Hspec.Core (SpecM)
 import qualified Control.Monad   as M
 import qualified Control.Monad.Trans as M
 import           Control.Monad.Trans.Free (FreeT(..), liftF)
-import           Web.Stripe
+import           Web.Stripe.Client
 
 ------------------------------------------------------------------------------
 -- Stripe free monad

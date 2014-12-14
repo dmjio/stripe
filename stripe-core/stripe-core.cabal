@@ -116,10 +116,8 @@ library
                      , unordered-containers
 
   default-language:    Haskell2010
-  other-modules:       Web.Stripe.Types
-                       Web.Stripe.Types.Util
+  other-modules:       Web.Stripe.Types.Util
   exposed-modules:
-                       Web.Stripe
                        Web.Stripe.Account
                        Web.Stripe.ApplicationFee
                        Web.Stripe.ApplicationFeeRefund
@@ -142,6 +140,7 @@ library
                        Web.Stripe.Subscription
                        Web.Stripe.Token
                        Web.Stripe.Transfer
+                       Web.Stripe.Types
                        Web.Stripe.Util
 
   ghc-options:        -Wall

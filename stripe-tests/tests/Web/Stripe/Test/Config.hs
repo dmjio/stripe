@@ -6,7 +6,7 @@ module Web.Stripe.Test.Config where
 import qualified Data.ByteString.Char8 as B8
 import           Control.Applicative ((<$>))
 
-import           Web.Stripe
+import           Web.Stripe.Client
 import           Web.Stripe.Balance
 import           System.Exit
 import           System.Environment

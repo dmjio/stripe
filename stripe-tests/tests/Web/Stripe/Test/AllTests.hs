@@ -26,7 +26,7 @@ import           Web.Stripe.Test.Token                 (tokenTests)
 import           Web.Stripe.Test.Transfer              (transferTests)
 import           Web.Stripe.Test.Event                 (eventTests)
 import           Web.Stripe.Test.Prelude               (Stripe)
-import           Web.Stripe                 (StripeConfig, StripeError)
+import           Web.Stripe.Client                     (StripeConfig, StripeError)
 ------------------------------------------------------------------------------
 -- | Main test function entry point
 allTests :: (forall a. StripeConfig -> Stripe a -> IO (Either StripeError a))
