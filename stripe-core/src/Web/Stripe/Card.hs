@@ -20,23 +20,26 @@
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
---       credit = CardNumber "4242424242424242"
---       em  = ExpMonth 12
---       ey  = ExpYear 2015
---       cvc = CVC "123"
---   result <- stripe config $ do
---          Customer { customerId = cid } <- createEmptyCustomer
---          card <- createCustomerCard cid credit em ey cvc
---          return card
+--   let config   = StripeConfig (StripeKey "secret_key")
+--       credit   = CardNumber "4242424242424242"
+--       em       = ExpMonth 12
+--       ey       = ExpYear 2015
+--       cvc      = CVC "123"
+--       cardinfo = (mkNewCard credit em ey) { newCardCVC = cvc }
+--   result <- stripe config $ createCustomer
 --   case result of
---     Right card -> print card
---     Left  stripeError -> print stripeError
+--     (Left stripeError) -> print stripeError
+--     (Right (Customer { customerId = cid })) -> do
+--       result <- stripe config $ createCustomerCard cid
+--                                   -&- cardinfo
+--       case result of
+--         Right card -> print card
+--         Left  stripeError -> print stripeError
 -- @
 module Web.Stripe.Card
     ( -- * API
       -- ** Customers
-      -- *** Create Customer Card
+      -- *** Create Card
       CreateCustomerCardByToken
     , createCustomerCardByToken
     , CreateRecipientCardByToken
@@ -45,8 +48,7 @@ module Web.Stripe.Card
     , createCustomerCard
     , CreateRecipientCard
     , createRecipientCard
-
-      -- *** Get Customer Card(s)
+      -- *** Get Card(s)
     , GetCustomerCard
     , getCustomerCard
     , GetRecipientCard
@@ -55,7 +57,7 @@ module Web.Stripe.Card
     , getCustomerCards
     , GetRecipientCards
     , getRecipientCards
-      -- *** Update Customer Card
+      -- *** Update Card
     , UpdateCustomerCard
     , updateCustomerCard
     , UpdateRecipientCard
@@ -128,6 +130,9 @@ createCardByToken
 
 data CreateCustomerCardByToken
 type instance StripeReturn CreateCustomerCardByToken = Card
+
+------------------------------------------------------------------------------
+-- | `Customer` `Card` creation from a `TokenId`
 createCustomerCardByToken
     :: CustomerId
     -> TokenId
@@ -251,6 +256,8 @@ instance StripeHasParam UpdateCustomerCard AddressCountry
 instance StripeHasParam UpdateCustomerCard ExpMonth
 instance StripeHasParam UpdateCustomerCard ExpYear
 instance StripeHasParam UpdateCustomerCard Name
+------------------------------------------------------------------------------
+-- | Update a `Customer` `Card`
 updateCustomerCard
     :: CustomerId
     -> CardId
@@ -318,7 +325,7 @@ deleteRecipientCard
       = deleteCard "recipients" (getRecipientId recipientid) cardid
 
 ------------------------------------------------------------------------------
--- | Retrieve all cards associated with a `Customer`
+-- | Retrieve all cards for `ID`
 getCards
     :: URL
     -> ID
@@ -331,12 +338,17 @@ getCards
         url     = prefix </> id_ </> "cards"
         params  = []
 
+------------------------------------------------------------------------------
+-- | Retrieve all cards associated with a `Customer`
 data GetCustomerCards
 type instance StripeReturn GetCustomerCards = (StripeList Card)
 instance StripeHasParam GetCustomerCards ExpandParams
 instance StripeHasParam GetCustomerCards (EndingBefore CardId)
 instance StripeHasParam GetCustomerCards Limit
 instance StripeHasParam GetCustomerCards (StartingAfter CardId)
+
+------------------------------------------------------------------------------
+-- | Retrieve all cards associated with a `Customer`
 getCustomerCards
     :: CustomerId    -- ^ The `CustomerId` associated with the cards
     -> StripeRequest GetCustomerCards
@@ -344,6 +356,8 @@ getCustomerCards
     customerid
     = getCards "customers" (getCustomerId customerid)
 
+------------------------------------------------------------------------------
+-- | Retrieve all cards associated with a `Recipient`
 data GetRecipientCards
 type instance StripeReturn GetRecipientCards = (StripeList RecipientCard)
 instance StripeHasParam GetRecipientCards ExpandParams
