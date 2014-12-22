@@ -13,12 +13,13 @@
 -- < https:/\/\stripe.com/docs/api#balance >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Balance (getBalance)
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
+--   let config = StripeConfig (StripeKey "secret_key")
 --   result <- stripe config getBalance
 --   case result of
 --     Right balance    -> print balance
@@ -67,19 +68,17 @@ import           Web.Stripe.Types.Util    (getTransactionId)
 
 ------------------------------------------------------------------------------
 -- | Retrieve the current `Balance` for your Stripe account
-data GetBalance
-type instance StripeReturn GetBalance = Balance
 getBalance :: StripeRequest GetBalance
 getBalance = request
   where request = mkStripeRequest GET url params
         url     = "balance"
         params  = []
 
+data GetBalance
+type instance StripeReturn GetBalance = Balance
+
 ------------------------------------------------------------------------------
 -- | Retrieve a 'BalanceTransaction' by 'TransactionId'
-data GetBalanceTransaction
-type instance StripeReturn GetBalanceTransaction = BalanceTransaction
-instance StripeHasParam GetBalanceTransaction ExpandParams
 getBalanceTransaction
     :: TransactionId  -- ^ The `TransactionId` of the `Transaction` to retrieve
     -> StripeRequest GetBalanceTransaction
@@ -89,8 +88,20 @@ getBalanceTransaction
         url     = "balance" </> "history" </> getTransactionId transactionid
         params  = []
 
+data GetBalanceTransaction
+type instance StripeReturn GetBalanceTransaction = BalanceTransaction
+instance StripeHasParam GetBalanceTransaction ExpandParams
+
 ------------------------------------------------------------------------------
 -- | Retrieve the history of `BalanceTransaction`s
+getBalanceTransactionHistory
+    :: StripeRequest GetBalanceTransactionHistory
+getBalanceTransactionHistory
+                = request
+  where request = mkStripeRequest GET url params
+        url     = "balance" </> "history"
+        params  = []
+
 data GetBalanceTransactionHistory
 type instance StripeReturn GetBalanceTransactionHistory = (StripeList BalanceTransaction)
 instance StripeHasParam GetBalanceTransactionHistory AvailableOn
@@ -104,12 +115,3 @@ instance StripeHasParam GetBalanceTransactionHistory (StartingAfter TransactionI
 instance (ToStripeParam a) => StripeHasParam GetBalanceTransactionHistory (Source a)
 instance StripeHasParam GetBalanceTransactionHistory TransferId
 instance StripeHasParam GetBalanceTransactionHistory TransactionType
-
-getBalanceTransactionHistory
-    :: StripeRequest GetBalanceTransactionHistory
-getBalanceTransactionHistory
-                = request
-  where request = mkStripeRequest GET url params
-        url     = "balance" </> "history"
-        params  = []
-

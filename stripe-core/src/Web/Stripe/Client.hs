@@ -64,7 +64,7 @@ instance Read APIVersion where
 -- This function is used by the backends such as @stripe-http-client@ to
 -- decode the results of an API request.
 handleStream
-    :: (Value -> Result a)
+    :: (Value -> Result a)             -- ^ function to decode JSON value
     -> Int                             -- ^ HTTP response code
     -> Result Value                    -- ^ result of attempting to decode body
     -> Either StripeError a
@@ -88,12 +88,16 @@ handleStream decodeValue statusCode r =
 
 ------------------------------------------------------------------------------
 -- | check the HTTP status code and see if it is one we can deal with or not
-attemptDecode :: Int -> Bool
+attemptDecode
+    :: Int  -- ^ HTTP status code
+    -> Bool
 attemptDecode code = code == 200 || code >= 400
 
 ------------------------------------------------------------------------------
 -- | lift a parser error to be a StripeError
-parseFail :: String -> Either StripeError a
+parseFail
+    :: String  -- ^ error message
+    -> Either StripeError a
 parseFail errorMessage  =
       Left $ StripeError ParseFailure (T.pack errorMessage) Nothing Nothing Nothing
 
@@ -107,9 +111,10 @@ unknownCode =
 ------------------------------------------------------------------------------
 -- | set the `errorHTTP` field of the `StripeError` based on the HTTP
 -- response code.
-setErrorHTTP :: Int
-             -> StripeError
-             -> StripeError
+setErrorHTTP
+  :: Int          -- ^ HTTP Status code
+  -> StripeError  -- ^ `StripeError`
+  -> StripeError
 setErrorHTTP statusCode stripeError =
   case statusCode of
     400 -> stripeError { errorHTTP = Just BadRequest        }

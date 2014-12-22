@@ -13,17 +13,19 @@
 -- < https:/\/\stripe.com/docs/api#tokens >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Token
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
+--   let config = StripeConfig (StripeKey "secret_key")
 --       credit = CardNumber "4242424242424242"
 --       em  = ExpMonth 12
 --       ey  = ExpYear 2015
 --       cvc = CVC "123"
---   result <- stripe config $ createCardToken cn em ey cvc
+--       cardinfo = (mkNewCard credit em ey) { newCardCVC = Just cvc }
+--   result <- stripe config $ createCardToken (Just cardinfo)
 --   case result of
 --     Right token -> print token
 --     Left stripeError -> print stripeError
@@ -75,11 +77,8 @@ import           Web.Stripe.Types         (Account(..), AccountNumber (..),
 
 ------------------------------------------------------------------------------
 -- | Create a `Token` by specifiying Credit `Card` information
-data CreateCardToken
-type instance StripeReturn CreateCardToken = Token Card
-instance StripeHasParam CreateCardToken CustomerId
 createCardToken
-    :: Maybe NewCard
+    :: Maybe NewCard -- ^ optional `NewCard` data
     -> StripeRequest CreateCardToken
 createCardToken
   newCard
@@ -88,12 +87,14 @@ createCardToken
         url     = "tokens"
         params  = maybe id toStripeParam newCard $ []
 
+data CreateCardToken
+type instance StripeReturn CreateCardToken = Token Card
+instance StripeHasParam CreateCardToken CustomerId
+
 ------------------------------------------------------------------------------
 -- | Create a `Token` for a specific `BankAccount`
-data CreateBankAccountToken
-type instance StripeReturn CreateBankAccountToken = Token BankAccount
 createBankAccountToken
-    :: Maybe NewBankAccount
+    :: Maybe NewBankAccount -- ^ option `BankAccount` information
     -> StripeRequest CreateBankAccountToken
 createBankAccountToken
   newBankAccount
@@ -102,10 +103,11 @@ createBankAccountToken
         url     = "tokens"
         params  = maybe id toStripeParam newBankAccount $ []
 
+data CreateBankAccountToken
+type instance StripeReturn CreateBankAccountToken = Token BankAccount
+
 ------------------------------------------------------------------------------
 -- | Retrieve a `Token` by `TokenId`
-data GetCardToken
-type instance StripeReturn GetCardToken = Token Card
 getCardToken
     :: TokenId -- ^ The `TokenId` of the `Card` `Token` to retrieve
     -> StripeRequest GetCardToken
@@ -114,10 +116,11 @@ getCardToken (TokenId token) = request
         url     = "tokens" </> token
         params  = []
 
+data GetCardToken
+type instance StripeReturn GetCardToken = Token Card
+
 ------------------------------------------------------------------------------
 -- | Retrieve a `Token` by `TokenId`
-data GetBankAccountToken
-type instance StripeReturn GetBankAccountToken = Token BankAccount
 getBankAccountToken
     :: TokenId -- ^ The `TokenId` of the `BankAccount` `Token` to retrieve
     -> StripeRequest GetBankAccountToken
@@ -125,3 +128,6 @@ getBankAccountToken (TokenId token) = request
   where request = mkStripeRequest GET url params
         url     = "tokens" </> token
         params  = []
+
+data GetBankAccountToken
+type instance StripeReturn GetBankAccountToken = Token BankAccount

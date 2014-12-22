@@ -13,6 +13,7 @@
 -- < https:/\/\stripe.com/docs/api#subscriptions >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Subscription
 -- import Web.Stripe.Customer
@@ -20,19 +21,23 @@
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
---   result <- stripe config $ do
---     Customer { customerId = cid } <- createEmptyCustomer
---     Plan { planId = pid } <- createPlan (PlanId "free plan")
---                      (0 :: Amount) -- free plan
---                      (USD :: Currency)
---                      (Month :: Inteval)
---                      ("sample plan" :: Name)
---                      ([] :: MetaData)
---   createSubscription cid pid ([] :: MetaData)
+--   let config = StripeConfig (StripeKey "secret_key")
+--   result <- stripe config $ createCustomer
 --   case result of
---     Right subscription -> print subscription
---     Left stripeError -> print stripeError
+--     (Left stripeError) -> print stripeError
+--     (Right (Customer { customerId = cid })) -> do
+--       result <- stripe config $ createPlan (PlanId "free plan")
+--                                            (Amount 0)
+--                                            USD
+--                                            Month
+--                                            (PlanName "sample plan")
+--       case result of
+--         (Left stripeError) -> print stripeError
+--         (Right (Plan { planId = pid })) -> do
+--            result <- stripe config $ createSubscription cid pid
+--            case result of
+--              (Left stripeError)   -> print stripeError
+--              (Right subscription) -> print subscription
 -- @
 module Web.Stripe.Subscription
     ( -- * API
@@ -86,15 +91,6 @@ import           Web.Stripe.Types.Util      (getCustomerId)
 
 ------------------------------------------------------------------------------
 -- | Create a `Subscription` by `CustomerId` and `PlanId`
-data CreateSubscription
-type instance StripeReturn CreateSubscription = Subscription
-instance StripeHasParam CreateSubscription CouponId
-instance StripeHasParam CreateSubscription TrialEnd
-instance StripeHasParam CreateSubscription CardId
-instance StripeHasParam CreateSubscription Quantity
-instance StripeHasParam CreateSubscription ApplicationFeePercent
-instance StripeHasParam CreateSubscription MetaData
-
 createSubscription
     :: CustomerId -- ^ The `CustomerId` upon which to create the `Subscription`
     -> PlanId     -- ^ The `PlanId` to associate the `Subscription` with
@@ -106,11 +102,17 @@ createSubscription
         url     = "customers" </> getCustomerId customerid </> "subscriptions"
         params  = toStripeParam planId []
 
+data CreateSubscription
+type instance StripeReturn CreateSubscription = Subscription
+instance StripeHasParam CreateSubscription CouponId
+instance StripeHasParam CreateSubscription TrialEnd
+instance StripeHasParam CreateSubscription CardId
+instance StripeHasParam CreateSubscription Quantity
+instance StripeHasParam CreateSubscription ApplicationFeePercent
+instance StripeHasParam CreateSubscription MetaData
+
 ------------------------------------------------------------------------------
 -- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId`
-data GetSubscription
-type instance StripeReturn GetSubscription = Subscription
-instance StripeHasParam GetSubscription ExpandParams
 getSubscription
     :: CustomerId       -- ^ The `CustomerId` of the `Subscription`
     -> SubscriptionId   -- ^ The `SubscriptionId` of the `Subscription` to retrieve
@@ -124,18 +126,12 @@ getSubscription
                   "subscriptions" </> subscriptionid
         params  = []
 
+data GetSubscription
+type instance StripeReturn GetSubscription = Subscription
+instance StripeHasParam GetSubscription ExpandParams
+
 ------------------------------------------------------------------------------
 -- | Update a `Subscription` by `CustomerId` and `SubscriptionId`
-data UpdateSubscription
-type instance StripeReturn UpdateSubscription = Subscription
-instance StripeHasParam UpdateSubscription PlanId
-instance StripeHasParam UpdateSubscription CouponId
-instance StripeHasParam UpdateSubscription Prorate
-instance StripeHasParam UpdateSubscription TrialEnd
-instance StripeHasParam UpdateSubscription CardId
-instance StripeHasParam UpdateSubscription Quantity
-instance StripeHasParam UpdateSubscription ApplicationFeePercent
-instance StripeHasParam UpdateSubscription MetaData
 updateSubscription
     :: CustomerId      -- ^ The `CustomerId` of the `Subscription` to update
     -> SubscriptionId  -- ^ The `SubscriptionId` of the `Subscription` to update
@@ -148,11 +144,19 @@ updateSubscription
         url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
         params  = []
 
+data UpdateSubscription
+type instance StripeReturn UpdateSubscription = Subscription
+instance StripeHasParam UpdateSubscription PlanId
+instance StripeHasParam UpdateSubscription CouponId
+instance StripeHasParam UpdateSubscription Prorate
+instance StripeHasParam UpdateSubscription TrialEnd
+instance StripeHasParam UpdateSubscription CardId
+instance StripeHasParam UpdateSubscription Quantity
+instance StripeHasParam UpdateSubscription ApplicationFeePercent
+instance StripeHasParam UpdateSubscription MetaData
+
 ------------------------------------------------------------------------------
 -- | Delete a `Subscription` by `CustomerId` and `SubscriptionId`
-data CancelSubscription
-instance StripeHasParam CancelSubscription AtPeriodEnd
-type instance StripeReturn CancelSubscription = Subscription
 cancelSubscription
     :: CustomerId     -- ^ The `CustomerId` of the `Subscription` to cancel
     -> SubscriptionId -- ^ The `SubscriptionId` of the `Subscription` to cancel
@@ -165,14 +169,12 @@ cancelSubscription
         url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
         params  = []
 
+data CancelSubscription
+instance StripeHasParam CancelSubscription AtPeriodEnd
+type instance StripeReturn CancelSubscription = Subscription
+
 ------------------------------------------------------------------------------
 -- | Retrieve active `Subscription`s
-data GetSubscriptions
-type instance StripeReturn GetSubscriptions = StripeList Subscription
-instance StripeHasParam GetSubscriptions ExpandParams
-instance StripeHasParam GetSubscriptions (EndingBefore SubscriptionId)
-instance StripeHasParam GetSubscriptions Limit
-instance StripeHasParam GetSubscriptions (StartingAfter SubscriptionId)
 getSubscriptions
     :: CustomerId                   -- ^ The `CustomerId` of the `Subscription`s to retrieve
     -> StripeRequest GetSubscriptions
@@ -181,3 +183,10 @@ getSubscriptions
   where request = mkStripeRequest GET url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions"
         params  = []
+
+data GetSubscriptions
+type instance StripeReturn GetSubscriptions = StripeList Subscription
+instance StripeHasParam GetSubscriptions ExpandParams
+instance StripeHasParam GetSubscriptions (EndingBefore SubscriptionId)
+instance StripeHasParam GetSubscriptions Limit
+instance StripeHasParam GetSubscriptions (StartingAfter SubscriptionId)

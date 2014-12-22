@@ -13,22 +13,17 @@
 -- < https:/\/\stripe.com/docs/api#coupons >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Coupon
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
---   result <- createCoupon
---            (Just $ CouponId "$1 Off!")
---            Once
---            (Just $ AmountOff 1)
---            (Just USD)
---            Nothing
---            Nothing
---            Nothing
---            Nothing
---            []
+--   let config = StripeConfig (StripeKey "secret_key")
+--   result <- stripe config $
+--              createCoupon (Just $ CouponId "$1 Off!") Once
+--               -&- (AmountOff 1)
+--               -&- USD
 --   case result of
 --     Right coupon      -> print coupon
 --     Left  stripeError -> print stripeError
@@ -81,15 +76,6 @@ import           Web.Stripe.Types         (AmountOff (..), Coupon (..),
 
 ------------------------------------------------------------------------------
 -- | Create `Coupon`
-data CreateCoupon
-type instance StripeReturn CreateCoupon = Coupon
-instance StripeHasParam CreateCoupon AmountOff
-instance StripeHasParam CreateCoupon Currency
-instance StripeHasParam CreateCoupon DurationInMonths
-instance StripeHasParam CreateCoupon MaxRedemptions
-instance StripeHasParam CreateCoupon MetaData
-instance StripeHasParam CreateCoupon PercentOff
-instance StripeHasParam CreateCoupon RedeemBy
 createCoupon
   :: Maybe CouponId         -- ^  Name of the `Coupon`
   -> Duration               -- ^ `Duration` of the `Coupon`
@@ -106,10 +92,18 @@ createCoupon
                       []
                     Nothing   -> []
 
+data CreateCoupon
+type instance StripeReturn CreateCoupon = Coupon
+instance StripeHasParam CreateCoupon AmountOff
+instance StripeHasParam CreateCoupon Currency
+instance StripeHasParam CreateCoupon DurationInMonths
+instance StripeHasParam CreateCoupon MaxRedemptions
+instance StripeHasParam CreateCoupon MetaData
+instance StripeHasParam CreateCoupon PercentOff
+instance StripeHasParam CreateCoupon RedeemBy
+
 ------------------------------------------------------------------------------
 -- | Retrieve `Coupon`
-data GetCoupon
-type instance StripeReturn GetCoupon = Coupon
 getCoupon
     :: CouponId -- ^ `CouponId` of the `Coupon` to retrieve
     -> StripeRequest GetCoupon
@@ -119,11 +113,11 @@ getCoupon
         url     = "coupons" </> couponid
         params  = []
 
+data GetCoupon
+type instance StripeReturn GetCoupon = Coupon
+
 ------------------------------------------------------------------------------
 -- | Update `Coupon`
-data UpdateCoupon
-type instance StripeReturn UpdateCoupon = Coupon
-instance StripeHasParam UpdateCoupon MetaData
 updateCoupon
     :: CouponId -- ^ The `CoupondId` of the `Coupon` to update
     -> StripeRequest UpdateCoupon
@@ -134,10 +128,12 @@ updateCoupon
         url     = "coupons" </> couponid
         params  = []
 
+data UpdateCoupon
+type instance StripeReturn UpdateCoupon = Coupon
+instance StripeHasParam UpdateCoupon MetaData
+
 ------------------------------------------------------------------------------
 -- | Delete `Coupon`
-data DeleteCoupon
-type instance StripeReturn DeleteCoupon = StripeDeleteResult
 deleteCoupon
     :: CouponId -- ^ The `CoupondId` of the `Coupon` to delete
     -> StripeRequest DeleteCoupon
@@ -147,13 +143,11 @@ deleteCoupon
         url     = "coupons" </> couponid
         params  = []
 
+data DeleteCoupon
+type instance StripeReturn DeleteCoupon = StripeDeleteResult
+
 ------------------------------------------------------------------------------
 -- | Retrieve a list of `Coupon`s
-data GetCoupons
-type instance StripeReturn GetCoupons = (StripeList Coupon)
-instance StripeHasParam GetCoupons (EndingBefore CouponId)
-instance StripeHasParam GetCoupons Limit
-instance StripeHasParam GetCoupons (StartingAfter CouponId)
 getCoupons
     :: StripeRequest GetCoupons
 getCoupons
@@ -161,3 +155,9 @@ getCoupons
   where request = mkStripeRequest GET url params
         url     = "coupons"
         params  = []
+
+data GetCoupons
+type instance StripeReturn GetCoupons = (StripeList Coupon)
+instance StripeHasParam GetCoupons (EndingBefore CouponId)
+instance StripeHasParam GetCoupons Limit
+instance StripeHasParam GetCoupons (StartingAfter CouponId)

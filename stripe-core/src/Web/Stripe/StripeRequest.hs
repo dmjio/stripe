@@ -490,9 +490,9 @@ type family StripeReturn a :: *
 -- | HTTP Params
 --
 -- helper function for building a 'StripeRequest'
-mkStripeRequest :: -- forall a. (FromJSON (StripeReturn a)) =>
-                   Method
-                -> Text
-                -> Params
-                -> StripeRequest a
-mkStripeRequest m e q = StripeRequest m e q -- fromJSON
+mkStripeRequest
+    :: Method
+    -> Text
+    -> Params
+    -> StripeRequest a
+mkStripeRequest m e q = StripeRequest m e q

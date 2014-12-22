@@ -13,19 +13,22 @@
 -- < https:/\/\stripe.com/docs/api#transfers >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Transfer
 -- import Web.Stripe.Recipient
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
---   result <- stripe config $ do
---     Recipient { recipientId = recipientid } <- getRecipient (RecipientId "recipient_id")
---     createTransfer recipientid (100 :: Amount) USD ([] :: MetaData)
+--   let config = StripeConfig (StripeKey "secret_key")
+--   result <- stripe config $ getRecipient (RecipientId "recipient_id")
 --   case result of
---     Right transfer    -> print transfer
---     Left  stripeError -> print stripeError
+--     (Left stripeError) -> print stripeError
+--     (Right (Recipient { recipientId = recipientid })) -> do
+--       result <- stripe config $ createTransfer recipientid (Amount 100) USD
+--       case result of
+--        Left  stripeError -> print stripeError
+--        Right transfer    -> print transfer
 -- @
 module Web.Stripe.Transfer
     ( -- * API
@@ -79,13 +82,6 @@ import           Web.Stripe.Types         (Amount(..), BankAccountId(..), Card(.
 
 ------------------------------------------------------------------------------
 -- | Create a `Transfer`
-data CreateTransfer
-type instance StripeReturn CreateTransfer = Transfer
-instance StripeHasParam CreateTransfer Description
-instance StripeHasParam CreateTransfer BankAccountId
-instance StripeHasParam CreateTransfer CardId
-instance StripeHasParam CreateTransfer StatementDescription
-instance StripeHasParam CreateTransfer MetaData
 createTransfer
     :: RecipientId -- ^ The `RecipientId` of the `Recipient` who will receive the `Transfer`
     -> Amount      -- ^ The `Amount` of money to transfer to the `Recipient`
@@ -102,11 +98,16 @@ createTransfer
                   toStripeParam currency    $
                   []
 
+data CreateTransfer
+type instance StripeReturn CreateTransfer = Transfer
+instance StripeHasParam CreateTransfer Description
+instance StripeHasParam CreateTransfer BankAccountId
+instance StripeHasParam CreateTransfer CardId
+instance StripeHasParam CreateTransfer StatementDescription
+instance StripeHasParam CreateTransfer MetaData
+
 ------------------------------------------------------------------------------
 -- | Retrieve a `Transfer`
-data GetTransfer
-type instance StripeReturn GetTransfer = Transfer
-instance StripeHasParam GetTransfer ExpandParams
 getTransfer
     :: TransferId -- ^ `TransferId` associated with the `Transfer` to retrieve
     -> StripeRequest GetTransfer
@@ -117,12 +118,12 @@ getTransfer
         url     = "transfers" </> transferid
         params  = []
 
+data GetTransfer
+type instance StripeReturn GetTransfer = Transfer
+instance StripeHasParam GetTransfer ExpandParams
+
 ------------------------------------------------------------------------------
 -- | Update a `Transfer`
-data UpdateTransfer
-type instance StripeReturn UpdateTransfer = Transfer
-instance StripeHasParam UpdateTransfer Description
-instance StripeHasParam UpdateTransfer MetaData
 updateTransfer
     :: TransferId        -- ^ The `TransferId` of the `Transfer` to update
     -> StripeRequest UpdateTransfer
@@ -133,10 +134,13 @@ updateTransfer
         url     = "transfers" </> transferid
         params  = []
 
+data UpdateTransfer
+type instance StripeReturn UpdateTransfer = Transfer
+instance StripeHasParam UpdateTransfer Description
+instance StripeHasParam UpdateTransfer MetaData
+
 ------------------------------------------------------------------------------
 -- | Cancel a `Transfer`
-data CancelTransfer
-type instance StripeReturn CancelTransfer = Transfer
 cancelTransfer
     :: TransferId        -- ^ The `TransferId` of the `Transfer` to cancel
     -> StripeRequest CancelTransfer
@@ -145,8 +149,19 @@ cancelTransfer (TransferId transferid) = request
         url     = "transfers" </> transferid </> "cancel"
         params  = []
 
+data CancelTransfer
+type instance StripeReturn CancelTransfer = Transfer
+
 ------------------------------------------------------------------------------
 -- | Retrieve StripeList of `Transfers`
+getTransfers
+    :: StripeRequest GetTransfers
+getTransfers
+    = request
+  where request = mkStripeRequest GET url params
+        url     = "transfers"
+        params  = []
+
 data GetTransfers
 type instance StripeReturn GetTransfers = StripeList Transfer
 instance StripeHasParam GetTransfers ExpandParams
@@ -157,10 +172,3 @@ instance StripeHasParam GetTransfers Limit
 instance StripeHasParam GetTransfers RecipientId
 instance StripeHasParam GetTransfers (StartingAfter TransferId)
 instance StripeHasParam GetTransfers TransferStatus
-getTransfers
-    :: StripeRequest GetTransfers
-getTransfers
-    = request
-  where request = mkStripeRequest GET url params
-        url     = "transfers"
-        params  = []

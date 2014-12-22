@@ -13,17 +13,16 @@
 -- < https:/\/\stripe.com/docs/api#recipients >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Recipient
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
+--   let config = StripeConfig (StripeKey "secret_key")
 --   result <- stripe config $
---       createRecipient (FirstName "simon")
---                       (LastName "marlow")
---                       Nothing -- What is Simon Marlow's middle initial?
---                       (Invidiual :: RecipientType)
+--       createRecipient (Name "simon marlow")
+--                       Individual
 --   case result of
 --     Right recipient  -> print recipient
 --     Left stripeError -> print stripeError
@@ -103,19 +102,9 @@ import           Web.Stripe.Types.Util    (getRecipientId)
 
 ------------------------------------------------------------------------------
 -- | Base Request for issues create `Recipient` requests
-data CreateRecipient
-type instance StripeReturn CreateRecipient = Recipient
-instance StripeHasParam CreateRecipient TaxID
-instance StripeHasParam CreateRecipient NewBankAccount
-instance StripeHasParam CreateRecipient TokenId
-instance StripeHasParam CreateRecipient NewCard
-instance StripeHasParam CreateRecipient CardId
-instance StripeHasParam CreateRecipient Email
-instance StripeHasParam CreateRecipient Description
-instance StripeHasParam CreateRecipient MetaData
 createRecipient
-    :: Name
-    -> RecipientType
+    :: Name          -- ^ `Recipient` `Name`
+    -> RecipientType -- ^ `Individual` or `Corporation`
     -> StripeRequest CreateRecipient
 createRecipient
     name
@@ -127,11 +116,19 @@ createRecipient
                   toStripeParam recipienttype $
                   []
 
+data CreateRecipient
+type instance StripeReturn CreateRecipient = Recipient
+instance StripeHasParam CreateRecipient TaxID
+instance StripeHasParam CreateRecipient NewBankAccount
+instance StripeHasParam CreateRecipient TokenId
+instance StripeHasParam CreateRecipient NewCard
+instance StripeHasParam CreateRecipient CardId
+instance StripeHasParam CreateRecipient Email
+instance StripeHasParam CreateRecipient Description
+instance StripeHasParam CreateRecipient MetaData
+
 ------------------------------------------------------------------------------
 -- | Retrieve a 'Recipient'
-data GetRecipient
-type instance StripeReturn GetRecipient = Recipient
-instance StripeHasParam GetRecipient ExpandParams
 getRecipient
     :: RecipientId -- ^ The `RecipientId` of the `Recipient` to be retrieved
     -> StripeRequest GetRecipient
@@ -141,8 +138,21 @@ getRecipient
         url     = "recipients" </> getRecipientId recipientid
         params  = []
 
+data GetRecipient
+type instance StripeReturn GetRecipient = Recipient
+instance StripeHasParam GetRecipient ExpandParams
+
 ------------------------------------------------------------------------------
 -- | Update `Recipient`
+updateRecipient
+    :: RecipientId -- ^ `RecipientId` of `Recipient` to update
+    -> StripeRequest UpdateRecipient
+updateRecipient
+  recipientid   = request
+  where request = mkStripeRequest POST url params
+        url     = "recipients" </> getRecipientId recipientid
+        params  = []
+
 data UpdateRecipient
 type instance StripeReturn UpdateRecipient = Recipient
 instance StripeHasParam UpdateRecipient Name
@@ -155,19 +165,9 @@ instance StripeHasParam UpdateRecipient CardId
 instance StripeHasParam UpdateRecipient Email
 instance StripeHasParam UpdateRecipient Description
 instance StripeHasParam UpdateRecipient MetaData
-updateRecipient
-    :: RecipientId
-    -> StripeRequest UpdateRecipient
-updateRecipient
-  recipientid   = request
-  where request = mkStripeRequest POST url params
-        url     = "recipients" </> getRecipientId recipientid
-        params  = []
 
 ------------------------------------------------------------------------------
 -- | Delete a `Recipient`
-data DeleteRecipient
-type instance StripeReturn DeleteRecipient = StripeDeleteResult
 deleteRecipient
     :: RecipientId   -- ^ `RecipiendId` of `Recipient` to delete
     -> StripeRequest DeleteRecipient
@@ -177,15 +177,11 @@ deleteRecipient
         url     = "recipients" </> getRecipientId recipientid
         params  = []
 
+data DeleteRecipient
+type instance StripeReturn DeleteRecipient = StripeDeleteResult
+
 ------------------------------------------------------------------------------
 -- | Retrieve multiple 'Recipient's
-data GetRecipients
-type instance StripeReturn GetRecipients = StripeList Recipient
-instance StripeHasParam GetRecipients ExpandParams
-instance StripeHasParam GetRecipients (EndingBefore RecipientId)
-instance StripeHasParam GetRecipients Limit
-instance StripeHasParam GetRecipients (StartingAfter RecipientId)
-instance StripeHasParam GetRecipients IsVerified
 getRecipients
     :: StripeRequest GetRecipients
 getRecipients
@@ -193,3 +189,11 @@ getRecipients
   where request = mkStripeRequest GET url params
         url     = "recipients"
         params  = []
+
+data GetRecipients
+type instance StripeReturn GetRecipients = StripeList Recipient
+instance StripeHasParam GetRecipients ExpandParams
+instance StripeHasParam GetRecipients (EndingBefore RecipientId)
+instance StripeHasParam GetRecipients Limit
+instance StripeHasParam GetRecipients (StartingAfter RecipientId)
+instance StripeHasParam GetRecipients IsVerified

@@ -13,19 +13,24 @@
 -- < https:/\/\stripe.com/docs/api#invoiceitems >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Customer
 -- import Web.Stripe.InvoiceItem
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
---   result <- stripe config $ do
---     Customer { customerId = cid } <- createEmptyCustomer
---     createInvoiceItem cid 100 USD Nothing Nothing (Just "description") []
+--   let config = StripeConfig (StripeKey "secret_key")
+--   result <- stripe config $ createCustomer
 --   case result of
---     Right invoiceitem -> print invoiceitem
---     Left  stripeError -> print stripeError
+--     (Left stripeError) -> print stripeError
+--     (Right (Customer { customerId = cid })) ->
+--       do result <- stripe config $
+--            createInvoiceItem cid (Amount 100) USD
+--              -&- (Description "description")
+--          case result of
+--            Left stripeError  -> print stripeError
+--            Right invoiceitem -> print invoiceitem
 -- @
 module Web.Stripe.InvoiceItem
     ( -- * API
@@ -72,12 +77,6 @@ import           Web.Stripe.Types.Util    (getInvoiceItemId)
 
 ------------------------------------------------------------------------------
 -- | Create an invoice for a Customer
-data CreateInvoiceItem
-type instance StripeReturn CreateInvoiceItem = InvoiceItem
-instance StripeHasParam CreateInvoiceItem InvoiceId
-instance StripeHasParam CreateInvoiceItem SubscriptionId
-instance StripeHasParam CreateInvoiceItem Description
-instance StripeHasParam CreateInvoiceItem MetaData
 createInvoiceItem
     :: CustomerId            -- ^ `CustomerId` of `Customer` on which to create an `InvoiceItem`
     -> Amount                -- ^ `Amount` associated with `InvoiceItem`
@@ -94,11 +93,15 @@ createInvoiceItem
                   toStripeParam currency   $
                   []
 
+data CreateInvoiceItem
+type instance StripeReturn CreateInvoiceItem = InvoiceItem
+instance StripeHasParam CreateInvoiceItem InvoiceId
+instance StripeHasParam CreateInvoiceItem SubscriptionId
+instance StripeHasParam CreateInvoiceItem Description
+instance StripeHasParam CreateInvoiceItem MetaData
+
 ------------------------------------------------------------------------------
 -- | Retrieve an `InvoiceItem` by `InvoiceItemId`
-data GetInvoiceItem
-type instance StripeReturn GetInvoiceItem = InvoiceItem
-instance StripeHasParam GetInvoiceItem ExpandParams
 getInvoiceItem
     :: InvoiceItemId -- ^ `InvoiceItemId` of `InvoiceItem` to retrieve
     -> StripeRequest GetInvoiceItem
@@ -108,13 +111,12 @@ getInvoiceItem
         url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = []
 
+data GetInvoiceItem
+type instance StripeReturn GetInvoiceItem = InvoiceItem
+instance StripeHasParam GetInvoiceItem ExpandParams
+
 ------------------------------------------------------------------------------
 -- | Update an `InvoiceItem` by `InvoiceItemId`
-data UpdateInvoiceItem
-type instance StripeReturn UpdateInvoiceItem = InvoiceItem
-instance StripeHasParam UpdateInvoiceItem Amount
-instance StripeHasParam UpdateInvoiceItem Description
-instance StripeHasParam UpdateInvoiceItem MetaData
 updateInvoiceItem
     :: InvoiceItemId     -- ^ `InvoiceItemId` of to update
     -> StripeRequest UpdateInvoiceItem
@@ -125,10 +127,14 @@ updateInvoiceItem
         url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = []
 
+data UpdateInvoiceItem
+type instance StripeReturn UpdateInvoiceItem = InvoiceItem
+instance StripeHasParam UpdateInvoiceItem Amount
+instance StripeHasParam UpdateInvoiceItem Description
+instance StripeHasParam UpdateInvoiceItem MetaData
+
 ------------------------------------------------------------------------------
 -- | Delete an `InvoiceItem` by `InvoiceItemId`
-data DeleteInvoiceItem
-type instance StripeReturn DeleteInvoiceItem = StripeDeleteResult
 deleteInvoiceItem
     :: InvoiceItemId -- ^ `InvoiceItemdId` of `InvoiceItem` to be deleted
     -> StripeRequest DeleteInvoiceItem
@@ -138,8 +144,18 @@ deleteInvoiceItem
         url     = "invoiceitems" </> getInvoiceItemId invoiceitemid
         params  = []
 
+data DeleteInvoiceItem
+type instance StripeReturn DeleteInvoiceItem = StripeDeleteResult
+
 ------------------------------------------------------------------------------
 -- | List `InvoiceItem`s
+getInvoiceItems
+    :: StripeRequest GetInvoiceItems
+getInvoiceItems = request
+  where request = mkStripeRequest GET url params
+        url     = "invoiceitems"
+        params  = []
+
 data GetInvoiceItems
 type instance StripeReturn GetInvoiceItems = (StripeList InvoiceItem)
 instance StripeHasParam GetInvoiceItems ExpandParams
@@ -148,9 +164,3 @@ instance StripeHasParam GetInvoiceItems CustomerId
 instance StripeHasParam GetInvoiceItems (EndingBefore InvoiceItemId)
 instance StripeHasParam GetInvoiceItems Limit
 instance StripeHasParam GetInvoiceItems (StartingAfter InvoiceItemId)
-getInvoiceItems
-    :: StripeRequest GetInvoiceItems
-getInvoiceItems = request
-  where request = mkStripeRequest GET url params
-        url     = "invoiceitems"
-        params  = []

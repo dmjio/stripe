@@ -13,24 +13,29 @@
 -- < https:/\/\stripe.com/docs/api#charges >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Customer
 -- import Web.Stripe.Charge
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
+--   let config = StripeConfig (StripeKey "secret_key")
 --       credit = CardNumber "4242424242424242"
 --       em  = ExpMonth 12
 --       ey  = ExpYear 2015
 --       cvc = CVC "123"
---   result <- stripe config $ do
---         Customer { customerId = cid } <- createCustomerByCard cn em ey cvc
---         charge <- chargeCustomer cid USD 100 Nothing
---         return charge
+--       cardinfo = (newCard credit em ey) { newCardCVC = Just cvc }
+--   result <- stripe config createCustomer
+--                              -&- cardinfo
 --   case result of
---     Right charge      -> print charge
---     Left  stripeError -> print stripeError
+--     (Left stripeError) -> print stripeError
+--     (Customer { customerId = cid }) ->
+--       do result <- stripe config $ createCharge (Amount 100) USD
+--                                      -&- cid
+--          case result of
+--            Left  stripeError -> print stripeError
+--            Right charge      -> print charge
 -- @
 module Web.Stripe.Charge
     ( -- * API
@@ -100,6 +105,19 @@ import           Web.Stripe.Types.Util      (getChargeId)
 
 ------------------------------------------------------------------------------
 -- | Create a `Charge`
+createCharge
+    :: Amount   -- ^ `Amount` to charge
+    -> Currency -- ^ `Currency` for charge
+    -> StripeRequest CreateCharge
+createCharge
+    amount
+    currency = request
+  where request = mkStripeRequest POST url params
+        url     = "charges"
+        params  = toStripeParam amount   $
+                  toStripeParam currency $
+                  []
+
 data CreateCharge
 type instance StripeReturn CreateCharge = Charge
 instance StripeHasParam CreateCharge CustomerId
@@ -112,24 +130,8 @@ instance StripeHasParam CreateCharge StatementDescription
 instance StripeHasParam CreateCharge ReceiptEmail
 instance StripeHasParam CreateCharge ApplicationFeeAmount
 
-createCharge
-    :: Amount
-    -> Currency
-    -> StripeRequest CreateCharge
-createCharge
-    amount
-    currency = request
-  where request = mkStripeRequest POST url params
-        url     = "charges"
-        params  = toStripeParam amount   $
-                  toStripeParam currency $
-                  []
-
 ------------------------------------------------------------------------------
 -- | Retrieve a `Charge` by `ChargeId`
-data GetCharge
-type instance StripeReturn GetCharge = Charge
-instance StripeHasParam GetCharge ExpandParams
 getCharge
     :: ChargeId -- ^ The `Charge` to retrive
     -> StripeRequest GetCharge
@@ -139,12 +141,12 @@ getCharge
         url     = "charges" </> getChargeId chargeid
         params  = []
 
+data GetCharge
+type instance StripeReturn GetCharge = Charge
+instance StripeHasParam GetCharge ExpandParams
+
 ------------------------------------------------------------------------------
 -- | A `Charge` to be updated
-data UpdateCharge
-type instance StripeReturn UpdateCharge = Charge
-instance StripeHasParam UpdateCharge Description
-instance StripeHasParam UpdateCharge MetaData
 updateCharge
     :: ChargeId    -- ^ The `Charge` to update
     -> StripeRequest UpdateCharge
@@ -154,12 +156,13 @@ updateCharge
         url     = "charges" </> getChargeId chargeid
         params  = []
 
+data UpdateCharge
+type instance StripeReturn UpdateCharge = Charge
+instance StripeHasParam UpdateCharge Description
+instance StripeHasParam UpdateCharge MetaData
+
 ------------------------------------------------------------------------------
 -- | a `Charge` to be captured
-data CaptureCharge
-type instance StripeReturn CaptureCharge = Charge
-instance StripeHasParam CaptureCharge Amount
-instance StripeHasParam CaptureCharge ReceiptEmail
 captureCharge
     :: ChargeId     -- ^ The `ChargeId` of the `Charge` to capture
     -> StripeRequest CaptureCharge
@@ -169,8 +172,20 @@ captureCharge
         url      = "charges" </> getChargeId chargeid </> "capture"
         params   = []
 
+data CaptureCharge
+type instance StripeReturn CaptureCharge = Charge
+instance StripeHasParam CaptureCharge Amount
+instance StripeHasParam CaptureCharge ReceiptEmail
+
 ------------------------------------------------------------------------------
 -- | Retrieve all `Charge`s
+getCharges
+    :: StripeRequest GetCharges
+getCharges = request
+  where request = mkStripeRequest GET url params
+        url     = "charges"
+        params  = []
+
 data GetCharges
 type instance StripeReturn GetCharges = StripeList Charge
 instance StripeHasParam GetCharges ExpandParams
@@ -179,9 +194,3 @@ instance StripeHasParam GetCharges CustomerId
 instance StripeHasParam GetCharges (EndingBefore ChargeId)
 instance StripeHasParam GetCharges Limit
 instance StripeHasParam GetCharges (StartingAfter ChargeId)
-getCharges
-    :: StripeRequest GetCharges
-getCharges = request
-  where request = mkStripeRequest GET url params
-        url     = "charges"
-        params  = []

@@ -13,13 +13,14 @@
 -- < https:/\/\stripe.com/docs/api#events >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Event
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
---   result <- stripe config $ getEvents Nothing Nothing Nothing
+--   let config = StripeConfig (StripeKey "secret_key")
+--   result <- stripe config $ getEvents
 --   case result of
 --     Right events     -> print events
 --     Left stripeError -> print stripeError
@@ -56,8 +57,6 @@ import           Web.Stripe.Types         (Created(..), Event (..),
 
 ------------------------------------------------------------------------------
 -- | `Event` to retrieve by `EventId`
-data GetEvent
-type instance StripeReturn GetEvent = Event
 getEvent
     :: EventId -- ^ The ID of the Event to retrieve
     -> StripeRequest GetEvent
@@ -66,15 +65,11 @@ getEvent (EventId eventid) = request
         url     = "events" </> eventid
         params  = []
 
+data GetEvent
+type instance StripeReturn GetEvent = Event
+
 ------------------------------------------------------------------------------
 -- | `StripeList` of `Event`s to retrieve
-data GetEvents
-type instance StripeReturn GetEvents = (StripeList Event)
-instance StripeHasParam GetEvents Created
-instance StripeHasParam GetEvents (EndingBefore EventId)
-instance StripeHasParam GetEvents Limit
-instance StripeHasParam GetEvents (StartingAfter EventId)
--- instance StripeHasParam GetEvents EventType -- FIXME
 getEvents
     :: StripeRequest GetEvents
 getEvents
@@ -82,3 +77,11 @@ getEvents
   where request = mkStripeRequest GET url params
         url     = "events"
         params  = []
+
+data GetEvents
+type instance StripeReturn GetEvents = (StripeList Event)
+instance StripeHasParam GetEvents Created
+instance StripeHasParam GetEvents (EndingBefore EventId)
+instance StripeHasParam GetEvents Limit
+instance StripeHasParam GetEvents (StartingAfter EventId)
+-- instance StripeHasParam GetEvents EventType -- FIXME

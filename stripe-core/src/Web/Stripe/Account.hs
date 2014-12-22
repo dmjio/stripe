@@ -13,12 +13,13 @@
 -- < https:/\/\stripe.com/docs/api#account >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Account
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
+--   let config = StripeConfig (StripeKey "secret_key")
 --   result <- stripe config getAccountDetails
 --   case result of
 --     Right account    -> print account

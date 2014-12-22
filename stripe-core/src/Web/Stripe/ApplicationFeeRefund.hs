@@ -13,12 +13,13 @@
 -- < https:/\/\stripe.com/docs/api#fee_refunds >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
--- import Web.Stripe.ApplicationFee
+-- import Web.Stripe.ApplicationFeeRefund
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
+--   let config = StripeConfig (StripeKey "secret_key")
 --   result <- stripe config $ getApplicationFeeRefund (FeeId "fee_id") (RefundId "refund_id")
 --   case result of
 --     Right applicationFeeRefund -> print applicationFeeRefund
@@ -61,10 +62,6 @@ import           Web.Stripe.Types         (Amount(..), ApplicationFee (..),
 
 ------------------------------------------------------------------------------
 -- | Create a new `ApplicationFeeRefund`
-data CreateApplicationFeeRefund
-type instance StripeReturn CreateApplicationFeeRefund = ApplicationFeeRefund
-instance StripeHasParam CreateApplicationFeeRefund Amount
-instance StripeHasParam CreateApplicationFeeRefund MetaData
 createApplicationFeeRefund
     :: FeeId        -- ^ The `FeeID` associated with the `ApplicationFee`
     -> StripeRequest CreateApplicationFeeRefund
@@ -75,11 +72,13 @@ createApplicationFeeRefund
         url     = "application_fees" </> feeid </> "refunds"
         params  = []
 
+data CreateApplicationFeeRefund
+type instance StripeReturn CreateApplicationFeeRefund = ApplicationFeeRefund
+instance StripeHasParam CreateApplicationFeeRefund Amount
+instance StripeHasParam CreateApplicationFeeRefund MetaData
+
 ------------------------------------------------------------------------------
 -- | Retrieve an existing 'ApplicationFeeRefund'
-data GetApplicationFeeRefund
-type instance StripeReturn GetApplicationFeeRefund = ApplicationFeeRefund
-instance StripeHasParam GetApplicationFeeRefund ExpandParams
 getApplicationFeeRefund
     :: FeeId     -- ^ The `FeeID` associated with the `ApplicationFee`
     -> RefundId  -- ^ The `ReufndId` associated with the `ApplicationFeeRefund`
@@ -92,11 +91,12 @@ getApplicationFeeRefund
         url     = "application_fees" </> feeid </> "refunds" </> refundid
         params  = []
 
+data GetApplicationFeeRefund
+type instance StripeReturn GetApplicationFeeRefund = ApplicationFeeRefund
+instance StripeHasParam GetApplicationFeeRefund ExpandParams
+
 ------------------------------------------------------------------------------
 -- | Update an `ApplicationFeeRefund` for a given Application `FeeId` and `RefundId`
-data UpdateApplicationFeeRefund
-type instance StripeReturn UpdateApplicationFeeRefund = ApplicationFeeRefund
-instance StripeHasParam UpdateApplicationFeeRefund MetaData
 updateApplicationFeeRefund
     :: FeeId    -- ^ The `FeeID` associated with the application
     -> RefundId -- ^ The `RefundId` associated with the application
@@ -110,14 +110,12 @@ updateApplicationFeeRefund
     url     = "application_fees" </> feeid </> "refunds" </> refundid
     params  = []
 
+data UpdateApplicationFeeRefund
+type instance StripeReturn UpdateApplicationFeeRefund = ApplicationFeeRefund
+instance StripeHasParam UpdateApplicationFeeRefund MetaData
+
 ------------------------------------------------------------------------------
 -- | Retrieve a list of all 'ApplicationFeeRefund's for a given Application 'FeeId'
-data GetApplicationFeeRefunds
-type instance StripeReturn GetApplicationFeeRefunds = (StripeList ApplicationFeeRefund)
-instance StripeHasParam GetApplicationFeeRefunds ExpandParams
-instance StripeHasParam GetApplicationFeeRefunds (EndingBefore RefundId)
-instance StripeHasParam GetApplicationFeeRefunds Limit
-instance StripeHasParam GetApplicationFeeRefunds (StartingAfter RefundId)
 getApplicationFeeRefunds
     :: FeeId               -- ^ The `FeeID` associated with the application
     -> StripeRequest GetApplicationFeeRefunds
@@ -127,3 +125,10 @@ getApplicationFeeRefunds
     request = mkStripeRequest GET url params
     url     = "application_fees" </> feeid </> "refunds"
     params  = []
+
+data GetApplicationFeeRefunds
+type instance StripeReturn GetApplicationFeeRefunds = (StripeList ApplicationFeeRefund)
+instance StripeHasParam GetApplicationFeeRefunds ExpandParams
+instance StripeHasParam GetApplicationFeeRefunds (EndingBefore RefundId)
+instance StripeHasParam GetApplicationFeeRefunds Limit
+instance StripeHasParam GetApplicationFeeRefunds (StartingAfter RefundId)

@@ -31,11 +31,13 @@ import           Web.Stripe.Util     (fromSeconds)
 ------------------------------------------------------------------------------
 -- | `Expandable` values
 
+-- | maps from an id to an object, e.g. `CardId` to `Card`
 type family ExpandsTo id :: *
 
+-- | a wrapper for fields which can either be an id or an expanded object
 data Expandable id
-  = Id id
-  | Expanded (ExpandsTo id)
+  = Id id -- ^ an id such as `CardId`, `AccountId`, `CustomerId`, etc
+  | Expanded (ExpandsTo id) -- ^ expanded object such as `Card`, `Account`, `Customer`, etc
     deriving (Typeable)
 
 deriving instance (Data id, Data (ExpandsTo id)) => Data (Expandable id)
@@ -72,6 +74,7 @@ data TimeRange a = TimeRange
     }
     deriving (Read, Show, Eq, Ord, Data, Typeable)
 
+-- | time range with all values set to `Nothing`
 emptyTimeRange :: TimeRange a
 emptyTimeRange = TimeRange
     { gt  = Nothing
@@ -1960,7 +1963,7 @@ instance FromJSON a => FromJSON (StripeList a) where
 
 ------------------------------------------------------------------------------
 -- | Pagination Option for `StripeList`
-newtype Limit             = Limit Int
+newtype Limit = Limit Int
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
@@ -2343,10 +2346,13 @@ instance FromJSON Currency where
    parseJSON _ = pure UnknownCurrency
 
 ------------------------------------------------------------------------------
--- | Show an amount
-showAmount :: Currency
-           -> Int
-           -> String
+-- | Show an amount accounting for zero currencies
+--
+-- https:\/\/support.stripe.com\/questions\/which-zero-decimal-currencies-does-stripe-support
+showAmount
+  :: Currency -- ^ `Currency`
+  -> Int      -- ^ `Amount`
+  -> String
 showAmount cur amt =
   case cur of
    USD -> "$" ++ show2places (currencyDivisor cur amt)
@@ -2355,11 +2361,12 @@ showAmount cur amt =
     show2places v = showFFloat (Just 2) v ""
 
 ------------------------------------------------------------------------------
+-- currency division funtion accounting for zero currencies
 --
 -- https:\/\/support.stripe.com\/questions\/which-zero-decimal-currencies-does-stripe-support
-currencyDivisor :: Currency
-             -> Int
-             -> Float
+currencyDivisor
+    :: Currency -- ^ `Currency`
+    -> (Int -> Float) -- ^ function to convert amount to a float
 currencyDivisor cur =
   case cur of
     BIF -> zeroCurrency

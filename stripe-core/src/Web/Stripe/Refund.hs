@@ -13,6 +13,7 @@
 -- < https:/\/\stripe.com/docs/api#refunds >
 --
 -- @
+-- {-\# LANGUAGE OverloadedStrings \#-}
 -- import Web.Stripe
 -- import Web.Stripe.Customer
 -- import Web.Stripe.Charge
@@ -20,18 +21,24 @@
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
+--   let config = StripeConfig (StripeKey "secret_key")
 --       credit = CardNumber "4242424242424242"
 --       em  = ExpMonth 12
 --       ey  = ExpYear 2015
 --       cvc = CVC "123"
---   result <- stripe config $ do
---     Customer { customerId = cid }  <- createCustomerByCard cn em ey cvc
---     Charge   { chargeId   = chid } <- chargeCustomer cid USD 100 Nothing
---     createRefund chid ([] :: MetaData)
+--       cardinfo = (mkNewCard credit em ey) { newCardCVC = Just cvc }
+--   result <- stripe config $ createCustomer -&- cardinfo
 --   case result of
---     Right refund     -> print refund
---     Left stripeError -> print stripeError
+--     (Left stripeError) -> print stripeError
+--     (Right (Customer { customerId = cid })) -> do
+--       result <- stripe config $ createCharge (Amount 100) USD -&- cid
+--       case result of
+--         (Left stripeError) -> print stripeError
+--         (Right (Charge { chargeId   = chid })) -> do
+--           result <- stripe config $ createRefund chid
+--           case result of
+--             (Left stripeError) -> print stripeError
+--             (Right refund)     -> print refund
 -- @
 module Web.Stripe.Refund
     ( -- * API
@@ -70,13 +77,7 @@ import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (
 import           Web.Stripe.Types.Util      (getChargeId)
 
 ------------------------------------------------------------------------------
--- | `Refund` a `Charge`
-data CreateRefund
-type instance StripeReturn CreateRefund = Refund
-instance StripeHasParam CreateRefund Amount
-instance StripeHasParam CreateRefund RefundApplicationFee
-instance StripeHasParam CreateRefund RefundReason
-instance StripeHasParam CreateRefund MetaData
+-- | create a `Refund`
 createRefund
     :: ChargeId -- ^ `ChargeId` associated with the `Charge` to be refunded
     -> StripeRequest CreateRefund
@@ -86,11 +87,15 @@ createRefund
         url     = "charges" </> getChargeId chargeid </> "refunds"
         params  = []
 
+data CreateRefund
+type instance StripeReturn CreateRefund = Refund
+instance StripeHasParam CreateRefund Amount
+instance StripeHasParam CreateRefund RefundApplicationFee
+instance StripeHasParam CreateRefund RefundReason
+instance StripeHasParam CreateRefund MetaData
+
 ------------------------------------------------------------------------------
 -- | Retrieve a `Refund` by `ChargeId` and `RefundId`
-data GetRefund
-type instance StripeReturn GetRefund = Refund
-instance StripeHasParam GetRefund ExpandParams
 getRefund
     :: ChargeId -- ^ `ChargeId` associated with the `Refund` to be retrieved
     -> RefundId -- ^ `RefundId` associated with the `Refund` to be retrieved
@@ -102,11 +107,12 @@ getRefund
          url     = "charges" </> getChargeId chargeid </> "refunds" </> refundid
          params  = []
 
+data GetRefund
+type instance StripeReturn GetRefund = Refund
+instance StripeHasParam GetRefund ExpandParams
+
 ------------------------------------------------------------------------------
 -- | Update a `Refund` by `ChargeId` and `RefundId`
-data UpdateRefund
-type instance StripeReturn UpdateRefund = Refund
-instance StripeHasParam UpdateRefund MetaData
 updateRefund
     :: ChargeId -- ^ `ChargeId` associated with the `Charge` to be updated
     -> RefundId -- ^ `RefundId` associated with the `Refund` to be retrieved
@@ -119,19 +125,24 @@ updateRefund
         url     = "charges" </> getChargeId chargeid  </> "refunds" </> refid
         params  = []
 
+data UpdateRefund
+type instance StripeReturn UpdateRefund = Refund
+instance StripeHasParam UpdateRefund MetaData
+
 ------------------------------------------------------------------------------
 -- | Retrieve a lot of Refunds by `ChargeId`
-data GetRefunds
-type instance StripeReturn GetRefunds = StripeList Refund
-instance StripeHasParam GetRefunds ExpandParams
-instance StripeHasParam GetRefunds (EndingBefore RefundId)
-instance StripeHasParam GetRefunds Limit
-instance StripeHasParam GetRefunds (StartingAfter RefundId)
 getRefunds
-    :: ChargeId               -- ^ `ChargeId` associated with the `Charge` to be updated
+    :: ChargeId               -- ^ `ChargeId` associated with the `Refunds` to get
     -> StripeRequest GetRefunds
 getRefunds
   chargeid = request
   where request = mkStripeRequest GET url params
         url     = "charges" </> getChargeId chargeid </> "refunds"
         params  = []
+
+data GetRefunds
+type instance StripeReturn GetRefunds = StripeList Refund
+instance StripeHasParam GetRefunds ExpandParams
+instance StripeHasParam GetRefunds (EndingBefore RefundId)
+instance StripeHasParam GetRefunds Limit
+instance StripeHasParam GetRefunds (StartingAfter RefundId)
