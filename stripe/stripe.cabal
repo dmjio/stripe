@@ -1,5 +1,5 @@
 name:                stripe
-version:             0.1.0.5
+version:             2.0.0
 synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
@@ -37,16 +37,17 @@ Description:
     Any API call that returns a `StripeList` is eligible for pagination.
     To use in practice do the following:
     .
+    > {-# LANGUAGE OverloadedStrings #-}
     > import Web.Stripe
     > import Web.Stripe.Customer
     >
     > main :: IO ()
     > main = do
-    >   let config = StripeConfig "secret key"
+    >   let config = StripeConfig (StripeKey "secret key")
     >   result <- stripe config $ getCustomers
-    >                                  (Just 30 :: Maybe Limit) -- Defaults to 10 if Nothing, 100 is Max
-    >                                  (StartingAfter $ CustomerId "customer_id0")
-    >                                  (EndingBefore $ CustomerId "customer_id30")
+    >                               -&- (Limit 30) -- Defaults to 10 if Nothing, 100 is Max
+    >                               -&- (StartingAfter $ CustomerId "customer_id0")
+    >                               -&- (EndingBefore $ CustomerId "customer_id30")
     >   case result of
     >     Right stripelist -> print (list stripelist :: [Customer])
     >     Left stripeError -> print stripeError
@@ -67,17 +68,18 @@ Description:
     This default_card hash can be expanded into a full `Card` object inside a `Customer` object.
     As an example:
     .
+    > {-# LANGUAGE OverloadedStrings #-}
     > import Web.Stripe
     > import Web.Stripe.Customer
     >
     > main :: IO ()
     > main = do
-    >   let config = StripeConfig "secret key"
+    >   let config = StripeConfig (StripeKey "secret key")
     >   result <- stripe config $ getCustomerExpandable
     >                                  (CustomerId "customerid")
-    >                                  (["default_card"] :: ExpandParams)
+    >                                  -&- ExpandParams ["default_card"]
     >   case result of
-    >     Right customer -> print (defaultCard customer) -- Will be an `ExpandedCard`
+    >     Right customer   -> print (defaultCard customer) -- Will be an `Expanded` `Card`
     >     Left stripeError -> print stripeError
     >
     .
@@ -87,15 +89,17 @@ Description:
     Any Stripe object that supports the embedding of metadata is available via this API.
     As an example:
     .
+    > {-# LANGUAGE OverloadedStrings #-}
     > import Web.Stripe
     > import Web.Stripe.Coupon
     >
     > main :: IO ()
     > main = do
-    >   let config = StripeConfig "secret key"
-    >   result <- stripe config $ updateCoupon (CouponId "couponid") [("key1", "value2"), ("key2", "value2")]
+    >   let config = StripeConfig (StripeKey "secret key")
+    >   result <- stripe config $ updateCoupon (CouponId "couponid")
+                                   -&- MetaData [("key1", "value2"), ("key2", "value2")]
     >   case result of
-    >     Right coupon -> print $ couponMetaData coupon
+    >     Right coupon     -> print $ couponMetaData coupon
     >     Left stripeError -> print stripeError
     .
     [Issues - <https://github.com/dmjio/stripe-haskell/issues>]
@@ -105,9 +109,9 @@ Description:
 
 library
   hs-source-dirs:      src src-http-streams
-  build-depends:       base,
-                       stripe-core,
-                       stripe-http-streams
+  build-depends:       base                >= 4   && < 5,
+                       stripe-core         >= 2.0 && < 2.1,
+                       stripe-http-streams >= 2.0 && < 2.1
 
   default-language:    Haskell2010
   exposed-modules:
@@ -119,3 +123,4 @@ library
 source-repository head
   type:     git
   location: git://github.com/dmjio/stripe-haskell.git
+  subdir: stripe
