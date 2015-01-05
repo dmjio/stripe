@@ -45,8 +45,8 @@ import           Data.Maybe      (Maybe(..))
 import           GHC.Num         (fromInteger)
 import           Prelude         (Bool(..), Eq(..), Functor(..), ($), IO, Char, String, error, undefined, (.), id, length)
 import           Test.Hspec
-import           Test.Hspec.Core (SpecM)
-import qualified Control.Monad   as M
+import           Test.Hspec.Core.Spec (SpecM)
+import qualified Control.Monad       as M
 import qualified Control.Monad.Trans as M
 import           Control.Monad.Trans.Free (FreeT(..), liftF)
 import           Web.Stripe.Client
@@ -92,8 +92,8 @@ instance StripeLift (IO a) where
   type LiftedType (IO a) = IO a
   stripeLift = id
 
-instance StripeLift (SpecM a) where
-  type LiftedType (SpecM a) = SpecM a
+instance StripeLift (SpecM a r) where
+  type LiftedType (SpecM a r) = SpecM a r
   stripeLift = id
 
 ------------------------------------------------------------------------------
