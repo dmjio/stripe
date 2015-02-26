@@ -1,5 +1,5 @@
 name:                stripe-haskell
-version:             0.1.1.1
+version:             0.1.2.1
 synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
@@ -151,6 +151,7 @@ library
                        Web.Stripe.ApplicationFee
                        Web.Stripe.ApplicationFeeRefund
                        Web.Stripe.Balance
+                       Web.Stripe.Bitcoin
                        Web.Stripe.Card
                        Web.Stripe.Charge
                        Web.Stripe.Coupon

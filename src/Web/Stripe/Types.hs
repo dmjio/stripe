@@ -2070,3 +2070,57 @@ instance FromJSON Currency where
    parseJSON (String "zar") = pure ZAR
    parseJSON (String "zmw") = pure ZMW
    parseJSON _ = pure UnknownCurrency
+
+------------------------------------------------------------------------------
+-- | BTC ReceiverObject
+data BitcoinReceiver = BitcoinReceiver {
+       btcId :: BitcoinReceiverId
+    ,  btcObject :: Text
+    ,  btcCreated :: UTCTime
+    ,  btcLiveMode :: Bool
+    ,  btcActive :: Bool
+    ,  btcAmount :: Integer
+    ,  btcAmountReceived :: Integer
+    ,  btcBitcoinAmount :: Integer
+    ,  btcBitcoinAmountReceived :: Integer
+    ,  btcBitcoinUri :: Text
+    ,  btcCurrency :: Currency
+    ,  btcFilled :: Bool
+    ,  btcInboundAddress :: Text
+    ,  btcUncapturedFunds :: Bool
+    ,  btcDescription :: Bool
+    ,  btcEmail :: Email
+    ,  btcMetadata :: MetaData
+    ,  btcRefundAddress :: Maybe Text
+--    , 
+
+    } deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | FromJSON for BitcoinReceiverId
+instance FromJSON BitcoinReceiver where
+   parseJSON (Object o) = undefined -- coming soon
+   parseJSON _ = mzero
+
+
+------------------------------------------------------------------------------
+-- | BTC ReceiverId
+newtype BitcoinReceiverId = BitcoinReceiverId Text
+    deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | FromJSON for BitcoinReceiverId
+instance FromJSON BitcoinReceiverId where
+   parseJSON (String x) = pure $ BitcoinReceiverId x
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | BTC PaymentId
+newtype PaymentId = PaymentId Text
+    deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | FromJSON for PaymentId
+instance FromJSON PaymentId where
+   parseJSON (String x) = pure $ PaymentId x
+   parseJSON _ = mzero
