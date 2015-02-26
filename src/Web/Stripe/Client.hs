@@ -7,10 +7,15 @@
 module Web.Stripe.Client
     ( -- * Execute a `Stripe` action
       stripe
+      -- * Execute a custom `Stripe` action (build your own, useful if
+      -- using old API's)
+    , stripeRaw
       -- * `Stripe` Monad
     , Stripe
       -- * `Stripe` Secret Key 
     , StripeConfig       (..)
+      -- * `Stripe` Request creator
+    , StripeRequest      (..)
     , module Web.Stripe.Client.Error
     ) where
 

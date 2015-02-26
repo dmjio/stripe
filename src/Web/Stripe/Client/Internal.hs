@@ -11,6 +11,7 @@
 ------------------------------------------------------------------------------
 module Web.Stripe.Client.Internal
     ( callAPI
+    , stripeRaw
     , stripe
     , Stripe
     , StripeRequest      (..)
@@ -20,6 +21,7 @@ module Web.Stripe.Client.Internal
     , module Web.Stripe.Client.Util
     , module Web.Stripe.Client.Error
     ) where
+
 
 import           Control.Exception          (SomeException, try)
 import           Control.Monad              (when)
@@ -48,10 +50,28 @@ import           Web.Stripe.Client.Util     (fromSeconds, getParams, toSeconds,
                                              paramsToByteString, toBytestring,
                                              toExpandable, toMetaData, toText,
                                              toTextLower, (</>))
-
 import qualified Data.ByteString            as S
 import qualified Data.Text.Encoding         as T
 import qualified System.IO.Streams          as Streams
+
+------------------------------------------------------------------------------
+-- | Create a custom request to `Stripe`'s API, Build your own!
+-- Useful if you're using an old api) !
+stripeRaw
+    :: FromJSON a
+    => StripeConfig       
+    -> StripeRequest
+    -> IO (Either StripeError a)
+stripeRaw config req = do
+  withOpenSSL $ do
+    ctx <- baselineContextSSL
+    result <- try (openConnectionSSL ctx "api.stripe.com" 443) :: IO (Either SomeException Connection)
+    case result of
+      Left msg -> return $ Left $ StripeError ConnectionFailure (toText msg) Nothing Nothing Nothing
+      Right conn -> do
+        json <- flip runReaderT (config, conn) $ runEitherT (callAPI req)
+        closeConnection conn
+        return json
 
 ------------------------------------------------------------------------------
 -- | Create a request to `Stripe`'s API

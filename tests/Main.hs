@@ -23,6 +23,7 @@ import           Test.Refund                (refundTests)
 import           Test.Subscription          (subscriptionTests)
 import           Test.Token                 (tokenTests)
 import           Test.Transfer              (transferTests)
+import           Test.Raw                   (rawTest)
 import           Test.Event                 (eventTests)
 
 ------------------------------------------------------------------------------
@@ -31,6 +32,7 @@ main :: IO ()
 main = do
   config <- getConfig
   hspec $ do
+    rawTest config
     chargeTests config
     refundTests config
     customerTests config
@@ -50,5 +52,6 @@ main = do
     balanceTests config
     tokenTests config
     eventTests config
+
 
 

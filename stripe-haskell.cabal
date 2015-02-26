@@ -1,13 +1,13 @@
 name:                stripe-haskell
-version:             0.1.1.0
+version:             0.1.1.1
 synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson
 maintainer:          djohnson.m@gmail.com
-copyright:           Copyright (c) 2014 David M. Johnson
-homepage:            https://github.com/dmjio/stripe-haskell
-bug-reports:         https://github.com/dmjio/stripe-haskell/issues
+copyright:           Copyright (c) 2015 David M. Johnson
+homepage:            https://github.com/dmjio/stripe
+bug-reports:         https://github.com/dmjio/stripe/issues
 category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
@@ -112,7 +112,8 @@ Test-Suite tests
                     , base >=4.6 && <4.8
                     , bytestring
                     , either
-                    , hspec >= 1.11.4
+                    , http-streams
+                    , hspec >= 2.1.4
                     , random
                     , stripe-haskell
                     , text
