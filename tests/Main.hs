@@ -25,6 +25,7 @@ import           Test.Token                 (tokenTests)
 import           Test.Transfer              (transferTests)
 import           Test.Raw                   (rawTest)
 import           Test.Event                 (eventTests)
+import           Test.Bitcoin               (bitcoinTests)
 
 ------------------------------------------------------------------------------
 -- | Main test function entry point
@@ -32,26 +33,27 @@ main :: IO ()
 main = do
   config <- getConfig
   hspec $ do
-    rawTest config
-    chargeTests config
-    refundTests config
-    customerTests config
-    cardTests config
-    subscriptionTests config
-    planTests config
-    couponTests config
-    discountTests config
-    invoiceTests config
-    invoiceItemTests config
-    disputeTests config
-    transferTests config
-    recipientTests config
-    applicationFeeTests config
-    applicationFeeRefundTests config
-    accountTests config
-    balanceTests config
-    tokenTests config
-    eventTests config
+--    rawTest config
+    bitcoinTests config
+    -- chargeTests config
+    -- refundTests config
+    -- customerTests config
+    -- cardTests config
+    -- subscriptionTests config
+    -- planTests config
+    -- couponTests config
+    -- discountTests config
+    -- invoiceTests config
+    -- invoiceItemTests config
+    -- disputeTests config
+    -- transferTests config
+    -- recipientTests config
+    -- applicationFeeTests config
+    -- applicationFeeRefundTests config
+    -- accountTests config
+    -- balanceTests config
+    -- tokenTests config
+    -- eventTests config
 
 
 

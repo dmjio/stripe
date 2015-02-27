@@ -31,6 +31,7 @@ module Web.Stripe.Bitcoin
     , BitcoinReceiver (..)
     ) where
 
+import           Data.Aeson
 import           Web.Stripe.Client.Internal ( Method (GET, POST)
                                             , Stripe
                                             , StripeRequest (..)
@@ -40,11 +41,17 @@ import           Web.Stripe.Types
 
 ------------------------------------------------------------------------------
 -- | Retrieve the object that represents your Stripe account
-createReceiver :: Stripe BitcoinReceiver
-createReceiver = callAPI request
+createReceiver
+ :: Integer -- Amount
+ -> Currency 
+ -> Stripe BitcoinReceiver
+createReceiver x b = callAPI request
   where request = StripeRequest POST url params
         url     = "bitcoin/receivers"
-        params  = []
+        params  = [ ("currency", "usd")
+                  , ("amount", "100")
+                  , ("email", "djohnson.m@gmail.com")
+                  ]
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `BitcoinReceiver`
@@ -59,9 +66,8 @@ getReceiver (BitcoinReceiverId receiverId) = callAPI request
 ------------------------------------------------------------------------------
 -- | Retrieve a list of `BitcoinReceiver`s
 listReceivers
- :: BitcoinReceiverId
- -> Stripe (StripeList BitcoinReceiver)
-listReceivers (BitcoinReceiverId receiverId) = callAPI request
+ :: Stripe Value
+listReceivers = callAPI request
   where request = StripeRequest GET url params
-        url     = "bitcoin/receivers" </> receiverId
+        url     = "bitcoin/receivers"
         params  = []

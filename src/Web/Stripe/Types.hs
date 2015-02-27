@@ -2074,32 +2074,54 @@ instance FromJSON Currency where
 ------------------------------------------------------------------------------
 -- | BTC ReceiverObject
 data BitcoinReceiver = BitcoinReceiver {
-       btcId :: BitcoinReceiverId
-    ,  btcObject :: Text
-    ,  btcCreated :: UTCTime
-    ,  btcLiveMode :: Bool
-    ,  btcActive :: Bool
-    ,  btcAmount :: Integer
-    ,  btcAmountReceived :: Integer
-    ,  btcBitcoinAmount :: Integer
+       btcId                    :: BitcoinReceiverId
+    ,  btcObject                :: Text
+    ,  btcCreated               :: UTCTime
+    ,  btcLiveMode              :: Bool
+    ,  btcActive                :: Bool
+    ,  btcAmount                :: Integer
+    ,  btcAmountReceived        :: Integer
+    ,  btcBitcoinAmount         :: Integer
     ,  btcBitcoinAmountReceived :: Integer
-    ,  btcBitcoinUri :: Text
-    ,  btcCurrency :: Currency
-    ,  btcFilled :: Bool
-    ,  btcInboundAddress :: Text
-    ,  btcUncapturedFunds :: Bool
-    ,  btcDescription :: Bool
-    ,  btcEmail :: Email
-    ,  btcMetadata :: MetaData
-    ,  btcRefundAddress :: Maybe Text
---    , 
-
+    ,  btcBitcoinUri            :: Text
+    ,  btcCurrency              :: Currency
+    ,  btcFilled                :: Bool
+    ,  btcInboundAddress        :: Text
+    ,  btcUncapturedFunds       :: Bool
+    ,  btcDescription           :: Maybe Text
+    ,  btcEmail                 :: Text
+    ,  btcMetadata              :: MetaData
+    ,  btcRefundAddress         :: Maybe Text
+--  ,  btcTransactions          :: Maybe ...
+    ,  btcPayment               :: Maybe PaymentId 
+    ,  btcCustomer              :: Maybe CustomerId
     } deriving (Show, Eq)
 
 ------------------------------------------------------------------------------
 -- | FromJSON for BitcoinReceiverId
 instance FromJSON BitcoinReceiver where
-   parseJSON (Object o) = undefined -- coming soon
+   parseJSON (Object o) =
+     BitcoinReceiver <$> (BitcoinReceiverId <$> o .: "id")
+                     <*> o .: "object"  
+                     <*> (fromSeconds <$> o .: "created") 
+                     <*> o .: "livemode"  
+                     <*> o .: "active"  
+                     <*> o .: "amount"  
+                     <*> o .: "amount_received"  
+                     <*> o .: "bitcoin_amount"  
+                     <*> o .: "bitcoin_amount_received"  
+                     <*> o .: "bitcoin_uri"  
+                     <*> o .: "currency"  
+                     <*> o .: "filled"  
+                     <*> o .: "inbound_address"  
+                     <*> o .: "uncaptured_funds"  
+                     <*> o .:? "description"  
+                     <*> o .: "email"  
+                     <*> (H.toList <$> o .: "metadata")
+                     <*> o .:? "refund_address"  
+                     <*> (fmap PaymentId <$> o .:? "payment")
+                     <*> (fmap CustomerId <$> o .:? "customer")
+
    parseJSON _ = mzero
 
 
