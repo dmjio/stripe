@@ -22,7 +22,7 @@ import           Web.Stripe.Client.Error    (StripeError (..))
 
 ------------------------------------------------------------------------------
 -- | The `Stripe` Monad
-type Stripe a = EitherT StripeError (ReaderT (StripeConfig, Connection) IO) a
+type Stripe = EitherT StripeError (ReaderT (StripeConfig, Connection) IO)
 
 ------------------------------------------------------------------------------
 -- | HTTP Params
