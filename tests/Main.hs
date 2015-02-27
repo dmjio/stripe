@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Main where
 
-import           Test.Hspec                 (hspec)
+import           Test.Hspec                 (hspec,parallel)
 import           Test.Config                (getConfig)
 
 import           Test.Account               (accountTests)
@@ -31,7 +31,7 @@ import           Test.Event                 (eventTests)
 main :: IO ()
 main = do
   config <- getConfig
-  hspec $ do
+  hspec $ parallel $ do
     rawTest config
     chargeTests config
     refundTests config
