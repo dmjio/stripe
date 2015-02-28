@@ -2,9 +2,8 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Main where
 
-import           Test.Hspec                 (hspec)
+import           Test.Hspec                 (hspec,parallel)
 import           Test.Config                (getConfig)
-
 import           Test.Account               (accountTests)
 import           Test.ApplicationFee        (applicationFeeTests)
 import           Test.ApplicationFeeRefund  (applicationFeeRefundTests)
@@ -32,28 +31,28 @@ import           Test.Bitcoin               (bitcoinTests)
 main :: IO ()
 main = do
   config <- getConfig
-  hspec $ do
---    rawTest config
+  hspec $ parallel $ do
+    rawTest config
     bitcoinTests config
-    -- chargeTests config
-    -- refundTests config
-    -- customerTests config
-    -- cardTests config
-    -- subscriptionTests config
-    -- planTests config
-    -- couponTests config
-    -- discountTests config
-    -- invoiceTests config
-    -- invoiceItemTests config
-    -- disputeTests config
-    -- transferTests config
-    -- recipientTests config
-    -- applicationFeeTests config
-    -- applicationFeeRefundTests config
-    -- accountTests config
-    -- balanceTests config
-    -- tokenTests config
-    -- eventTests config
+    chargeTests config
+    refundTests config
+    customerTests config
+    cardTests config
+    subscriptionTests config
+    planTests config
+    couponTests config
+    discountTests config
+    invoiceTests config
+    invoiceItemTests config
+    disputeTests config
+    transferTests config
+    recipientTests config
+    applicationFeeTests config
+    applicationFeeRefundTests config
+    accountTests config
+    balanceTests config
+    tokenTests config
+    eventTests config
 
 
 

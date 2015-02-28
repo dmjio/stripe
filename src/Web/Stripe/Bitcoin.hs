@@ -28,30 +28,36 @@ module Web.Stripe.Bitcoin
     , getReceiver
     , listReceivers
       -- * Types
-    , BitcoinReceiver (..)
+    , BitcoinReceiver      (..)
+    , BitcoinReceiverId    (..)
+    , BitcoinTransaction   (..)
+    , BitcoinTransactionId (..)
+    , Email                (..)
+    , StripeList           (..)
     ) where
 
-import           Data.Aeson
 import           Web.Stripe.Client.Internal ( Method (GET, POST)
                                             , Stripe
                                             , StripeRequest (..)
                                             , (</>)
-                                            , callAPI )
+                                            , callAPI
+                                            , getParams
+                                            , toText )
 import           Web.Stripe.Types
 
 ------------------------------------------------------------------------------
 -- | Retrieve the object that represents your Stripe account
 createReceiver
- :: Integer -- Amount
- -> Currency 
+ :: Integer -- ^ Amount
+ -> Email   -- ^ Email
  -> Stripe BitcoinReceiver
-createReceiver x b = callAPI request
+createReceiver amount (Email email) = callAPI request
   where request = StripeRequest POST url params
         url     = "bitcoin/receivers"
-        params  = [ ("currency", "usd")
-                  , ("amount", "100")
-                  , ("email", "djohnson.m@gmail.com")
-                  ]
+        params  = getParams [ ("currency", Just "usd")
+                            , ("amount", Just $ toText amount )
+                            , ("email", Just email )
+                            ]
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `BitcoinReceiver`
@@ -66,8 +72,19 @@ getReceiver (BitcoinReceiverId receiverId) = callAPI request
 ------------------------------------------------------------------------------
 -- | Retrieve a list of `BitcoinReceiver`s
 listReceivers
- :: Stripe Value
-listReceivers = callAPI request
-  where request = StripeRequest GET url params
-        url     = "bitcoin/receivers"
-        params  = []
+  :: Maybe Limit          -- ^ Defaults to 10 if `Nothing` specified
+  -> StartingAfter BitcoinReceiverId  -- ^ Paginate starting after the following `BitcoinReceiverId`
+  -> EndingBefore BitcoinReceiverId  -- ^ Paginate ending before the following `BitcoinReceiverId`
+  -> Stripe (StripeList BitcoinReceiver)
+listReceivers
+  limit
+  startingAfter
+  endingBefore  = callAPI request
+  where
+    request = StripeRequest GET url params
+    url     = "bitcoin/receivers"
+    params  = getParams [
+            ("limit", toText `fmap` limit )
+          , ("starting_after", (\(BitcoinReceiverId x) -> x) `fmap` startingAfter)
+          , ("ending_before", (\(BitcoinReceiverId x) -> x) `fmap` endingBefore)
+          ]
