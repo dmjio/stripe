@@ -4,7 +4,6 @@ module Main where
 
 import           Test.Hspec                 (hspec,parallel)
 import           Test.Config                (getConfig)
-
 import           Test.Account               (accountTests)
 import           Test.ApplicationFee        (applicationFeeTests)
 import           Test.ApplicationFeeRefund  (applicationFeeRefundTests)
@@ -25,6 +24,7 @@ import           Test.Token                 (tokenTests)
 import           Test.Transfer              (transferTests)
 import           Test.Raw                   (rawTest)
 import           Test.Event                 (eventTests)
+import           Test.Bitcoin               (bitcoinTests)
 
 ------------------------------------------------------------------------------
 -- | Main test function entry point
@@ -33,6 +33,7 @@ main = do
   config <- getConfig
   hspec $ parallel $ do
     rawTest config
+    bitcoinTests config
     chargeTests config
     refundTests config
     customerTests config

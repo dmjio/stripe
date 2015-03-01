@@ -2070,3 +2070,136 @@ instance FromJSON Currency where
    parseJSON (String "zar") = pure ZAR
    parseJSON (String "zmw") = pure ZMW
    parseJSON _ = pure UnknownCurrency
+
+------------------------------------------------------------------------------
+-- | BTC ReceiverObject
+data BitcoinReceiver = BitcoinReceiver {
+       btcId                    :: BitcoinReceiverId
+    ,  btcObject                :: Text
+    ,  btcCreated               :: UTCTime
+    ,  btcLiveMode              :: Bool
+    ,  btcActive                :: Bool
+    ,  btcAmount                :: Integer
+    ,  btcAmountReceived        :: Integer
+    ,  btcBitcoinAmount         :: Integer
+    ,  btcBitcoinAmountReceived :: Integer
+    ,  btcBitcoinUri            :: Text
+    ,  btcCurrency              :: Currency
+    ,  btcFilled                :: Bool
+    ,  btcInboundAddress        :: Text
+    ,  btcUncapturedFunds       :: Bool
+    ,  btcDescription           :: Maybe Text
+    ,  btcEmail                 :: Text
+    ,  btcMetadata              :: MetaData
+    ,  btcRefundAddress         :: Maybe Text
+    ,  btcTransactions          :: Maybe Transactions
+    ,  btcPayment               :: Maybe PaymentId 
+    ,  btcCustomer              :: Maybe CustomerId
+    } deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | FromJSON for BitcoinReceiverId
+instance FromJSON BitcoinReceiver where
+   parseJSON (Object o) =
+     BitcoinReceiver <$> (BitcoinReceiverId <$> o .: "id")
+                     <*> o .: "object"  
+                     <*> (fromSeconds <$> o .: "created") 
+                     <*> o .: "livemode"  
+                     <*> o .: "active"  
+                     <*> o .: "amount"  
+                     <*> o .: "amount_received"  
+                     <*> o .: "bitcoin_amount"  
+                     <*> o .: "bitcoin_amount_received"  
+                     <*> o .: "bitcoin_uri"  
+                     <*> o .: "currency"  
+                     <*> o .: "filled"  
+                     <*> o .: "inbound_address"  
+                     <*> o .: "uncaptured_funds"  
+                     <*> o .:? "description"  
+                     <*> o .: "email"  
+                     <*> (H.toList <$> o .: "metadata")
+                     <*> o .:? "refund_address"  
+                     <*> o .:? "transactions"
+                     <*> (fmap PaymentId <$> o .:? "payment")
+                     <*> (fmap CustomerId <$> o .:? "customer")
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | Bitcoin Transactions
+data Transactions = Transactions {
+      transactionsObject     :: Text
+    , transactionsTotalCount :: Integer
+    , transactionsHasMore    :: Bool
+    , transactionsURL        :: Text
+    , transactions           :: [BitcoinTransaction]
+    } deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | Bitcoin Transactions data
+instance FromJSON Transactions where
+   parseJSON (Object o) =
+     Transactions <$> o .: "object"  
+                  <*> o .: "total_count"  
+                  <*> o .: "has_more"  
+                  <*> o .: "url"  
+                  <*> o .: "data"  
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | Bitcoin Transaction
+data BitcoinTransaction = BitcoinTransaction {
+         btcTransactionId            :: BitcoinTransactionId
+       , btcTransactionObject        :: Text
+       , btcTransactionCreated       :: UTCTime
+       , btcTransactionAmount        :: Integer
+       , btcTransactionBitcoinAmount :: Integer
+       , btcTransactionCurrency      :: Currency
+       , btcTransactionReceiver      :: BitcoinReceiverId
+      } deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | FromJSON BitcoinTransaction
+instance FromJSON BitcoinTransaction where
+   parseJSON (Object o) =
+     BitcoinTransaction <$> o .: "id"
+                        <*> o .: "object"
+                        <*> (fromSeconds <$> o .: "created")
+                        <*> o .: "amount"
+                        <*> o .: "bitcoin_amount"
+                        <*> o .: "currency"
+                        <*> o .: "receiver"
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | BitcoinTransactionId
+newtype BitcoinTransactionId =
+    BitcoinTransactionId Text
+      deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | FromJSON BitcoinTransactionId
+instance FromJSON BitcoinTransactionId where
+   parseJSON (String o) = pure $ BitcoinTransactionId o
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | BTC ReceiverId
+newtype BitcoinReceiverId = BitcoinReceiverId Text
+    deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | FromJSON for BitcoinReceiverId
+instance FromJSON BitcoinReceiverId where
+   parseJSON (String x) = pure $ BitcoinReceiverId x
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
+-- | BTC PaymentId
+newtype PaymentId = PaymentId Text
+    deriving (Show, Eq)
+
+------------------------------------------------------------------------------
+-- | FromJSON for PaymentId
+instance FromJSON PaymentId where
+   parseJSON (String x) = pure $ PaymentId x
+   parseJSON _ = mzero
