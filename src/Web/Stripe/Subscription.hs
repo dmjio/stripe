@@ -150,17 +150,20 @@ updateSubscription
     :: CustomerId      -- ^ The `CustomerId` of the `Subscription` to update
     -> SubscriptionId  -- ^ The `SubscriptionId` of the `Subscription` to update
     -> Maybe CouponId  -- ^ Optional: The `Coupon` of the `Subscription` to update
+    -> Maybe PlanId    -- ^ Optional: The id `Plan` to switch the `Subscription` to
     -> MetaData
     -> Stripe Subscription
 updateSubscription
     customerid
     (SubscriptionId subscriptionid)
     couponid
+    planid
     metadata    = callAPI request
   where request = StripeRequest POST url params
         url     = "customers" </> getCustomerId customerid </> "subscriptions" </> subscriptionid
         params  = toMetaData metadata ++ getParams [
-           ("coupon", (\(CouponId x) -> x) `fmap` couponid)
+            ("coupon", (\(CouponId x) -> x) `fmap` couponid)
+          , ("plan",   (\(PlanId x) -> x) `fmap` planid)
           ]
 
 ------------------------------------------------------------------------------

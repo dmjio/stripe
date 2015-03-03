@@ -99,6 +99,7 @@ subscriptionTests config = do
       result `shouldSatisfy` isRight
     it "Succesfully updates a Customer's Subscriptions" $ do
       planid <- makePlanId
+      secondPlanid <- makePlanId
       couponid <- makeCouponId
       result <- stripe config $ do
         Coupon { } <-
@@ -119,9 +120,17 @@ subscriptionTests config = do
                         Month
                         "sample plan"
                         []
+        void $ createPlan secondPlanid
+                        0 -- free plan
+                        USD
+                        Year
+                        "second sample plan"
+                        []
         Subscription { subscriptionId = sid } <- createSubscription cid planid []
-        sub <- updateSubscription cid sid (Just couponid) [("hi","there")]
+        _ <- updateSubscription cid sid (Just couponid) Nothing [("hi","there")]
+        sub <- updateSubscription cid sid (Just couponid) (Just secondPlanid) [("hi","there")]
         void $ deletePlan planid
+        void $ deletePlan secondPlanid
         void $ deleteCustomer cid
         return sub
       result `shouldSatisfy` isRight

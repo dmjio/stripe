@@ -93,7 +93,7 @@ discountTests config = do
             []
         Subscription { subscriptionId = sid } <-
           createSubscription customerid plan []
-        void $ updateSubscription customerid sid (Just coupon) []
+        void $ updateSubscription customerid sid (Just coupon) Nothing []
         result <- deleteSubscriptionDiscount customerid sid
         void $ deletePlan planid
         void $ deleteCustomer customerid
