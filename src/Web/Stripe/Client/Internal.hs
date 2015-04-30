@@ -33,9 +33,9 @@ import           Data.Monoid                (mempty, (<>))
 import qualified Data.Text as T
 import           Network.Http.Client        (Connection, Method (..),
                                              baselineContextSSL, buildRequest,
-                                             closeConnection, concatHandler, 
-                                             getStatusCode, http,
-                                             inputStreamBody, openConnectionSSL,
+                                             closeConnection, concatHandler,
+                                             encodedFormBody, getStatusCode,
+                                             http, openConnectionSSL,
                                              receiveResponse, sendRequest,
                                              setAuthorizationBasic,
                                              setContentType, setHeader)
@@ -102,7 +102,7 @@ callAPI :: FromJSON a => StripeRequest -> Stripe a
 callAPI StripeRequest{..} = do
   (StripeConfig{..}, conn) <- ask
   let reqBody | method == GET = mempty
-              | otherwise     = paramsToByteString queryParams
+              | otherwise     = queryParams
       reqURL  | method == GET = S.concat [
                   T.encodeUtf8 endpoint
                   , "?"
@@ -116,8 +116,7 @@ callAPI StripeRequest{..} = do
       setContentType "application/x-www-form-urlencoded"
       setHeader "Stripe-Version" (toBytestring V20141007)
       setHeader "Connection" "Keep-Alive"
-    body <- Streams.fromByteString reqBody
-    sendRequest conn req $ inputStreamBody body
+    sendRequest conn req $ encodedFormBody reqBody
     receiveResponse conn $ \response inputStream ->
       do when debug $ print response
          result <- concatHandler response inputStream
