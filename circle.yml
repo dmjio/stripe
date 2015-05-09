@@ -2,6 +2,7 @@ dependencies:
   override:
     - cabal update
     - cabal sandbox init
+    - cabal configure --enable-tests
     - cabal install --dependencies-only
 
 machine:
