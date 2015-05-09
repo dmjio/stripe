@@ -2,8 +2,7 @@ dependencies:
   override:
     - cabal update
     - cabal sandbox init
-    - cabal configure --enable-tests
-    - cabal install --dependencies-only
+    - cabal install --dependencies-only --enable-tests
 
 machine:
   ghc:
