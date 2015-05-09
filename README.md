@@ -1,4 +1,4 @@
-stripe  [![Build Status](https://travis-ci.org/dmjio/stripe.svg)](https://travis-ci.org/dmjio/stripe) [![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg?style=flat)](https://hackage.haskell.org/package/stripe-haskell)
+stripe  [![Build Status](https://circleci.com/gh/dmjio/stripe.png)] [![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg?style=flat)](https://hackage.haskell.org/package/stripe-haskell)
 ========
 ##100% Stripe API coverage for Haskell ([Stripe API](http://stripe.com/docs/api))  
   
