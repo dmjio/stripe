@@ -1,4 +1,4 @@
-name:                stripe
+name:                stripe-haskell
 version:             2.0.0
 synopsis:            Stripe API for Haskell
 license:             MIT
@@ -22,10 +22,7 @@ Description:
     Disputes, Transfers, Recipients, Application Fees, Application Fee Refunds,
     Account, Balance, Events and Tokens.
     .
-    [100% Haddock Coverage]
-    All code written for this library is documented to completion with the haddock documentation tool
-    .
-    [100+ Hspec Tests] Thoroughly unit-tested with hspec.
+    [Hspec Tests] Thoroughly unit-tested with hspec.
     All API commands are unit-tested before inclusion into the API (see the stripe-tests package).
     To run the tests, perform the following:
     .
@@ -139,5 +136,5 @@ library
 
 source-repository head
   type:     git
-  location: git://github.com/dmjio/stripe-haskell.git
+  location: git://github.com/dmjio/stripe.git
   subdir: stripe
