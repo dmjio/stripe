@@ -14,7 +14,7 @@
 --
 -- main :: IO ()
 -- main = do
---   let config = SecretKey "secret_key"
+--   let config = StripeConfig "secret_key"
 --   result <- stripe config getAccountDetails
 --   case result of
 --     Right details -> print details
