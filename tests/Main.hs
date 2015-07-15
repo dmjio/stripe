@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 module Main where
@@ -30,29 +31,32 @@ import           Test.Bitcoin               (bitcoinTests)
 -- | Main test function entry point
 main :: IO ()
 main = do
-  config <- getConfig
-  hspec $ parallel $ do
-    rawTest config
-    bitcoinTests config
-    chargeTests config
-    refundTests config
-    customerTests config
-    cardTests config
-    subscriptionTests config
-    planTests config
-    couponTests config
-    discountTests config
-    invoiceTests config
-    invoiceItemTests config
-    disputeTests config
-    transferTests config
-    recipientTests config
-    applicationFeeTests config
-    applicationFeeRefundTests config
-    accountTests config
-    balanceTests config
-    tokenTests config
-    eventTests config
+   let msg = "You must export STRIPEKEY in order to run the tests, returning Success"
+   getConfig >>= \case
+     Nothing -> putStrLn msg
+     Just config -> do
+       hspec $ parallel $ do
+         rawTest config
+         bitcoinTests config
+         chargeTests config
+         refundTests config
+         customerTests config
+         cardTests config
+         subscriptionTests config
+         planTests config
+         couponTests config
+         discountTests config
+         invoiceTests config
+         invoiceItemTests config
+         disputeTests config
+         transferTests config
+         recipientTests config
+         applicationFeeTests config
+         applicationFeeRefundTests config
+         accountTests config
+         balanceTests config
+         tokenTests config
+         eventTests config
 
 
 
