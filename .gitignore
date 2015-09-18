@@ -7,3 +7,4 @@ cabal.sandbox.config
 /tests.hp
 /tests.prof
 /tests.ps
+*.nix
