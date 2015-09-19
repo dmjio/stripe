@@ -107,7 +107,7 @@ Test-Suite tests
     type:             exitcode-stdio-1.0
     main-is:          Main.hs
     hs-source-dirs:   tests
-    build-depends:    aeson        == 0.10.*
+    build-depends:    aeson        == 0.9.*
                     , base         >=4.6 && < 5
                     , bytestring   == 0.10.*
                     , either       == 4.4.*
@@ -149,7 +149,7 @@ Test-Suite tests
 
 library 
   hs-source-dirs:      src
-  build-depends:      aeson                == 0.10.*
+  build-depends:      aeson                == 0.9.*
                     , base                 >=4.6 && < 5
                     , bytestring           == 0.10.*
                     , either               == 4.4.*
