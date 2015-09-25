@@ -1,5 +1,5 @@
 name:                stripe-haskell
-version:             0.1.4.2
+version:             0.1.4.3
 synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
@@ -103,6 +103,9 @@ Description:
     Pull requests welcome!
     .
 
+extra-source-files:
+    README.md
+    
 Test-Suite tests
     type:             exitcode-stdio-1.0
     main-is:          Main.hs
