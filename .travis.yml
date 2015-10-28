@@ -23,7 +23,7 @@ matrix:
 
 install:
  - travis_retry cabal update
- - cd stripe-http-treams && cabal sandbox init && cabal sandbox add-source ../stripe-core ../stripe-tests ../stripe-http-streams && cabal install --only-dependencies --enable-tests
+ - cd stripe-http-streams && cabal sandbox init && cabal sandbox add-source ../stripe-core ../stripe-tests ../stripe-http-streams && cabal install --only-dependencies --enable-tests
 
 script:
- - cd stripe-http-treams && cabal configure --enable-tests && cabal build tests && dist/build/tests/tests
+ - cd stripe-http-streams && cabal configure --enable-tests && cabal build tests && dist/build/tests/tests
