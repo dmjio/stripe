@@ -1,3 +1,4 @@
+sudo: true
 language: haskell
 env:
  #- GHCVER=7.4.2 CABALVER=1.18
