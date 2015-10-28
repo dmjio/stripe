@@ -8,8 +8,6 @@ env:
  - GHCVER=head  CABALVER=head
  - STRIPEKEY=sk_test_igoYowTqR5IfovOKFKwigRm
 
-sudo: false
-
 matrix:
   allow_failures:
    - env: GHCVER=head  CABALVER=head
