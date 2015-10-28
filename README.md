@@ -1,10 +1,19 @@
-stripe  ![Build Status](https://img.shields.io/circleci/project/dmjio/stripe.svg) [![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg?style=flat)](https://hackage.haskell.org/package/stripe-haskell)
+stripe
+========
+![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg)
+![Hackage Dependencies](https://img.shields.io/hackage-deps/v/stripe-haskell.svg)
+![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
+![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg)
+![Build Status](https://api.travis-ci.org/dmjio/stripe-haskell.svg?branch=master)
+[![Join the chat at https://gitter.im/dmjio/stripe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dmjio/stripe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+
 ========
 ##Stripe API coverage for Haskell ([Stripe API](http://stripe.com/docs/api))  
   
 All Stripe commands are supported, including but not limited to Charges, Refunds, Customers, Cards, Subscriptions, Plans, Coupons, Discounts, Invoices, Invoice Items, Disputes, Transfers, Recipients, Bitcoin, Application Fees, Application Fee Refunds, Account, Balance, Events and Tokens.
 ***
-##100% Haddock Coverage
+## Haddock Coverage
   All code written for this library is documented to completion with the haddock documentation tool
 
 ##[100+ Hspec Tests](https://github.com/dmjio/stripe-haskell/blob/master/COVERAGE.md)

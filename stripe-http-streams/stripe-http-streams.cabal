@@ -37,7 +37,7 @@ Test-Suite tests
     build-depends:    HsOpenSSL
                     , base                >= 4.7  && < 5
                     , free                >= 4.10 && < 4.13
-                    , hspec               >= 2.1  && < 2.2
+                    , hspec               == 2.2.*
                     , http-streams        >= 0.7  && < 0.9
                     , stripe-core         >= 2.0  && < 2.1
                     , stripe-http-streams >= 2.0  && < 2.1

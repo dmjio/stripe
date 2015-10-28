@@ -4,12 +4,12 @@ env:
  - GHCVER=7.6.3 CABALVER=1.18
  - GHCVER=7.8.4 CABALVER=1.18
  - GHCVER=7.10.1 CABALVER=1.22
+ - GHCVER=7.10.2 CABALVER=1.22
  - GHCVER=head  CABALVER=head
  - STRIPEKEY=sk_test_igoYowTqR5IfovOKFKwigRm
 
 matrix:
   allow_failures:
-   - env: GHCVER=7.10.1 CABALVER=1.22
    - env: GHCVER=head  CABALVER=head
 
 before_install:
@@ -22,9 +22,7 @@ before_install:
 
 install:
  - travis_retry cabal update
- - cabal install --only-dependencies --enable-tests
+ - cd stripe-http-treams && cabal sandbox init && cabal sandbox add-source ../stripe-core ../stripe-tests ../stripe-http-streams && cabal install --only-dependencies --enable-tests
 
 script:
- - cabal configure --enable-tests
- - cabal build
- - cabal test
+ - cd stripe-http-treams && cabal configure --enable-tests && cabal build tests && dist/build/tests/tests
