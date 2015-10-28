@@ -1,6 +1,8 @@
 stripe  ![Build Status](https://img.shields.io/circleci/project/dmjio/stripe.svg) [![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg?style=flat)](https://hackage.haskell.org/package/stripe-haskell)
 ========
 ##Stripe API coverage for Haskell ([Stripe API](http://stripe.com/docs/api))  
+
+[![Join the chat at https://gitter.im/dmjio/stripe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dmjio/stripe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
   
 All Stripe commands are supported, including but not limited to Charges, Refunds, Customers, Cards, Subscriptions, Plans, Coupons, Discounts, Invoices, Invoice Items, Disputes, Transfers, Recipients, Bitcoin, Application Fees, Application Fee Refunds, Account, Balance, Events and Tokens.
 ***
