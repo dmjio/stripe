@@ -6,6 +6,7 @@ stripe
 ![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg)
 ![Build Status](https://api.travis-ci.org/dmjio/stripe.svg?branch=master)
 [![Join the chat at https://gitter.im/dmjio/stripe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dmjio/stripe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ========
 ##Stripe API coverage for Haskell ([Stripe API](http://stripe.com/docs/api))
 
