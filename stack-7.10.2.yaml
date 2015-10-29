@@ -1,0 +1,6 @@
+packages:
+- stripe-core/
+- stripe-http-streams/
+- stripe-tests/
+resolver: lts-3.10
+

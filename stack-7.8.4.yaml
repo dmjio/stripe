@@ -1,0 +1,10 @@
+packages:
+- stripe-core/
+- stripe-http-streams/
+- stripe-tests/
+resolver: lts-2.18
+extra-deps:
+- http-streams-0.8.3.3
+- io-streams-1.3.2.0
+- http-common-0.8.2.0
+- openssl-streams-1.2.1.0

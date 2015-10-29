@@ -1,29 +1,34 @@
+language: c
+
+# explicitly request container-based infrastructure
 sudo: false
-language: haskell
-env:
- #- GHCVER=7.4.2 CABALVER=1.18
- - GHCVER=7.6.3 CABALVER=1.18
- - GHCVER=7.8.4 CABALVER=1.18
- - GHCVER=7.10.1 CABALVER=1.22
- - GHCVER=7.10.2 CABALVER=1.22
- - GHCVER=head  CABALVER=head
- - STRIPEKEY=sk_test_igoYowTqR5IfovOKFKwigRm
 
 matrix:
+  include:
+    - env: GHCVER=7.8.4
+      addons: {apt: {packages: [ghc-7.8.4], sources: [hvr-ghc]}}
+    - env: GHCVER=7.10.2
+      addons: {apt: {packages: [ghc-7.10.2],sources: [hvr-ghc]}}
+    - env: GHCVER=head
+      addons: {apt: {packages: [ghc-head],  sources: [hvr-ghc]}}
   allow_failures:
-   - env: GHCVER=head  CABALVER=head
+     - env: GHCVER=head
 
-# before_install:
- # - travis_retry sudo add-apt-repository -y ppa:hvr/ghc
- # - travis_retry sudo apt-get update
- # - travis_retry sudo apt-get install cabal-install-$CABALVER ghc-$GHCVER
- # - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
- # - cabal --version
- # - cabal install happy alex
+before_install:
+ - export STACK_YAML=stack-$GHCVER.yaml
+ - export PATH=/opt/ghc/$GHCVER/bin:$PATH
+ # stack
+ - mkdir -p ~/.local/bin
+ - travis_retry curl -L https://github.com/commercialhaskell/stack/releases/download/v0.1.4.0/stack-0.1.4.0-x86_64-linux.tar.gz | tar -xvzf -
+ - mv stack ~/.local/bin
+ - export PATH=~/.local/bin:$PATH
 
 install:
- - travis_retry cabal update
- - cd stripe-http-streams && cabal sandbox init && cabal sandbox add-source ../stripe-core ../stripe-tests ../stripe-http-streams && cabal install --only-dependencies --enable-tests
+ - stack build
 
 script:
- - cd stripe-http-streams && cabal configure --enable-tests && cabal build tests && dist/build/tests/tests
+ - stack test
+
+cache:
+  directories:
+    - $HOME/.stack
