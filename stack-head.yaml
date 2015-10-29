@@ -1,5 +1,6 @@
 packages:
 - stripe-core/
+- stripe-haskell/
 - stripe-http-streams/
 - stripe-tests/
 resolver: lts-3.10

@@ -109,30 +109,13 @@ library
   build-depends:       base                >= 4   && < 5,
                        stripe-core         >= 2.0 && < 2.1,
                        stripe-http-streams >= 2.0 && < 2.1
+
   default-language:    Haskell2010
   exposed-modules:
                        Web.Stripe
-                       Web.Stripe.Account
-                       Web.Stripe.ApplicationFee
-                       Web.Stripe.ApplicationFeeRefund
-                       Web.Stripe.Balance
-                       Web.Stripe.Card
-                       Web.Stripe.Charge
-                       Web.Stripe.Coupon
-                       Web.Stripe.Customer
-                       Web.Stripe.Discount
-                       Web.Stripe.Dispute
-                       Web.Stripe.Event
-                       Web.Stripe.Invoice
-                       Web.Stripe.InvoiceItem
-                       Web.Stripe.Plan
-                       Web.Stripe.Recipient
-                       Web.Stripe.Refund
-                       Web.Stripe.Subscription
-                       Web.Stripe.Token
-                       Web.Stripe.Transfer
-  ghc-options:        -Wall -rtsopts
                        Web.Stripe.Client.Stripe
+
+  ghc-options:        -Wall
 
 source-repository head
   type:     git
