@@ -1,10 +1,11 @@
 name:                stripe-http-streams
-version:             2.0.0
+version:             2.0.1
 license:             MIT
 license-file:        LICENSE
-author:              David Johnson
+author:              David Johnson, Jeremy Shaw
+synopsis:            Stripe API for Haskell - http-streams backend
 maintainer:          djohnson.m@gmail.com
-copyright:           Copyright (c) 2014 David M. Johnson
+copyright:           Copyright (c) 2016 David M. Johnson, Jeremy Shaw
 category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
