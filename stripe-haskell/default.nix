@@ -1,3 +1,3 @@
-{ nixpkgs ? import <nixpkgs> {} }:
-            nixpkgs.pkgs.haskellPackages.callPackage ./stripe-haskell.nix
+{ nixpkgs ? import <nixpkgs> {}, compiler ? "ghc7102" }:
+            nixpkgs.pkgs.haskell.packages.${compiler}.callPackage ./stripe-haskell.nix
            { }

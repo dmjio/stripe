@@ -3,7 +3,7 @@
 }:
 mkDerivation {
   pname = "stripe-core";
-  version = "2.0.0";
+  version = "2.0.1";
   src = ./.;
   buildDepends = [
     aeson base bytestring mtl text time transformers
