@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
+{-# LANGUAGE RecordWildCards   #-}
 module Web.Stripe.Test.Token where
 
 import           Data.Either
@@ -31,7 +31,7 @@ tokenTests stripe = do
   where
     cn  = CardNumber "4242424242424242"
     em  = ExpMonth 12
-    ey  = ExpYear 2015
+    ey  = ExpYear 2020
     cvc = CVC "123"
     cardinfo = (mkNewCard cn em ey) { newCardCVC = Just cvc }
     bankinfo = NewBankAccount

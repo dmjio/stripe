@@ -1,18 +1,18 @@
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
+{-# LANGUAGE RecordWildCards   #-}
 module Web.Stripe.Test.Dispute where
 
-import           Data.Either            (Either(Right), isRight)
-import           Control.Concurrent     (threadDelay)
+import           Control.Concurrent      (threadDelay)
+import           Data.Either             (Either (Right), isRight)
 
 import           Test.Hspec
 import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Test.Util
 
-import           Web.Stripe.Dispute
 import           Web.Stripe.Charge
 import           Web.Stripe.Customer
+import           Web.Stripe.Dispute
 
 disputeTests :: StripeSpec
 disputeTests stripe = do
@@ -88,7 +88,7 @@ disputeTests stripe = do
   where
     cn  = CardNumber "4000000000000259"
     em  = ExpMonth 12
-    ey  = ExpYear 2015
+    ey  = ExpYear 2020
     cvc = CVC "123"
     win  = Evidence "winning_evidence"
     lose = Evidence "losing_evidence"

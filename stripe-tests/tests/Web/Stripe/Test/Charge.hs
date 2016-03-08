@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RebindableSyntax  #-}
 {-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE RebindableSyntax #-}
 module Web.Stripe.Test.Charge where
 
 import           Data.Either
 import           Test.Hspec
-import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Charge
 import           Web.Stripe.Customer
+import           Web.Stripe.Test.Prelude
 
 chargeTests :: StripeSpec
 chargeTests stripe =
@@ -21,7 +21,7 @@ chargeTests stripe =
   where
     cn  = CardNumber "4242424242424242"
     em  = ExpMonth 12
-    ey  = ExpYear 2015
+    ey  = ExpYear 2020
     cvc = CVC "123"
     cardinfo = (mkNewCard cn em ey) { newCardCVC = Just cvc }
     chargeCustomerTest =

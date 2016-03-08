@@ -1,16 +1,16 @@
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
+{-# LANGUAGE RecordWildCards   #-}
 module Web.Stripe.Test.Invoice where
 
 import           Data.Either
 import           Test.Hspec
+import           Web.Stripe.Customer
+import           Web.Stripe.Invoice
+import           Web.Stripe.InvoiceItem
+import           Web.Stripe.Plan
 import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Test.Util
-import           Web.Stripe.Invoice
-import           Web.Stripe.Plan
-import           Web.Stripe.Customer
-import           Web.Stripe.InvoiceItem
 
 invoiceTests :: StripeSpec
 invoiceTests stripe = do
@@ -116,5 +116,5 @@ invoiceTests stripe = do
     meta = MetaData [ ("some","metadata") ]
     credit = CardNumber "4242424242424242"
     em  = ExpMonth 12
-    ey  = ExpYear 2015
+    ey  = ExpYear 2020
     cvc = CVC "123"
