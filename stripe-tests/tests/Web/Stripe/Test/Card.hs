@@ -1,16 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RebindableSyntax  #-}
 {-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE RebindableSyntax #-}
 module Web.Stripe.Test.Card where
 
 import           Data.Either
 import           Data.Maybe
 import           Test.Hspec
-import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Card
 import           Web.Stripe.Customer
 import           Web.Stripe.Recipient
-import           Web.Stripe.StripeRequest (Expandable(Id))
+import           Web.Stripe.StripeRequest (Expandable (Id))
+import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Token
 
 cardTests :: StripeSpec
@@ -223,7 +223,7 @@ cardTests stripe = do
     credit = CardNumber "4242424242424242"
     debit  = CardNumber "4000056655665556"
     em  = ExpMonth 12
-    ey  = ExpYear 2015
+    ey  = ExpYear 2020
     cvc = CVC "123"
     country = Country "US"
     routingnumber = RoutingNumber "110000000"

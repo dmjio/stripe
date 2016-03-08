@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 module Web.Stripe.Test.Balance where
 
 import           Data.Either
@@ -9,7 +9,7 @@ import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Balance
 import           Web.Stripe.Charge
 import           Web.Stripe.Customer
-import           Web.Stripe.StripeRequest (Expandable(..))
+import           Web.Stripe.StripeRequest (Expandable (..))
 
 balanceTests :: StripeSpec
 balanceTests stripe = do
@@ -47,6 +47,6 @@ balanceTests stripe = do
   where
     cn  = CardNumber "4242424242424242"
     em  = ExpMonth 12
-    ey  = ExpYear 2015
+    ey  = ExpYear 2020
     cvc = CVC "123"
 

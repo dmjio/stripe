@@ -1,14 +1,14 @@
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
+{-# LANGUAGE RecordWildCards   #-}
 module Web.Stripe.Test.Refund where
 
 import           Data.Either
 import           Test.Hspec
-import           Web.Stripe.Test.Prelude
 import           Web.Stripe.Charge
 import           Web.Stripe.Customer
 import           Web.Stripe.Refund
+import           Web.Stripe.Test.Prelude
 
 ------------------------------------------------------------------------------
 -- | Card Info
@@ -19,7 +19,7 @@ em :: ExpMonth
 em  = ExpMonth 12
 
 ey :: ExpYear
-ey  = ExpYear 2015
+ey  = ExpYear 2020
 
 cvc :: CVC
 cvc = CVC "123"
