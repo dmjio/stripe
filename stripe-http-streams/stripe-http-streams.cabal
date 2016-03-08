@@ -1,5 +1,5 @@
 name:                stripe-http-streams
-version:             2.0.2
+version:             2.0.3
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson, Jeremy Shaw
@@ -22,7 +22,7 @@ library
   exposed-modules:     Web.Stripe.Client.HttpStreams
   other-extensions:    OverloadedStrings, RecordWildCards
   build-depends:         base         >= 4.7  && < 5
-                       , aeson        >= 0.8  && < 0.10
+                       , aeson        >= 0.8  && < 0.10 || == 0.11.*
                        , bytestring   >= 0.10 && < 0.11
                        , HsOpenSSL    >= 0.11 && < 0.12
                        , http-streams >= 0.7  && < 0.9
