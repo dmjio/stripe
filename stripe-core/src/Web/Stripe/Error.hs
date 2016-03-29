@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings  #-}
 -- |
 -- Module      : Web.Stripe.Error
 -- Copyright   : (c) David Johnson, 2014
@@ -14,9 +15,11 @@ module Web.Stripe.Error
     ) where
 
 import           Control.Applicative ((<$>))
+import           Control.Exception
+import           Control.Monad       (mzero)
 import           Data.Aeson
 import           Data.Text           (Text)
-import           Control.Monad       (mzero)
+import           Data.Typeable
 
 ------------------------------------------------------------------------------
 -- | Error Codes for HTTP Responses
@@ -27,7 +30,7 @@ data StripeErrorHTTPCode =
         | NotFound          -- ^ 404
         | StripeServerError -- ^ (>=500)
         | UnknownHTTPCode   -- ^ All other codes
-          deriving Show
+          deriving (Show, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Stripe Error Types
@@ -38,7 +41,7 @@ data StripeErrorType =
         | ConnectionFailure
         | ParseFailure
         | UnknownErrorType
-          deriving Show
+          deriving (Show, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Stripe Error Codes
@@ -56,7 +59,7 @@ data StripeErrorCode =
         | ProcessingError
         | RateLimit
         | UnknownError
-          deriving Show
+          deriving (Show, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Stripe Error
@@ -66,7 +69,9 @@ data StripeError = StripeError {
     , errorCode  :: Maybe StripeErrorCode
     , errorParam :: Maybe Text
     , errorHTTP  :: Maybe StripeErrorHTTPCode
-    } deriving Show
+    } deriving (Show, Typeable)
+
+instance Exception StripeError
 
 ------------------------------------------------------------------------------
 -- | Parses an error message into a `StripeErrorType`
