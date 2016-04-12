@@ -37,7 +37,7 @@ import Web.Stripe.Customer
 
 main :: IO ()
 main = do
-  let config = StripeConfig "secret key"
+  let config = StripeConfig (StripeKey "secret key")
   result <- stripe config $ getCustomers
 				(Just 30 :: Maybe Limit) -- Defaults to 10 if Nothing, 100 is Max
 				(StartingAfter $ CustomerId "customer_id0")
