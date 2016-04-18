@@ -68,7 +68,8 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      RefundApplicationFee(..), RefundReason(..),
                                      RoutingNumber(..), StartingAfter(..),
                                      StatementDescription(..), Source(..),
-                                     SubscriptionId(..), TaxID(..), TimeRange(..),
+                                     SubscriptionId(..), TaxID(..), 
+                                     TaxPercent(..), TimeRange(..),
                                      TokenId(..), TransactionId(..),
                                      TransactionType(..), TransferId(..),
                                      TransferStatus(..), TrialEnd(..),
@@ -374,6 +375,10 @@ instance ToStripeParam SubscriptionId where
 instance ToStripeParam TaxID where
   toStripeParam (TaxID tid) =
     (("tax_id", Text.encodeUtf8 tid) :)
+
+instance ToStripeParam TaxPercent where
+  toStripeParam (TaxPercent tax) =
+    (("tax_percent", fromString $ showFFloat (Just 2) tax "") :)
 
 instance ToStripeParam a => ToStripeParam (TimeRange a) where
   toStripeParam (TimeRange{..}) =
