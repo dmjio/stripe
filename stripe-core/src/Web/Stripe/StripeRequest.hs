@@ -164,7 +164,7 @@ instance ToStripeParam AvailableOn where
 
 instance ToStripeParam AtPeriodEnd where
   toStripeParam (AtPeriodEnd p) =
-    (("prorate", if p then "true" else "false") :)
+    (("at_period_end", if p then "true" else "false") :)
 
 instance ToStripeParam BankAccountId where
   toStripeParam (BankAccountId bid) =
