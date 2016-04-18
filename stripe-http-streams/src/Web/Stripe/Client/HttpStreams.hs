@@ -32,7 +32,8 @@ import           Network.Http.Client        (Connection,
                                              inputStreamBody, openConnectionSSL,
                                              receiveResponse, sendRequest,
                                              setAuthorizationBasic, encodedFormBody,
-                                             setContentType, setHeader)
+                                             setContentType, setHeader, 
+                                             setTransferEncoding)
 import qualified Network.Http.Client        as C
 import           OpenSSL                    (withOpenSSL)
 import qualified System.IO.Streams          as Streams
@@ -129,6 +130,7 @@ callAPI conn fromJSON' StripeConfig {..} StripeRequest{..} = do
     setContentType "application/x-www-form-urlencoded"
     setHeader "Stripe-Version" (toBytestring V20141007)
     setHeader "Connection" "Keep-Alive"
+    setTransferEncoding
   sendRequest conn req (encodedFormBody reqBody)
   receiveResponse conn $ \response inputStream ->
       do when debug $ print response
