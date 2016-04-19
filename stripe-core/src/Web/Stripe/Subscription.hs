@@ -69,6 +69,7 @@ module Web.Stripe.Subscription
     , Subscription       (..)
     , SubscriptionId     (..)
     , SubscriptionStatus (..)
+    , TaxPercent         (..)
     , TrialEnd           (..)
     ) where
 
@@ -86,7 +87,8 @@ import           Web.Stripe.Types           (ApplicationFeePercent(..),
                                              StartingAfter(..),
                                              Subscription (..), StripeList(..),
                                              SubscriptionId (..),
-                                             SubscriptionStatus (..), TrialEnd(..))
+                                             SubscriptionStatus (..), TaxPercent(..), 
+                                             TrialEnd(..))
 import           Web.Stripe.Types.Util      (getCustomerId)
 
 ------------------------------------------------------------------------------
@@ -110,6 +112,7 @@ instance StripeHasParam CreateSubscription CardId
 instance StripeHasParam CreateSubscription Quantity
 instance StripeHasParam CreateSubscription ApplicationFeePercent
 instance StripeHasParam CreateSubscription MetaData
+instance StripeHasParam CreateSubscription TaxPercent
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Subscription` by `CustomerId` and `SubscriptionId`
@@ -154,6 +157,7 @@ instance StripeHasParam UpdateSubscription CardId
 instance StripeHasParam UpdateSubscription Quantity
 instance StripeHasParam UpdateSubscription ApplicationFeePercent
 instance StripeHasParam UpdateSubscription MetaData
+instance StripeHasParam UpdateSubscription TaxPercent
 
 ------------------------------------------------------------------------------
 -- | Delete a `Subscription` by `CustomerId` and `SubscriptionId`

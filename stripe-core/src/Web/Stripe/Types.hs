@@ -557,6 +557,7 @@ data Subscription = Subscription {
     , subscriptionApplicationFeePercent :: Maybe Double
     , subscriptionDiscount              :: Maybe Discount
     , subscriptionMetaData              :: MetaData
+    , subscriptionTaxPercent            :: Maybe Double
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
@@ -580,6 +581,7 @@ instance FromJSON Subscription where
                     <*> o .:? "application_fee_percent"
                     <*> o .:? "discount"
                     <*> o .: "metadata"
+                    <*> o .:? "tax_percent"
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
@@ -601,6 +603,11 @@ instance FromJSON SubscriptionStatus where
    parseJSON (String "canceled") = pure Canceled
    parseJSON (String "unpaid")   = pure UnPaid
    parseJSON _                   = mzero
+
+------------------------------------------------------------------------------
+-- | `TaxPercent` for a `Subscription`
+newtype TaxPercent = TaxPercent Double deriving (Read, Show, Eq, Ord, Data, Typeable)
+
 
 ------------------------------------------------------------------------------
 -- | `PlanId` for a `Plan`
