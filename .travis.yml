@@ -9,6 +9,8 @@ matrix:
       addons: {apt: {packages: [ghc-7.8.4], sources: [hvr-ghc]}}
     - env: GHCVER=7.10.2
       addons: {apt: {packages: [ghc-7.10.2],sources: [hvr-ghc]}}
+    - env: GHCVER=8.0.0
+      addons: {apt: {packages: [ghc-8.0.0],sources: [hvr-ghc]}}
     - env: GHCVER=head
       addons: {apt: {packages: [ghc-head],  sources: [hvr-ghc]}}
   allow_failures:
