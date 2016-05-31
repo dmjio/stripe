@@ -1,5 +1,5 @@
 name:                stripe-haskell
-version:             2.0.3
+version:             2.1.0
 synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
@@ -19,8 +19,8 @@ extra-source-files:
 library
   hs-source-dirs:      src src-http-streams
   build-depends:       base                >= 4   && < 5,
-                       stripe-core         >= 2.0 && < 2.1,
-                       stripe-http-streams >= 2.0 && < 2.1
+                       stripe-core         >= 2.0 && < 2.2,
+                       stripe-http-streams >= 2.0 && < 2.2
 
   default-language:    Haskell2010
   exposed-modules:
