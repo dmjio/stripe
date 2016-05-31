@@ -1,0 +1,13 @@
+flags: {}
+extra-include-dirs:
+- /usr/local/opt/openssl/include
+extra-lib-dirs:
+- /usr/local/opt/openssl/lib
+packages:
+- stripe-core/
+- stripe-haskell/
+- stripe-http-streams/
+- stripe-tests/
+extra-deps:
+- http-streams-0.8.3.3
+resolver: nightly-2016-05-26
