@@ -538,6 +538,12 @@ newtype SubscriptionId = SubscriptionId { getSubscriptionId :: Text }
     deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
+-- | JSON Instance for `SubscriptionId`
+instance FromJSON SubscriptionId where
+    parseJSON (String x)   = pure (SubscriptionId x)
+    parseJSON _            = mzero
+
+------------------------------------------------------------------------------
 -- | Subscription Object
 data Subscription = Subscription {
       subscriptionId                    :: SubscriptionId
@@ -919,7 +925,7 @@ data InvoiceItem = InvoiceItem {
     , invoiceItemDescription  :: Maybe Description
     , invoiceItemInvoice      :: Maybe (Expandable InvoiceId)
     , invoiceItemQuantity     :: Maybe Quantity
-    , invoiceItemSubscription :: Maybe Subscription
+    , invoiceItemSubscription :: Maybe SubscriptionId
     , invoiceItemMetaData     :: MetaData
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
