@@ -120,6 +120,7 @@ createCharge
 
 data CreateCharge
 type instance StripeReturn CreateCharge = Charge
+instance StripeHasParam CreateCharge ExpandParams
 instance StripeHasParam CreateCharge CustomerId
 instance StripeHasParam CreateCharge NewCard
 instance StripeHasParam CreateCharge TokenId
