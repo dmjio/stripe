@@ -128,7 +128,7 @@ data Charge = Charge {
     , chargeCreated              :: UTCTime
     , chargeLiveMode             :: Bool
     , chargePaid                 :: Bool
-    , chargeAmount               :: Int
+    , chargeAmount               :: Amount
     , chargeCurrency             :: Currency
     , chargeRefunded             :: Bool
     , chargeCreditCard           :: Card
@@ -157,7 +157,7 @@ instance FromJSON Charge where
                <*> (fromSeconds <$> o .: "created")
                <*> o .: "livemode"
                <*> o .: "paid"
-               <*> o .: "amount"
+               <*> (Amount <$> o .: "amount")
                <*> o .: "currency"
                <*> o .: "refunded"
                <*> o .: "card"
