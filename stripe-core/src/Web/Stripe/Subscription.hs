@@ -107,6 +107,7 @@ createSubscription
 data CreateSubscription
 type instance StripeReturn CreateSubscription = Subscription
 instance StripeHasParam CreateSubscription CouponId
+instance StripeHasParam CreateSubscription Prorate
 instance StripeHasParam CreateSubscription TrialEnd
 instance StripeHasParam CreateSubscription CardId
 instance StripeHasParam CreateSubscription Quantity
