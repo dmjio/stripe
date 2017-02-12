@@ -1,36 +1,21 @@
-language: c
-
-# explicitly request container-based infrastructure
-sudo: false
+language: nix
 
 matrix:
   include:
-    - env: GHCVER=7.8.4
-      addons: {apt: {packages: [ghc-7.8.4], sources: [hvr-ghc]}}
-    - env: GHCVER=7.10.2
-      addons: {apt: {packages: [ghc-7.10.2],sources: [hvr-ghc]}}
-    - env: GHCVER=8.0.1
-      addons: {apt: {packages: [ghc-8.0.1],sources: [hvr-ghc]}}
-    - env: GHCVER=head
-      addons: {apt: {packages: [ghc-head],  sources: [hvr-ghc]}}
+    - env: GHCVER=ghc7102
+    - env: GHCVER=ghc7103
+    - env: GHCVER=ghc801
+    - env: GHCVER=ghc802
   allow_failures:
-     - env: GHCVER=head
+    - env: GHCVER=ghc742
+    - env: GHCVER=ghc763
+    - env: GHCVER=ghc783
+    - env: GHCVER=ghc784
+    - env: GHCVER=ghcHEAD
 
 before_install:
- - export STACK_YAML=stack-$GHCVER.yaml
- - export PATH=/opt/ghc/$GHCVER/bin:$PATH
- # stack
- - mkdir -p ~/.local/bin
- - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
- - export PATH=~/.local/bin:$PATH
-
-install:
- - stack setup
- - stack build
+ - nix-channel --list
+ - nix-channel --update
 
 script:
- - stack test
-
-cache:
-  directories:
-    - $HOME/.stack
+ - nix-build -A stripe-haskell --argstr compiler $GHCVER
