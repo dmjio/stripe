@@ -1,4 +1,4 @@
-{ compiler ? "ghc802" }:
+{ compiler ? "ghc802", profiling ? false }:
   let
    config = {
      packageOverrides = pkgs: {
@@ -10,6 +10,7 @@
                   # Only run tests on stripe-http-streams
  		  doCheck = args.pname == "stripe-http-streams";
 		  doHaddock = false;
+		  enableLibraryProfiling = profiling;
 		});
                 stripe-core = self.callPackage ./stripe-core { };
                 stripe-tests = self.callPackage ./stripe-tests { inherit stripe-core; };
