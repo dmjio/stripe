@@ -1,5 +1,5 @@
 name:                stripe-http-streams
-version:             2.2.0
+version:             2.2.1
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson, Jeremy Shaw
@@ -38,7 +38,7 @@ Test-Suite tests
     build-depends:    HsOpenSSL
                     , base                >= 4.7  && < 5
                     , free                >= 4.10 && < 4.13
-                    , hspec               >= 2.1.0 && < 2.3
+                    , hspec               >= 2.1.0 && < 2.5
                     , http-streams        >= 0.7  && < 0.9
                     , stripe-core         >= 2.0  && < 2.3
                     , stripe-http-streams >= 2.0  && < 2.3
