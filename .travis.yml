@@ -17,6 +17,8 @@ matrix:
     - env: GHCVER=ghc763
     - env: GHCVER=ghc783
     - env: GHCVER=ghc784
+    - env: GHCVER=ghc7102
+    - env: GHCVER=ghc7103
     - env: GHCVER=ghcHEAD
 
 before_install:
