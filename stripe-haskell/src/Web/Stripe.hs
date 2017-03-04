@@ -23,6 +23,7 @@
 module Web.Stripe (
     module Web.Stripe.Client
   , module Web.Stripe.StripeRequest
+  , module Web.Stripe.Error
   , stripe
   , showAmount
   ) where
@@ -31,4 +32,5 @@ import Web.Stripe.Client (StripeConfig(..), StripeKey(..))
 import Web.Stripe.StripeRequest
 import Web.Stripe.Types (showAmount)
 import Web.Stripe.Client.Stripe (stripe)
+import Web.Stripe.Error
 
