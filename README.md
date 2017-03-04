@@ -48,7 +48,7 @@ main = do
 ```
 
 ##[Versioning](https://stripe.com/docs/api#versioning)
-  All versioning is hard-coded (for safety).
+  All versioning is hard-coded (for safety) to version `2014-10-07`.
   Stripe API versions specified in the HTTP headers of Stripe requests take precedence
   over the API version specified in your Stripe Dashboard. In an attempt to ensure
   API consistency and correct parsing of returned JSON, all Stripe versions are hard-coded, and are
