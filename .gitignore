@@ -10,3 +10,4 @@ cabal.sandbox.config
 /tests.ps
 .stack-work
 result
+result-*
