@@ -47,6 +47,19 @@ main = do
     Left stripeError -> print stripeError
 ```
 
+##[Optional Parameters](https://alexeyzabelin.com/haskell-api-wrapper)
+   Stripe API calls can take multiple optional parameters.
+  `stripe-haskell` supports optional parameters through the use of type-families and typeclasses.
+   In practice, the function to use is `(-&-)` to specify optional parameters on a request.
+   For a deeper dive into how this works, please see this [blog post](https://alexeyzabelin.com/haskell-api-wrapper).
+
+```haskell
+chargeCardByToken :: TokenId -> Currency -> Amount -> IO (Either StripeError Charge)
+chargeCardByToken tokenId currency amount =
+  stripe config $ createCharge amount currency
+     -&- tokenId
+```
+
 ##[Versioning](https://stripe.com/docs/api#versioning)
   All versioning is hard-coded (for safety) to version `2014-10-07`.
   Stripe API versions specified in the HTTP headers of Stripe requests take precedence
