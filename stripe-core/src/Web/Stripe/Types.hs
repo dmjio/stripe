@@ -131,7 +131,7 @@ data Charge = Charge {
     , chargeAmount               :: Amount
     , chargeCurrency             :: Currency
     , chargeRefunded             :: Bool
-    , chargeCreditCard           :: Card
+    , chargeCreditCard           :: Maybe Card
     , chargeCaptured             :: Bool
     , chargeRefunds              :: StripeList Refund
     , chargeBalanceTransaction   :: Maybe (Expandable TransactionId)
@@ -160,7 +160,7 @@ instance FromJSON Charge where
                <*> (Amount <$> o .: "amount")
                <*> o .: "currency"
                <*> o .: "refunded"
-               <*> o .: "card"
+               <*> o .:? "card"
                <*> o .: "captured"
                <*> o .: "refunds"
                <*> o .:? "balance_transaction"
@@ -394,7 +394,7 @@ data Card = Card {
     , cardExpMonth          :: ExpMonth
     , cardExpYear           :: ExpYear
     , cardFingerprint       :: Text
-    , cardCountry           :: Text
+    , cardCountry           :: Maybe Text
     , cardName              :: Maybe Name
     , cardAddressLine1      :: Maybe AddressLine1
     , cardAddressLine2      :: Maybe AddressLine2
@@ -444,7 +444,7 @@ instance FromJSON Card where
              <*> (ExpMonth <$> o .: "exp_month")
              <*> (ExpYear <$> o .: "exp_year")
              <*> o .: "fingerprint"
-             <*> o .: "country"
+             <*> o .:? "country"
              <*> o .:? "name"
              <*> (fmap AddressLine1 <$> o .:? "address_line1")
              <*> (fmap AddressLine2 <$> o .:? "address_line2")
