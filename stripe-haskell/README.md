@@ -8,14 +8,14 @@ stripe
 [![Join the chat at https://gitter.im/dmjio/stripe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dmjio/stripe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ========
-##Stripe API coverage for Haskell ([Stripe API](http://stripe.com/docs/api))
+## Stripe API coverage for Haskell ([Stripe API](http://stripe.com/docs/api))
 
 All Stripe commands are supported, including but not limited to Charges, Refunds, Customers, Cards, Subscriptions, Plans, Coupons, Discounts, Invoices, Invoice Items, Disputes, Transfers, Recipients, Bitcoin, Application Fees, Application Fee Refunds, Account, Balance, Events and Tokens.
 ***
 ## Haddock Coverage
   All code written for this library is documented to completion with the haddock documentation tool
 
-##[100+ Hspec Tests](https://github.com/dmjio/stripe-haskell/blob/master/COVERAGE.md)
+## [100+ Hspec Tests](https://github.com/dmjio/stripe-haskell/blob/master/COVERAGE.md)
  Thoroughly unit-tested with hspec.
     All API commands are unit-tested before inclusion into the API (see the tests directory).
     To run the tests, perform the following:
@@ -26,7 +26,7 @@ cabal build tests
 dist/build/tests/tests # You will be prompted to enter your *TEST* key
 ```
 
-##[Pagination](https://stripe.com/docs/api#pagination)
+## [Pagination](https://stripe.com/docs/api#pagination)
   Pagination is possible on all API calls that return a JSON array.
   Any API call that returns a `StripeList` is eligible for pagination.
   To use in practice do the following:
@@ -47,7 +47,7 @@ main = do
     Left stripeError -> print stripeError
 ```
 
-##[Versioning](https://stripe.com/docs/api#versioning)
+## [Versioning](https://stripe.com/docs/api#versioning)
   All versioning is hard-coded (for safety).
   Stripe API versions specified in the HTTP headers of Stripe requests take precedence
   over the API version specified in your Stripe Dashboard. In an attempt to ensure
@@ -55,7 +55,7 @@ main = do
   inaccessible to the end-users of this library. When a new Stripe API version is released
   this library will increment the hard-coded API version.
 
-##[Expansion](https://stripe.com/docs/api#expansion)
+## [Expansion](https://stripe.com/docs/api#expansion)
   Object expansion is supported on Stripe objects eligible for expansion though the `ExpandParams` type.
   Object expansion allows normal Stripe API calls to return expanded objects inside of other objects.
   For example, a `Customer` object contains a Card ID hash on the default_card field.
@@ -77,7 +77,7 @@ main = do
     Left stripeError -> print stripeError
 ```
 
-##[MetaData](https://stripe.com/docs/api#metadata)
+## [MetaData](https://stripe.com/docs/api#metadata)
   Stripe objects allow the embedding of arbitrary metadata.
   Any Stripe object that supports the embedding of metadata is available via this API.
   As an example:
@@ -95,6 +95,6 @@ main = do
     Left stripeError -> print stripeError
 ```
 
-##[Issues](https://github.com/dmjio/stripe-haskell/issues)
+## [Issues](https://github.com/dmjio/stripe-haskell/issues)
   Any API recommendations or bugs can be reported on the GitHub issue tracker.
   Pull requests welcome!
