@@ -20,7 +20,7 @@ import           Control.Applicative (pure, (<$>), (<*>), (<|>))
 import           Control.Monad       (mzero)
 import           Data.Aeson          (FromJSON (parseJSON), ToJSON(..),
                                       Value (String, Object, Bool), (.:),
-                                      (.:?))
+                                      (.:?), (.!=))
 import           Data.Data           (Data, Typeable)
 import qualified Data.HashMap.Strict as H
 import           Data.Ratio          ((%))
@@ -1975,7 +1975,7 @@ instance FromJSON a => FromJSON (StripeList a) where
                    <*> o .:  "url"
                    <*> o .:  "object"
                    <*> o .:? "total_count"
-                   <*> o .:  "has_more"
+                   <*> o .:?  "has_more" .!= False
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
