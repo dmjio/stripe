@@ -22,7 +22,7 @@ All Stripe commands are supported, including but not limited to:
   - Invoice Items
   - Disputes
   - Transfers
-  - Recipients
+  - Recipients ([Deprecated](https://stripe.com/docs/connect/migrating))
   - Bitcoin
   - Application Fees
   - Application Fee Refunds

@@ -46,7 +46,7 @@ allTests stripe' = do
     invoiceItemTests stripe
     disputeTests stripe
     transferTests stripe
-    recipientTests stripe
+--    recipientTests stripe
     applicationFeeTests stripe
     applicationFeeRefundTests stripe
     accountTests stripe

@@ -115,23 +115,25 @@ cardTests stripe = do
         cardAddressZip     `shouldBe` (Just cardzip)
 
     describe "Recipient Card tests" $ do
-      it "Can create a RecipientCard by CardNumber" $ do
-        result <- stripe $ do
-          r@Recipient{..} <- createRecipient name Individual -&- debitinfo
-          void $ deleteRecipient recipientId
-          return r
-        result `shouldSatisfy` isRight
-        let Right Recipient {..} = result
-        length (list recipientCards) `shouldBe` 1
+      -- # Deprecated #
+      -- it "Can create a RecipientCard by CardNumber" $ do
+      --   result <- stripe $ do
+      --     r@Recipient{..} <- createRecipient name Individual -&- debitinfo
+      --     void $ deleteRecipient recipientId
+      --     return r
+      --   result `shouldSatisfy` isRight
+      --   let Right Recipient {..} = result
+      --   length (list recipientCards) `shouldBe` 1
 
-      it "Can create a RecipientCard by Card TokenId" $ do
-        result <- stripe $ do
-          Token { tokenId = tkid } <- createCardToken (Just debitinfo)
-          Recipient { recipientId = rid } <- createRecipient name Individual
-          rcard <- createRecipientCardByToken rid tkid
-          void $ deleteRecipient rid
-          return rcard
-        result `shouldSatisfy` isRight
+      -- Deprecated
+      -- it "Can create a RecipientCard by Card TokenId" $ do
+      --   result <- stripe $ do
+      --     Token { tokenId = tkid } <- createCardToken (Just debitinfo)
+      --     Recipient { recipientId = rid } <- createRecipient name Individual
+      --     rcard <- createRecipientCardByToken rid tkid
+      --     void $ deleteRecipient rid
+      --     return rcard
+      --   result `shouldSatisfy` isRight
 
       it "Fails to create a RecipientCard by BankAccount TokenId" $ do
         result <- stripe $ do
@@ -142,80 +144,87 @@ cardTests stripe = do
           return rcard
         result `shouldSatisfy` isLeft
 
-      it "Can retrieve a RecipientCard" $ do
-        result <- stripe $ do
-          Recipient{..} <- createRecipient name Individual -&- debitinfo
-          let (Id cardid) = fromJust recipientDefaultCard
-          rcard <- getRecipientCard recipientId cardid
-          void $ deleteRecipient recipientId
-          return rcard
-        result `shouldSatisfy` isRight
+      -- # Deprecated
+      -- it "Can retrieve a RecipientCard" $ do
+      --   result <- stripe $ do
+      --     Recipient{..} <- createRecipient name Individual -&- debitinfo
+      --     let (Id cardid) = fromJust recipientDefaultCard
+      --     rcard <- getRecipientCard recipientId cardid
+      --     void $ deleteRecipient recipientId
+      --     return rcard
+      --   result `shouldSatisfy` isRight
 
-      it "Can retrieve a RecipientCard Expanded" $ do
-        result <- stripe $ do
-          Recipient{..} <- createRecipient name Individual -&- debitinfo
-          let (Id cardid) = fromJust recipientDefaultCard
-          rcard <- getRecipientCard recipientId cardid -&- ExpandParams ["recipient"]
-          void $ deleteRecipient recipientId
-          return rcard
-        result `shouldSatisfy` isRight
+      -- # Deprecated
+      -- it "Can retrieve a RecipientCard Expanded" $ do
+      --   result <- stripe $ do
+      --     Recipient{..} <- createRecipient name Individual -&- debitinfo
+      --     let (Id cardid) = fromJust recipientDefaultCard
+      --     rcard <- getRecipientCard recipientId cardid -&- ExpandParams ["recipient"]
+      --     void $ deleteRecipient recipientId
+      --     return rcard
+      --   result `shouldSatisfy` isRight
 
-      it "Can retrieve a Recipient's Cards" $ do
-        result <- stripe $ do
-          Recipient{..} <- createRecipient name Individual -&- debitinfo
-          rcard <- getRecipientCards recipientId
-          void $ deleteRecipient recipientId
-          return rcard
-        result `shouldSatisfy` isRight
+      -- # Deprecated
+      -- it "Can retrieve a Recipient's Cards" $ do
+      --   result <- stripe $ do
+      --     Recipient{..} <- createRecipient name Individual -&- debitinfo
+      --     rcard <- getRecipientCards recipientId
+      --     void $ deleteRecipient recipientId
+      --     return rcard
+      --   result `shouldSatisfy` isRight
 
-      it "Can retrieve a Recipient's Cards Expanded" $ do
-        result <- stripe $ do
-          Recipient{..} <- createRecipient name Individual -&- debitinfo
-          rcard <- getRecipientCards recipientId -&- ExpandParams  ["data.recipient"]
-          void $ deleteRecipient recipientId
-          return rcard
-        result `shouldSatisfy` isRight
+      -- # Deprecated
+      -- it "Can retrieve a Recipient's Cards Expanded" $ do
+      --   result <- stripe $ do
+      --     Recipient{..} <- createRecipient name Individual -&- debitinfo
+      --     rcard <- getRecipientCards recipientId -&- ExpandParams  ["data.recipient"]
+      --     void $ deleteRecipient recipientId
+      --     return rcard
+      --   result `shouldSatisfy` isRight
 
-      it "Can delete a Recipient Card" $ do
-        result <- stripe $ do
-          Recipient{..} <- createRecipient name Individual -&- debitinfo
-          let (Id defaultCard) = fromJust recipientDefaultCard
-          rcard <- deleteRecipientCard recipientId defaultCard
-          void $ deleteRecipient recipientId
-          return rcard
-        result `shouldSatisfy` isRight
+      -- # Deprecated
+      -- it "Can delete a Recipient Card" $ do
+      --   result <- stripe $ do
+      --     Recipient{..} <- createRecipient name Individual -&- debitinfo
+      --     let (Id defaultCard) = fromJust recipientDefaultCard
+      --     rcard <- deleteRecipientCard recipientId defaultCard
+      --     void $ deleteRecipient recipientId
+      --     return rcard
+      --   result `shouldSatisfy` isRight
 
-      it "Can update a Recipient's Card" $ do
-        result <- stripe $ do
-          Recipient{..} <- createRecipient name Individual -&- debitinfo
-          let (Id cardid) = fromJust recipientDefaultCard
-          rcard@RecipientCard{..} <-
-                       updateRecipientCard recipientId cardid
-                        -&- cardname
-                        -&- cardcity
-                        -&- cardcountry
-                        -&- cardaddressOne
-                        -&- cardaddressTwo
-                        -&- cardaddressState
-                        -&- cardzip
-          void $ deleteRecipient recipientId
-          return rcard
-        result `shouldSatisfy` isRight
-        let Right RecipientCard{..} = result
-        recipientCardName `shouldBe` (Just cardname)
-        recipientCardAddressCity `shouldBe` (Just cardcity)
-        recipientCardAddressCountry `shouldBe` (Just cardcountry)
-        recipientCardAddressLine1 `shouldBe` (Just cardaddressOne)
-        recipientCardAddressLine2 `shouldBe` (Just cardaddressTwo)
-        recipientCardAddressState `shouldBe` (Just cardaddressState)
-        recipientCardAddressZip `shouldBe` (Just cardzip)
+      -- # Deprecated
+      -- it "Can update a Recipient's Card" $ do
+      --   result <- stripe $ do
+      --     Recipient{..} <- createRecipient name Individual -&- debitinfo
+      --     let (Id cardid) = fromJust recipientDefaultCard
+      --     rcard@RecipientCard{..} <-
+      --                  updateRecipientCard recipientId cardid
+      --                   -&- cardname
+      --                   -&- cardcity
+      --                   -&- cardcountry
+      --                   -&- cardaddressOne
+      --                   -&- cardaddressTwo
+      --                   -&- cardaddressState
+      --                   -&- cardzip
+      --     void $ deleteRecipient recipientId
+      --     return rcard
+      --   result `shouldSatisfy` isRight
+      --   let Right RecipientCard{..} = result
+      --   recipientCardName `shouldBe` (Just cardname)
+      --   recipientCardAddressCity `shouldBe` (Just cardcity)
+      --   recipientCardAddressCountry `shouldBe` (Just cardcountry)
+      --   recipientCardAddressLine1 `shouldBe` (Just cardaddressOne)
+      --   recipientCardAddressLine2 `shouldBe` (Just cardaddressTwo)
+      --   recipientCardAddressState `shouldBe` (Just cardaddressState)
+      --   recipientCardAddressZip `shouldBe` (Just cardzip)
 
-      it "Fails to add a Credit Card to a Recipient" $ do
-        result <- stripe $ do
-          r <- createRecipient name Individual -&- cardinfo
-          void $ deleteRecipient (recipientId r)
-          return r
-        result `shouldSatisfy` isLeft
+      -- # Deprecated
+      -- it "Fails to add a Credit Card to a Recipient" $ do
+      --   result <- stripe $ do
+      --     r <- createRecipient name Individual -&- cardinfo
+      --     void $ deleteRecipient (recipientId r)
+      --     return r
+      --   result `shouldSatisfy` isLeft
 
   where
     cardinfo = (mkNewCard credit em ey) { newCardCVC = Just cvc }
