@@ -406,6 +406,7 @@ data Card = Card {
     , cardAddressLine1Check :: Maybe Text
     , cardAddressZipCheck   :: Maybe Text
     , cardCustomerId        :: Maybe (Expandable CustomerId)
+    , cardMetaData          :: MetaData
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
@@ -456,6 +457,7 @@ instance FromJSON Card where
              <*> o .:? "address_line1_check"
              <*> o .:? "address_zip_check"
              <*> o .:? "customer"
+             <*> o .: "metadata"
     parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
