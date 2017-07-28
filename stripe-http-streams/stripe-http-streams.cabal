@@ -41,7 +41,7 @@ Test-Suite tests
                     , hspec               >= 2.1.0 && < 2.5
                     , http-streams        >= 0.7  && < 0.9
                     , stripe-core         >= 2.0  && < 2.3
-                    , stripe-http-streams >= 2.0  && < 2.3
+                    , stripe-http-streams
                     , stripe-tests        >= 2.0  && < 2.3
     default-language: Haskell2010
     ghc-options:      -Wall -threaded -rtsopts
