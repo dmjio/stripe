@@ -1,5 +1,5 @@
 name:                stripe-haskell
-version:             2.2.1
+version:             2.2.2
 synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
