@@ -5,7 +5,6 @@ matrix:
   include:
     - env: GHCVER=ghc7102
     - env: GHCVER=ghc7103
-    - env: GHCVER=ghc801
     - env: GHCVER=ghc802
     - env: GHCVER=ghc742
     - env: GHCVER=ghc763
