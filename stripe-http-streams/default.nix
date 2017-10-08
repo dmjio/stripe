@@ -3,7 +3,7 @@
 }:
 mkDerivation {
   pname = "stripe-http-streams";
-  version = "2.2.2";
+  version = "2.2.3";
   src = ./.;
   libraryHaskellDepends = [
     aeson base bytestring HsOpenSSL http-streams io-streams stripe-core

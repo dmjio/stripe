@@ -3,7 +3,7 @@
 }:
 mkDerivation {
   pname = "stripe-core";
-  version = "2.2.2";
+  version = "2.2.3";
   src = ./.;
   libraryHaskellDepends = [
     aeson base bytestring mtl text time transformers
