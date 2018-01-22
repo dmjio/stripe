@@ -179,14 +179,13 @@ instance StripeHasParam CancelSubscription AtPeriodEnd
 type instance StripeReturn CancelSubscription = Subscription
 
 ------------------------------------------------------------------------------
--- | Retrieve active `Subscription`s
+-- | Retrieve all active `Subscription`s
 getSubscriptions
-    :: CustomerId                   -- ^ The `CustomerId` of the `Subscription`s to retrieve
-    -> StripeRequest GetSubscriptions
+    :: StripeRequest GetSubscriptions
 getSubscriptions
-  customerid = request
+    = request
   where request = mkStripeRequest GET url params
-        url     = "customers" </> getCustomerId customerid </> "subscriptions"
+        url     = "subscriptions"
         params  = []
 
 data GetSubscriptions
