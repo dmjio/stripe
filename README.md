@@ -1,11 +1,10 @@
 stripe
 ========
 ![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg)
-![Hackage Dependencies](https://img.shields.io/hackage-deps/v/stripe-haskell.svg)
 ![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
-![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg)
-![Build Status](https://api.travis-ci.org/dmjio/stripe.svg?branch=master)
+![MIT License](https://github.com/dmjio/stripe/blob/master/stripe-haskell/LICENSE)
 [![Join the chat at https://gitter.im/dmjio/stripe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dmjio/stripe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/dmjio/stripe.svg?branch=master)](https://travis-ci.org/dmjio/stripe)
 
 ## Stripe API coverage for Haskell ([Stripe API](http://stripe.com/docs/api))
 
@@ -55,7 +54,7 @@ import Web.Stripe.Customer
 
 main :: IO ()
 main = do
-  let config = StripeConfig "secret key"
+  let config = StripeConfig (StripeKey "secret key")
   result <- stripe config $ getCustomers
 				(Just 30 :: Maybe Limit) -- Defaults to 10 if Nothing, 100 is Max
 				(StartingAfter $ CustomerId "customer_id0")
@@ -99,7 +98,7 @@ import Web.Stripe.Customer
 
 main :: IO ()
 main = do
-  let config = StripeConfig "secret key"
+  let config = StripeConfig (StripeKey "secret key")
   result <- stripe config $ getCustomerExpandable
 				   (CustomerId "customerid")
 				   (["default_card"] :: ExpandParams)
@@ -119,7 +118,7 @@ import Web.Stripe.Coupon
 
 main :: IO ()
 main = do
-  let config = StripeConfig "secret key"
+  let config = StripeConfig (StripeKey "secret key")
   result <- stripe config $ updateCoupon (CouponId "couponid") [("key1", "value2"), ("key2", "value2")]
   case result of
     Right coupon -> print $ couponMetaData coupon

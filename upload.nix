@@ -1,8 +1,8 @@
 { pkgs ? import <nixpkgs> {} }:
+with pkgs.haskell.lib;
 let
-  lib = pkgs.haskell.lib;
   stripePkgs = import ./default.nix {};
 in pkgs.buildEnv {
     name = "hackage-upload";
-    paths = map lib.sdistTarball (pkgs.lib.attrValues stripePkgs);
+    paths = map sdistTarball (pkgs.lib.attrValues stripePkgs);
   }

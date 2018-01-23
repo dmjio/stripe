@@ -4,7 +4,7 @@
 }:
 mkDerivation {
   pname = "stripe-tests";
-  version = "2.2.2";
+  version = "2.2.3";
   src = ./.;
   libraryHaskellDepends = [
     aeson base bytestring free hspec hspec-core mtl random stripe-core
