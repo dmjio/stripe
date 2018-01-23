@@ -1,7 +1,6 @@
 stripe
 ========
 ![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg)
-![Hackage Dependencies](https://img.shields.io/hackage-deps/v/stripe-haskell.svg)
 ![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
 ![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg)
 ![Build Status](https://api.travis-ci.org/dmjio/stripe.svg?branch=master)
