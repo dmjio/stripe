@@ -55,7 +55,7 @@ import Web.Stripe.Customer
 
 main :: IO ()
 main = do
-  let config = StripeConfig "secret key"
+  let config = StripeConfig (StripeKey "secret key")
   result <- stripe config $ getCustomers
 				(Just 30 :: Maybe Limit) -- Defaults to 10 if Nothing, 100 is Max
 				(StartingAfter $ CustomerId "customer_id0")
@@ -99,7 +99,7 @@ import Web.Stripe.Customer
 
 main :: IO ()
 main = do
-  let config = StripeConfig "secret key"
+  let config = StripeConfig (StripeKey "secret key")
   result <- stripe config $ getCustomerExpandable
 				   (CustomerId "customerid")
 				   (["default_card"] :: ExpandParams)
@@ -119,7 +119,7 @@ import Web.Stripe.Coupon
 
 main :: IO ()
 main = do
-  let config = StripeConfig "secret key"
+  let config = StripeConfig (StripeKey "secret key")
   result <- stripe config $ updateCoupon (CouponId "couponid") [("key1", "value2"), ("key2", "value2")]
   case result of
     Right coupon -> print $ couponMetaData coupon
