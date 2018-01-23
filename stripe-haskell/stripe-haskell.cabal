@@ -1,5 +1,5 @@
 name:                stripe-haskell
-version:             2.2.3
+version:             2.3.0
 synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
@@ -12,9 +12,6 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
 Description:         For usage information please consult README.md
-
-extra-source-files:
-   README.md
 
 library
   hs-source-dirs:      src src-http-streams
