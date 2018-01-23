@@ -8,9 +8,9 @@ let
 	      overrides = self: super: with pkgs.haskell.lib; rec {
                 stripe-core = self.callPackage ./stripe-core {};
                 stripe-tests = self.callPackage ./stripe-tests { inherit stripe-core; };
-                stripe-http-streams = dontCheck (self.callPackage ./stripe-http-streams {
+                stripe-http-streams = self.callPackage ./stripe-http-streams {
                   inherit stripe-tests stripe-core;
-                });
+                };
                 stripe-haskell = self.callPackage ./stripe-haskell {
                   inherit stripe-http-streams stripe-core;
                 };
