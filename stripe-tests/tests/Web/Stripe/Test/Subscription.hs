@@ -62,6 +62,36 @@ subscriptionTests stripe = do
         void $ deleteCustomer cid
         return sub
       result `shouldSatisfy` isRight
+    it "Succesfully retrieves a Customer's Subscriptions expanded" $ do
+      planid <- makePlanId
+      result <- stripe $ do
+        Customer { customerId = cid } <- createCustomer
+        void $ createPlan planid
+                        (Amount 0) -- free plan
+                        USD
+                        Month
+                        (PlanName "sample plan")
+        void $ createSubscription cid planid
+        sub <- getSubscriptionsByCustomerId cid -&- ExpandParams ["data.customer"]
+        void $ deletePlan planid
+        void $ deleteCustomer cid
+        return sub
+      result `shouldSatisfy` isRight
+    it "Succesfully retrieves a Customer's Subscriptions" $ do
+      planid <- makePlanId
+      result <- stripe $ do
+        Customer { customerId = cid } <- createCustomer
+        void $ createPlan planid
+                        (Amount 0) -- free plan
+                        USD
+                        Month
+                        (PlanName "sample plan")
+        void $ createSubscription cid planid
+        sub <- getSubscriptionsByCustomerId cid
+        void $ deletePlan planid
+        void $ deleteCustomer cid
+        return sub
+      result `shouldSatisfy` isRight
     it "Succesfully retrieves all Subscriptions expanded" $ do
       planid <- makePlanId
       result <- stripe $ do

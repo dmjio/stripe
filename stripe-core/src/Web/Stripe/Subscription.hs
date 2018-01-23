@@ -51,6 +51,8 @@ module Web.Stripe.Subscription
     , cancelSubscription
     , GetSubscriptions
     , getSubscriptions
+    , GetSubscriptionsByCustomerId
+    , getSubscriptionsByCustomerId
       -- * Types
     , ApplicationFeePercent (..)
     , AtPeriodEnd        (..)
@@ -194,3 +196,21 @@ instance StripeHasParam GetSubscriptions ExpandParams
 instance StripeHasParam GetSubscriptions (EndingBefore SubscriptionId)
 instance StripeHasParam GetSubscriptions Limit
 instance StripeHasParam GetSubscriptions (StartingAfter SubscriptionId)
+
+------------------------------------------------------------------------------
+-- | Retrieve a customer's `Subscription`s
+getSubscriptionsByCustomerId
+    :: CustomerId
+    -> StripeRequest GetSubscriptionsByCustomerId
+getSubscriptionsByCustomerId
+    customerid = request
+  where request = mkStripeRequest GET url params
+        url     = "customers" </> getCustomerId customerid </> "subscriptions"
+        params  = []
+
+data GetSubscriptionsByCustomerId
+type instance StripeReturn GetSubscriptionsByCustomerId = StripeList Subscription
+instance StripeHasParam GetSubscriptionsByCustomerId ExpandParams
+instance StripeHasParam GetSubscriptionsByCustomerId (EndingBefore SubscriptionId)
+instance StripeHasParam GetSubscriptionsByCustomerId Limit
+instance StripeHasParam GetSubscriptionsByCustomerId (StartingAfter SubscriptionId)
