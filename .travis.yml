@@ -26,6 +26,3 @@ before_install:
 script:
  - nix-build -A stripe-haskell --argstr compiler $GHCVER
 
-cache:
-  directories:
-    - /nix/store
