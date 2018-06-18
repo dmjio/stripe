@@ -2,5 +2,6 @@ packages:
 - stripe-core/
 - stripe-haskell/
 - stripe-http-streams/
+- stripe-http-client/
 - stripe-tests/
 resolver: lts-9.5

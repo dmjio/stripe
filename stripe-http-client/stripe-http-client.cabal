@@ -1,0 +1,53 @@
+name:                stripe-http-client
+version:             0.1
+license:             MIT
+license-file:        LICENSE
+author:              Christopher Reichert
+synopsis:            Stripe API for Haskell - http-client backend
+maintainer:          creichert07@gmail.com
+copyright:           Copyright (c) 2018 Christopher Reichert
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+Description:
+    .
+    <<https://stripe.com/img/navigation/logo@2x.png>>
+    .
+    [Access Stripe API using http-client]
+    This package provides access to the Stripe API using `stripe-core`
+    and `http-client`. See also the `stripe` package.
+
+library
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  exposed-modules:     Web.Stripe.Client.HttpClient
+  ghc-options:         -Wall
+  other-extensions:    OverloadedStrings
+                       RecordWildCards
+  build-depends:         base            >= 4.7  && < 5
+                       , bytestring      >= 0.10 && < 0.11
+                       , text            >= 1.1  && < 1.3
+                       , aeson           >= 0.8 && < 0.10 || >= 0.11 && < 1.3
+                       , http-client
+                       , http-client-tls
+                       , http-types
+                       , stripe-core
+
+Test-Suite tests
+    type:             exitcode-stdio-1.0
+    main-is:          Main.hs
+    hs-source-dirs:   tests
+    default-language: Haskell2010
+    build-depends:    base                >= 4.7  && < 5
+                    , free                >= 4.10 && < 4.13
+                    , hspec               >= 2.1.0 && < 2.5
+                    , stripe-core
+                    , stripe-tests
+                    , http-client
+                    , stripe-http-client
+    ghc-options:      -Wall -threaded -rtsopts
+
+source-repository head
+  type:     git
+  subdir:   stripe-http-client
+  location: git://github.com/dmjio/stripe-haskell.git
