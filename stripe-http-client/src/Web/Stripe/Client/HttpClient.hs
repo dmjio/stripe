@@ -138,13 +138,13 @@ m2m S.GET    = Http.methodGet
 m2m S.POST   = Http.methodPost
 m2m S.DELETE = Http.methodDelete
 
--- This function is used instead of http-client's 'urlEncodedBody' so that
---
+-- | This function is used instead of http-client's built-in 'urlEncodedBody' as
+-- the request method is set explicitly to POST in 'urlEncodeBody' but Stripe
+-- uses POST\/PUT\/DELETE. A PR should be submitted to http-client to fix
+-- eventually.
 urlEncodeBody :: [(ByteString, ByteString)] -> Request -> Request
 urlEncodeBody headers req = req {
       requestBody = RequestBodyLBS (BSL.fromChunks body)
-    --
-    -- , method = "POST"
     , requestHeaders =
         ("Content-Type", "application/x-www-form-urlencoded")
       : filter (\(x, _) -> x /= "Content-Type") (requestHeaders req)
