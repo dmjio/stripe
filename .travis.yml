@@ -10,6 +10,9 @@ matrix:
     - env: GHCVER=ghc763
     - env: GHCVER=ghc783
     - env: GHCVER=ghc784
+    - env: GHCVER=ghc801
+    - env: GHCVER=ghc802
+    - env: GHCVER=ghc822
     - env: GHCVER=ghcHEAD
   allow_failures:
     - env: GHCVER=ghc742
@@ -17,6 +20,9 @@ matrix:
     - env: GHCVER=ghc783
     - env: GHCVER=ghc784
     - env: GHCVER=ghc7103
+    - env: GHCVER=ghc801
+    - env: GHCVER=ghc802
+    - env: GHCVER=ghc822
     - env: GHCVER=ghcHEAD
 
 before_install:
@@ -25,4 +31,3 @@ before_install:
 
 script:
  - nix-build -A stripe-haskell --argstr compiler $GHCVER
-
