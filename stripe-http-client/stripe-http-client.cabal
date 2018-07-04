@@ -1,5 +1,5 @@
 name:                stripe-http-client
-version:             0.1
+version:             2.4.0
 license:             MIT
 license-file:        LICENSE
 author:              Christopher Reichert
@@ -39,7 +39,7 @@ Test-Suite tests
     hs-source-dirs:   tests
     default-language: Haskell2010
     build-depends:    base                >= 4.7  && < 5
-                    , free                >= 4.10 && < 4.13
+                    , free                >= 4.10 && < 6
                     , hspec               >= 2.1.0 && < 2.5
                     , stripe-core
                     , stripe-tests

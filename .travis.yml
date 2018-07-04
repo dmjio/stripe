@@ -3,26 +3,13 @@ language: nix
 matrix:
   fast_finish: true
   include:
-    - env: GHCVER=ghc7103
     - env: GHCVER=ghc802
     - env: GHCVER=ghc822
-    - env: GHCVER=ghc742
-    - env: GHCVER=ghc763
-    - env: GHCVER=ghc783
-    - env: GHCVER=ghc784
-    - env: GHCVER=ghc801
-    - env: GHCVER=ghc802
-    - env: GHCVER=ghc822
+    - env: GHCVER=ghc842
     - env: GHCVER=ghcHEAD
   allow_failures:
-    - env: GHCVER=ghc742
-    - env: GHCVER=ghc763
-    - env: GHCVER=ghc783
-    - env: GHCVER=ghc784
-    - env: GHCVER=ghc7103
-    - env: GHCVER=ghc801
     - env: GHCVER=ghc802
-    - env: GHCVER=ghc822
+    - env: GHCVER=ghc842
     - env: GHCVER=ghcHEAD
 
 before_install:
@@ -30,4 +17,4 @@ before_install:
  - nix-channel --update
 
 script:
- - nix-build -A stripe-haskell --argstr compiler $GHCVER
+ - nix-build -A stripe-haskell --argstr compiler $GHCVER --arg check true
