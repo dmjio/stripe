@@ -1,7 +1,12 @@
+{-# LANGUAGE CPP #-}
 module Main where
 
 import Control.Monad.Trans.Free       (FreeF(..), FreeT(..))
+#if MIN_VERSION_http_client(0,5,13)
+import Network.HTTP.Client hiding (withConnection)
+#else
 import Network.HTTP.Client
+#endif
 import Web.Stripe.Client              (StripeConfig(..), StripeError(..))
 import Web.Stripe.Client.HttpClient   (withConnection, callAPI)
 import Web.Stripe.Test.AllTests       (allTests)
