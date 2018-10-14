@@ -149,6 +149,7 @@ type instance StripeReturn GetInvoices = StripeList Invoice
 instance StripeHasParam GetInvoices ExpandParams
 instance StripeHasParam GetInvoices (EndingBefore InvoiceId)
 instance StripeHasParam GetInvoices Limit
+instance StripeHasParam GetInvoices CustomerId
 instance StripeHasParam GetInvoices (StartingAfter InvoiceId)
 
 ------------------------------------------------------------------------------
