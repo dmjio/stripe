@@ -6,6 +6,7 @@ matrix:
     - env: GHCVER=ghc802
     - env: GHCVER=ghc822
     - env: GHCVER=ghc842
+    - env: GHCVER=ghc843
     - env: GHCVER=ghcHEAD
   allow_failures:
     - env: GHCVER=ghc802
