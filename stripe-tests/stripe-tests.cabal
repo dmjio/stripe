@@ -1,5 +1,5 @@
 name:                stripe-tests
-version:             2.4.0
+version:             2.4.1
 synopsis:            Tests for Stripe API bindings for Haskell
 license:             MIT
 license-file:        LICENSE
@@ -22,7 +22,7 @@ Description:
 
 library
   hs-source-dirs:      tests
-  build-depends:       aeson                >= 0.8 && < 0.10 || >= 0.11 && < 1.4
+  build-depends:       aeson                >= 0.8 && < 0.10 || >= 0.11 && < 1.5
                      , base                 >= 4.7   && < 5
                      , bytestring           >= 0.10  && < 0.11
                      , free                 >= 4.10  && < 6
