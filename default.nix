@@ -1,4 +1,4 @@
-{ compiler ? "ghc843", check ? false }:
+{ compiler ? "ghc844", check ? false }:
 let
    config = {
      packageOverrides = pkgs: with pkgs.haskell.lib; {
