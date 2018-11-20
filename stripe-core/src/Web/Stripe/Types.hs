@@ -196,7 +196,7 @@ data Refund = Refund {
     , refundCreated            :: UTCTime
     , refundObject             :: Text
     , refundCharge             :: ChargeId
-    , refundBalanceTransaction :: Expandable TransactionId
+    , refundBalanceTransaction :: Maybe (Expandable TransactionId)
     , refundMetaData           :: MetaData
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
@@ -210,7 +210,7 @@ instance FromJSON Refund where
                <*> (fromSeconds <$> o .: "created")
                <*> o .: "object"
                <*> o .: "charge"
-               <*> o .: "balance_transaction"
+               <*> o .:? "balance_transaction"
                <*> o .: "metadata"
    parseJSON _ = mzero
 
