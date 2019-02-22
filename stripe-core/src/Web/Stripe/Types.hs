@@ -1733,7 +1733,7 @@ instance FromJSON EventType where
    parseJSON (String "application_fee.refunded") = pure ApplicationFeeRefundedEvent
    parseJSON (String "balance.available") = pure BalanceAvailableEvent
    parseJSON (String "charge.succeeded") = pure ChargeSucceededEvent
-   parseJSON (String "chage.failed") = pure ChargeFailedEvent
+   parseJSON (String "charge.failed") = pure ChargeFailedEvent
    parseJSON (String "charge.refunded") = pure ChargeRefundedEvent
    parseJSON (String "charge.captured") = pure ChargeCapturedEvent
    parseJSON (String "charge.updated") = pure ChargeUpdatedEvent
