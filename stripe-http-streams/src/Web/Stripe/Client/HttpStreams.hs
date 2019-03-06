@@ -24,6 +24,7 @@ import           Control.Monad              (when)
 import           Data.Aeson                 (Result(..), FromJSON, Value, fromJSON, json')
 import qualified Data.ByteString            as S
 import           Data.Monoid                (mempty, (<>))
+import           Data.Maybe                 (fromMaybe)
 import qualified Data.Text.Encoding         as T
 import           Network.Http.Client        (Connection,
                                              baselineContextSSL, buildRequest,
@@ -40,7 +41,7 @@ import qualified System.IO.Streams          as Streams
 import qualified System.IO.Streams.Attoparsec as Streams
 import           System.IO.Streams.Attoparsec (ParseException(..))
 import           Web.Stripe.Client          (APIVersion (..), Method(..), StripeConfig (..),
-                                             StripeError (..),
+                                             StripeError (..), defaultEndpoint, Endpoint (..),
                                              StripeErrorType (..), StripeRequest (..),
                                              StripeReturn, getStripeKey,
                                              toBytestring, toText,
@@ -56,7 +57,7 @@ stripe
     -> StripeRequest a
     -> IO (Either StripeError (StripeReturn a))
 stripe config request =
-  withConnection $ \conn -> do
+  withConnection (fromMaybe defaultEndpoint (stripeEndpoint config)) $ \conn -> do
     stripeConn conn config request
 
 ------------------------------------------------------------------------------
@@ -73,12 +74,12 @@ stripeConn conn config request =
 
 ------------------------------------------------------------------------------
 -- | Open a connection to the stripe API server
-withConnection :: (Connection -> IO (Either StripeError a))
+withConnection :: Endpoint -> (Connection -> IO (Either StripeError a))
                -> IO (Either StripeError a)
-withConnection f =
+withConnection (Endpoint endpoint) f =
   withOpenSSL $ do
     ctx <- baselineContextSSL
-    result <- try (openConnectionSSL ctx "api.stripe.com" 443) :: IO (Either SomeException Connection)
+    result <- try (openConnectionSSL ctx endpoint 443) :: IO (Either SomeException Connection)
     case result of
       Left msg -> return $ Left $ StripeError ConnectionFailure (toText msg) Nothing Nothing Nothing
       Right conn -> (f conn) `finally` (closeConnection conn)

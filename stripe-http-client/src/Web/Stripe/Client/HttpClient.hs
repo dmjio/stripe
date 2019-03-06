@@ -21,6 +21,7 @@ module Web.Stripe.Client.HttpClient
 
 import qualified Control.Arrow
 import qualified Data.ByteString.Lazy     as BSL
+import           Data.Maybe
 import qualified Data.Text.Encoding       as TE
 import qualified Network.HTTP.Types       as Http
 
@@ -38,6 +39,7 @@ import qualified Web.Stripe.StripeRequest as S
 
 import Web.Stripe.Client (APIVersion (..), StripeConfig (..),
                           StripeError (..), StripeKey (..),
+                          defaultEndpoint, Endpoint (..),
                           StripeRequest, StripeReturn,
                           attemptDecode, handleStream,
                           parseFail, toBytestring, unknownCode)
@@ -119,7 +121,7 @@ callAPI man fromJSON' config stripeRequest = do
                   defaultRequest {
                     Http.method = m2m (S.method stripeRequest)
                   , Http.secure = True
-                  , Http.host = "api.stripe.com"
+                  , Http.host = getEndpoint $ fromMaybe defaultEndpoint (stripeEndpoint config)
                   , Http.port = 443
                   , Http.path = "/v1/" <> TE.encodeUtf8 (S.endpoint stripeRequest)
                   , Http.requestHeaders = [

@@ -63,6 +63,7 @@ library
                        Web.Stripe.Test.AllTests
   ghc-options:        -Wall
 
+
 source-repository head
   type:     git
   subdir:   stripe-tests
