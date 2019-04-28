@@ -164,3 +164,4 @@ instance StripeHasParam GetInvoiceItems CustomerId
 instance StripeHasParam GetInvoiceItems (EndingBefore InvoiceItemId)
 instance StripeHasParam GetInvoiceItems Limit
 instance StripeHasParam GetInvoiceItems (StartingAfter InvoiceItemId)
+instance StripeHasParam GetInvoiceItems InvoiceId
