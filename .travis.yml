@@ -3,15 +3,11 @@ language: nix
 matrix:
   fast_finish: true
   include:
-    - env: GHCVER=ghc802
-    - env: GHCVER=ghc822
-    - env: GHCVER=ghc842
     - env: GHCVER=ghc844
-    - env: GHCVER=ghc861
+    - env: GHCVER=ghc864
     - env: GHCVER=ghcHEAD
   allow_failures:
-    - env: GHCVER=ghc802
-    - env: GHCVER=ghc842
+    - env: GHCVER=ghc844
     - env: GHCVER=ghcHEAD
 
 before_install:
