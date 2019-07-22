@@ -16,6 +16,7 @@ module Web.Stripe.Client
     , unknownCode
     , defaultEndpoint
     , Endpoint      (..)
+    , Protocol      (..)
     , StripeConfig  (..)
     , StripeKey     (..)
     , APIVersion    (..)
@@ -40,6 +41,11 @@ newtype StripeKey = StripeKey
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
+-- | Endpoint Protocol
+data Protocol = HTTP | HTTPS
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
 -- | Stripe config
 data StripeConfig = StripeConfig
     { secretKey :: StripeKey
@@ -48,11 +54,15 @@ data StripeConfig = StripeConfig
 
 ------------------------------------------------------------------------------
 -- | Stripe endpoint, useful for mocking
-newtype Endpoint = Endpoint { getEndpoint :: ByteString }
-  deriving (Show, Eq, Read, Ord, Data)
+data Endpoint
+  = Endpoint
+  { endpointUrl :: ByteString
+  , endpointProtocol :: Protocol
+  , endpointPort :: Int
+  } deriving (Show, Eq, Read, Ord, Data)
 
 defaultEndpoint :: Endpoint
-defaultEndpoint = Endpoint "api.stripe.com"
+defaultEndpoint = Endpoint "api.stripe.com" HTTPS 443
 
 ------------------------------------------------------------------------------
 -- | API Version

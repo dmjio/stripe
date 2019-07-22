@@ -5,10 +5,10 @@ To setup your development environment, you'll need the [Nix package manager](htt
    git clone git@github.com:dmjio/stripe.git
    cd stripe
    ```
-2. Get into a shell for stripe-http-streams (stripe-tests is used in the test suite of stripe-http-streams).
+2. Get into a shell for stripe-http-client (stripe-tests is used in the test suite of stripe-http-client).
    ```
-   nix-shell --attr stripe-http-streams.env
-   cd stripe-http-streams
+   nix-shell --attr stripe-http-client.env
+   cd stripe-http-client
    ```
 3. Ensure dependencies are all correct (this is contingent on your nixpkgs
    version). Bump the upper bounds in the cabal files if need be.

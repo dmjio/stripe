@@ -17,7 +17,7 @@ Description:
     .
     [100+ Hspec Tests]
     This cabal package contains all the Stripe Hspec tests in an HTTP backend agnostic format.
-    To run these tests you will need to install a package such as `stripe-http-streams`.
+    To run these tests you will need to install a package such as `stripe-http-client`.
     This allows each backend to run the full testsuite.
 
 library
