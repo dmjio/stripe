@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings  #-}
 -- |
 -- Module      : Web.Stripe.Client
 -- Copyright   : (c) David Johnson, 2014
@@ -13,6 +14,9 @@ module Web.Stripe.Client
     , parseFail
     , attemptDecode
     , unknownCode
+    , defaultEndpoint
+    , Endpoint      (..)
+    , Protocol      (..)
     , StripeConfig  (..)
     , StripeKey     (..)
     , APIVersion    (..)
@@ -37,10 +41,28 @@ newtype StripeKey = StripeKey
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
+-- | Endpoint Protocol
+data Protocol = HTTP | HTTPS
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
 -- | Stripe config
 data StripeConfig = StripeConfig
     { secretKey :: StripeKey
+    , stripeEndpoint :: Maybe Endpoint
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | Stripe endpoint, useful for mocking
+data Endpoint
+  = Endpoint
+  { endpointUrl :: ByteString
+  , endpointProtocol :: Protocol
+  , endpointPort :: Int
+  } deriving (Show, Eq, Read, Ord, Data)
+
+defaultEndpoint :: Endpoint
+defaultEndpoint = Endpoint "api.stripe.com" HTTPS 443
 
 ------------------------------------------------------------------------------
 -- | API Version

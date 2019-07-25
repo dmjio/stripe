@@ -1,18 +1,8 @@
 language: nix
 
-matrix:
-  fast_finish: true
-  include:
-    - env: GHCVER=ghc844
-    - env: GHCVER=ghc864
-    - env: GHCVER=ghcHEAD
-  allow_failures:
-    - env: GHCVER=ghc844
-    - env: GHCVER=ghcHEAD
-
 before_install:
  - nix-channel --list
  - nix-channel --update
 
 script:
- - nix-build -A stripe-haskell --argstr compiler $GHCVER --arg check true
+ - nix-build

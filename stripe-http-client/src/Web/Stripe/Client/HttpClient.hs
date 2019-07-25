@@ -21,6 +21,7 @@ module Web.Stripe.Client.HttpClient
 
 import qualified Control.Arrow
 import qualified Data.ByteString.Lazy     as BSL
+import           Data.Maybe
 import qualified Data.Text.Encoding       as TE
 import qualified Network.HTTP.Types       as Http
 
@@ -38,9 +39,11 @@ import qualified Web.Stripe.StripeRequest as S
 
 import Web.Stripe.Client (APIVersion (..), StripeConfig (..),
                           StripeError (..), StripeKey (..),
+                          defaultEndpoint, Endpoint (..),
                           StripeRequest, StripeReturn,
                           attemptDecode, handleStream,
-                          parseFail, toBytestring, unknownCode)
+                          parseFail, toBytestring,
+                          unknownCode, Protocol (..))
 
 
 -- | Create a request to 'Stripe's API.
@@ -118,9 +121,9 @@ callAPI man fromJSON' config stripeRequest = do
         let req = Http.applyBasicAuth (getStripeKey (secretKey config)) mempty $
                   defaultRequest {
                     Http.method = m2m (S.method stripeRequest)
-                  , Http.secure = True
-                  , Http.host = "api.stripe.com"
-                  , Http.port = 443
+                  , Http.secure = endpointProtocol (fromMaybe defaultEndpoint (stripeEndpoint config)) == HTTPS
+                  , Http.host = endpointUrl $ fromMaybe defaultEndpoint (stripeEndpoint config)
+                  , Http.port = endpointPort $ fromMaybe defaultEndpoint (stripeEndpoint config)
                   , Http.path = "/v1/" <> TE.encodeUtf8 (S.endpoint stripeRequest)
                   , Http.requestHeaders = [
                         ("Stripe-Version", toBytestring stripeVersion)
