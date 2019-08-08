@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
 ------------------------------------------------------------------------------
--- | 
+-- |
 -- Module      : Web.Stripe.Types
 -- Copyright   : (c) David Johnson, 2014
 -- Maintainer  : djohnson.m@gmail.com
@@ -20,7 +20,7 @@ import           Control.Applicative (pure, (<$>), (<*>), (<|>))
 import           Control.Monad       (mzero)
 import           Data.Aeson          (FromJSON (parseJSON), ToJSON(..),
                                       Value (String, Object, Bool), (.:),
-                                      (.:?), eitherDecode)
+                                      (.:?))
 import           Data.Aeson.Types    (typeMismatch)
 import           Data.Data           (Data, Typeable)
 import qualified Data.HashMap.Strict as H
@@ -259,7 +259,7 @@ data Customer = Customer {
     , customerDefaultCard    :: Maybe (Expandable CardId)
     , customerMetaData       :: MetaData
     } | DeletedCustomer {
-      deletedCustomer   :: Maybe Bool
+      deletedCustomer   :: Bool
     , deletedCustomerId :: CustomerId
   } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
@@ -267,7 +267,10 @@ data Customer = Customer {
 -- | JSON Instance for `Customer`
 instance FromJSON Customer where
   parseJSON (Object o)
-        = (Customer
+        = (DeletedCustomer
+           <$> o .: "deleted"
+           <*> (CustomerId <$> o .: "id"))
+           <|> (Customer
            <$> o .: "object"
            <*> (fromSeconds <$> o .: "created")
            <*> (CustomerId <$> o .: "id")
@@ -282,12 +285,6 @@ instance FromJSON Customer where
            <*> o .:? "currency"
            <*> o .:? "default_card"
            <*> o .: "metadata")
-           <|> (DeletedCustomer
-           <$> o .: "deleted"
-           <*> (CustomerId <$> o .: "id"))
-           <|> (DeletedCustomer
-           <$> o .:? "deleted"
-           <*> (CustomerId <$> o .: "id"))
   parseJSON o = typeMismatch "Customer" o
 
 ------------------------------------------------------------------------------
