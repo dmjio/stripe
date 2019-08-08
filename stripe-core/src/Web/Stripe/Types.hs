@@ -20,7 +20,8 @@ import           Control.Applicative (pure, (<$>), (<*>), (<|>))
 import           Control.Monad       (mzero)
 import           Data.Aeson          (FromJSON (parseJSON), ToJSON(..),
                                       Value (String, Object, Bool), (.:),
-                                      (.:?))
+                                      (.:?), eitherDecode)
+import           Data.Aeson.Types    (typeMismatch)
 import           Data.Data           (Data, Typeable)
 import qualified Data.HashMap.Strict as H
 import           Data.Ratio          ((%))
@@ -265,7 +266,7 @@ data Customer = Customer {
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Customer`
 instance FromJSON Customer where
-    parseJSON (Object o)
+  parseJSON (Object o)
         = (Customer
            <$> o .: "object"
            <*> (fromSeconds <$> o .: "created")
@@ -280,14 +281,14 @@ instance FromJSON Customer where
            <*> o .: "cards"
            <*> o .:? "currency"
            <*> o .:? "default_card"
-           <*> o .: "metadata"
-           <|> DeletedCustomer
+           <*> o .: "metadata")
+           <|> (DeletedCustomer
            <$> o .: "deleted"
            <*> (CustomerId <$> o .: "id"))
-           <|> DeletedCustomer
+           <|> (DeletedCustomer
            <$> o .:? "deleted"
-           <*> (CustomerId <$> o .: "id")
-    parseJSON _ = mzero
+           <*> (CustomerId <$> o .: "id"))
+  parseJSON o = typeMismatch "Customer" o
 
 ------------------------------------------------------------------------------
 -- | AccountBalance for a `Customer`
@@ -393,7 +394,7 @@ data Card = Card {
     , cardFunding           :: Text
     , cardExpMonth          :: ExpMonth
     , cardExpYear           :: ExpYear
-    , cardFingerprint       :: Text
+    , cardFingerprint       :: Maybe Text
     , cardCountry           :: Maybe Text
     , cardName              :: Maybe Name
     , cardAddressLine1      :: Maybe AddressLine1
@@ -444,7 +445,7 @@ instance FromJSON Card where
              <*> o .: "funding"
              <*> (ExpMonth <$> o .: "exp_month")
              <*> (ExpYear <$> o .: "exp_year")
-             <*> o .: "fingerprint"
+             <*> o .:? "fingerprint"
              <*> o .:? "country"
              <*> o .:? "name"
              <*> (fmap AddressLine1 <$> o .:? "address_line1")
