@@ -251,7 +251,7 @@ data Customer = Customer {
     , customerDescription    :: Maybe Description
     , customerEmail          :: Maybe Email
     , customerDelinquent     :: Bool
-    , customerSubscriptions  :: StripeList Subscription
+    , customerSubscriptions  :: Maybe (StripeList Subscription)
     , customerDiscount       :: Maybe Discount
     , customerAccountBalance :: Int
     , customerCards          :: StripeList Card
@@ -278,7 +278,7 @@ instance FromJSON Customer where
            <*> o .:? "description"
            <*> (fmap Email <$> o .:? "email")
            <*> o .: "delinquent"
-           <*> o .: "subscriptions"
+           <*> o .:? "subscriptions"
            <*> o .:? "discount"
            <*> o .: "account_balance"
            <*> o .: "cards"
