@@ -2534,6 +2534,7 @@ currencyDivisor cur =
     XPF -> zeroCurrency
     EUR -> hundred
     USD -> hundred
+    CHF -> hundred
     _   -> error $ "please submit a patch to currencyDivisor for this currency: " ++ show cur
   where
     zeroCurrency = fromIntegral
