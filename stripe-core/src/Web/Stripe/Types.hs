@@ -1886,6 +1886,113 @@ instance FromJSON Event where
    parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
+-- | `PaymentIntentId` for `PaymentIntent`
+newtype PaymentIntentId =
+  PaymentIntentId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | `PaymentIntent` Object
+data PaymentIntent = PaymentIntent {
+      paymentIntentId                        :: PaymentIntentId
+    , paymentIntentAmount                    :: Int
+    , paymentIntentAmountCapturable          :: Maybe Int
+    , paymentIntentAmountReceived            :: Maybe Int
+    , paymentIntentApplication               :: Maybe (Expandable ApplicationId)
+    , paymentIntentApplicationFeeAmount      :: Maybe Int
+    , paymentIntentCanceledAt                :: Maybe UTCTime
+    , paymentIntentCancellationReason        :: Maybe CancellationReason
+    , paymentIntentCaptureMethod             :: CaptureMethod
+    , paymentIntentCharges                   :: Maybe (StripeList Charge)
+    , paymentIntentClientSecret              :: Maybe (Text)
+    , paymentIntentConfirmationMethod        :: ConfirmationMethod
+    , paymentIntentCreated                   :: UTCTime
+    , paymentIntentCurrency                  :: Currency
+    , paymentIntentCustomer                  :: Maybe (Expandable CustomerId)
+    , paymentInventInvoice                   :: Maybe (Expandable InvoiceId)
+    , paymentIntentLastPaymentError          :: Maybe TODO
+    , paymentIntentLiveMode                  :: Maybe Bool
+    , paymentIntentMetadata                  :: Maybe MetaData
+    , paymentIntentNextAction                :: Maybe TOOD
+    , paymentIntentOnBehalfOf                :: Maybe (Expandable AccountId)
+    , paymentIntentPaymentMethod             :: Maybe (Expandable PaymentMethodId)
+    , paymentIntentPaymentOptions            :: Maybe (Expandable PaymentMethodOptionsId)
+    , paymentIntentPaymentMethodTypes        :: [Text]
+    , paymentIntentReceiptEmail              :: Maybe ReceiptEmail
+    , paymentIntentReview                    :: Maybe (Expandable Review)
+    , paymentIntentSetupFutureUsage          :: Maybe Text
+    , paymentIntentShipping                  :: Maybe TODO
+    , paymentIntentStatementDescriptor       :: Maybe StatementDescription
+    , paymentIntentStatementDescriptorSuffix :: Maybe StatementDescription
+    , paymentIntentStatus                    :: PaymentIntentStatus
+    , paymentIntentTransferData              :: Maybe TransferData
+    , paymentIntentTransferGroup             :: Maybe Text
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+data CancellationReason
+  = CancellationReasonDuplicate
+  | CancellationReasonFraudulent
+  | CancellationReasonRequestedByCustomer
+  | CancellationReasonAbandoned
+  | CancellationReasonFailedInvoice
+  | CancellationReasonVoidInvoice
+  | CancellationReasonAutomatic
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+data CaptureMethod
+  = CaptureMethodAutomatic
+  | CaptureMethodManual
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+data ConfirmationMethod
+  = ConfirmationMethodAutomatic
+  | ConfirmationMethodManual
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+data PaymentIntentStatus
+  = PaymentIntentStatusCanceled
+  | PaymentIntentStatusProcessing
+  | PaymentIntentStatusRequiresAction
+  | PaymentIntentStatusRequiresCapture
+  | PaymentIntentStatusRequiresConfirmation
+  | PaymentIntentStatusRequiresPaymentMethod
+  | PaymentIntentStatusSucceeded
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+newtype PaymentMethodId =
+  PaymentMethodId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+data PaymentMethod = PaymentMethod {
+      paymentMethodId                        :: PaymentMethodId
+    , paymentMethodBillingDetails            :: BillingDetails
+    , paymentMethodCard                      :: Maybe PaymentMethodCard
+    , paymentMethodCardPresent               :: Maybe PaymentMethodCardPresent
+    , paymentMethodCreated                   :: UTCTime
+    , paymentMethodCustomer                  :: Maybe (Expandable CustomerId)
+    , paymentMethodLiveMode                  :: Bool
+    , paymentMethodType                      :: PaymentMethodType
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+data PaymentMethodType
+  = PaymentMethodTypeCard
+  | PaymentMethodTypeCardPresent
+
+newtype PaymentMethodOptionsId =
+  PaymentMethodOptionsId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | JSON Instance for `PaymentIntent`
+instance FromJSON PaymentIntent where
+   parseJSON (Object o) =
+        PaymentIntent <$> (PaymentIntentId <$> o .: "id")
+               <*> o .: "amount"
+               <*> o .: "currency"
+               <*> (fromSeconds <$> o .: "created")
+               <*> o .: "object"
+               <*> o .: "charge"
+               <*> o .:? "balance_transaction"
+               <*> o .: "metadata"
+   parseJSON _ = mzero
+
+------------------------------------------------------------------------------
 -- | Connect Application
 data ConnectApp = ConnectApp {
       connectAppId     :: Maybe Text
