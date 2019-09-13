@@ -57,21 +57,18 @@ module Web.Stripe.PaymentIntent
     , EndingBefore (..)
     , ExpandParams (..)
     , PaymentIntent       (..)
-    , PaymentIntentApplicationFee(..)
-    , PaymentIntentReason (..)
     , PaymentIntentId     (..)
     , StripeList   (..)
     ) where
 
 import           Web.Stripe.StripeRequest   (Method (GET, POST),
                                              StripeHasParam, StripeReturn,
-                                             StripeRequest (..), mkStripeRequest)
+                                             StripeRequest (..), toStripeParam, mkStripeRequest)
 import           Web.Stripe.Util            ((</>))
-import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..),
+import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..), Currency(..),
                                              EndingBefore(..), Limit(..),
                                              MetaData(..), PaymentIntent (..),
-                                             PaymentIntentApplicationFee(..),
-                                             PaymentIntentId (..), PaymentIntentReason(..),
+                                             PaymentIntentId (..),
                                              StartingAfter(..), ExpandParams(..),
                                              StripeList (..))
 import           Web.Stripe.Types.Util      (getChargeId)
@@ -88,7 +85,8 @@ createPaymentIntent
   where request = mkStripeRequest POST url params
         url     = "payment_intents"
         params  = toStripeParam amount $
-                  toStripeParam currency
+                  toStripeParam currency $
+                  []
 
 data CreatePaymentIntent
 type instance StripeReturn CreatePaymentIntent = PaymentIntent
@@ -96,14 +94,12 @@ type instance StripeReturn CreatePaymentIntent = PaymentIntent
 ------------------------------------------------------------------------------
 -- | Retrieve a `PaymentIntent` by `ChargeId` and `PaymentIntentId`
 getPaymentIntent
-    :: ChargeId -- ^ `ChargeId` associated with the `PaymentIntent` to be retrieved
-    -> PaymentIntentId -- ^ `PaymentIntentId` associated with the `PaymentIntent` to be retrieved
+    :: PaymentIntentId -- ^ `PaymentIntentId` associated with the `PaymentIntent` to be retrieved
     -> StripeRequest GetPaymentIntent
 getPaymentIntent
-   chargeid
-   (PaymentIntentId refundid) = request
+   (PaymentIntentId paymentIntentid) = request
    where request = mkStripeRequest GET url params
-         url     = "charges" </> getChargeId chargeid </> "refunds" </> refundid
+         url     = "payment_intents" </> paymentIntentid </> "refunds"
          params  = []
 
 data GetPaymentIntent
@@ -113,15 +109,13 @@ instance StripeHasParam GetPaymentIntent ExpandParams
 ------------------------------------------------------------------------------
 -- | Update a `PaymentIntent` by `ChargeId` and `PaymentIntentId`
 updatePaymentIntent
-    :: ChargeId -- ^ `ChargeId` associated with the `Charge` to be updated
-    -> PaymentIntentId -- ^ `PaymentIntentId` associated with the `PaymentIntent` to be retrieved
+    :: PaymentIntentId -- ^ `PaymentIntentId` associated with the `PaymentIntent` to be retrieved
     -> StripeRequest UpdatePaymentIntent
 updatePaymentIntent
-   chargeid
-   (PaymentIntentId refid)
+   (PaymentIntentId paymentIntentid)
                 = request
   where request = mkStripeRequest POST url params
-        url     = "charges" </> getChargeId chargeid  </> "refunds" </> refid
+        url     = "payment_intents" </> paymentIntentid
         params  = []
 
 data UpdatePaymentIntent
@@ -131,12 +125,10 @@ instance StripeHasParam UpdatePaymentIntent MetaData
 ------------------------------------------------------------------------------
 -- | Retrieve a lot of PaymentIntents by `ChargeId`
 getPaymentIntents
-    :: ChargeId               -- ^ `ChargeId` associated with the `PaymentIntents` to get
-    -> StripeRequest GetPaymentIntents
+    :: StripeRequest GetPaymentIntents
 getPaymentIntents
-  chargeid = request
   where request = mkStripeRequest GET url params
-        url     = "charges" </> getChargeId chargeid </> "refunds"
+        url     = "payment_intents"
         params  = []
 
 data GetPaymentIntents

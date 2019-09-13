@@ -1894,7 +1894,7 @@ instance FromJSON Event where
 ------------------------------------------------------------------------------
 -- | `PaymentIntentId` for `PaymentIntent`
 newtype PaymentIntentId =
-  PaymentIntentId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+  PaymentIntentId { getPaymentIntentId :: Text } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `PaymentIntent` Object

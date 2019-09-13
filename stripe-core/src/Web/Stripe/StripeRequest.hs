@@ -58,7 +58,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      IntervalCount(..),
                                      InvoiceId(..), InvoiceItemId(..),
                                      InvoiceLineItemId(..),
-                                     IsVerified(..), MetaData(..), PlanId(..),
+                                     IsVerified(..), MetaData(..), PaymentIntentId(..), PlanId(..),
                                      PlanName(..), Prorate(..), Limit(..),
                                      MaxRedemptions(..), Name(..),
                                      NewBankAccount(..), NewCard(..),
@@ -68,7 +68,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      RefundApplicationFee(..), RefundReason(..),
                                      RoutingNumber(..), StartingAfter(..),
                                      StatementDescription(..), Source(..),
-                                     SubscriptionId(..), TaxID(..), 
+                                     SubscriptionId(..), TaxID(..),
                                      TaxPercent(..), TimeRange(..),
                                      TokenId(..), TransactionId(..),
                                      TransactionType(..), TransferId(..),
@@ -317,6 +317,10 @@ instance ToStripeParam NewCard where
         , ("card[address_state]", (\(AddressState x) -> x) <$> newCardAddressState )
         , ("card[address_zip]", (\(AddressZip x) -> x) <$> newCardAddressZip )
         ]) ++)
+
+instance ToStripeParam PaymentIntentId where
+  toStripeParam (PaymentIntentId rid) =
+    (("payment_intent", Text.encodeUtf8 rid) :)
 
 instance ToStripeParam (Param Text Text) where
   toStripeParam (Param (k,v)) =
