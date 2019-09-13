@@ -9,47 +9,22 @@
 -- Maintainer  : djohnson.m@gmail.com
 -- Stability   : experimental
 -- Portability : POSIX
---
--- < https:/\/\stripe.com/docs/api#refunds >
---
--- @
--- {-\# LANGUAGE OverloadedStrings \#-}
--- import Web.Stripe
--- import Web.Stripe.Customer
--- import Web.Stripe.Charge
--- import Web.Stripe.PaymentIntent
---
--- main :: IO ()
--- main = do
---   let config = StripeConfig (StripeKey "secret_key")
---       credit = CardNumber "4242424242424242"
---       em  = ExpMonth 12
---       ey  = ExpYear 2015
---       cvc = CVC "123"
---       cardinfo = (mkNewCard credit em ey) { newCardCVC = Just cvc }
---   result <- stripe config $ createCustomer -&- cardinfo
---   case result of
---     (Left stripeError) -> print stripeError
---     (Right (Customer { customerId = cid })) -> do
---       result <- stripe config $ createCharge (Amount 100) USD -&- cid
---       case result of
---         (Left stripeError) -> print stripeError
---         (Right (Charge { chargeId   = chid })) -> do
---           result <- stripe config $ createPaymentIntent chid
---           case result of
---             (Left stripeError) -> print stripeError
---             (Right refund)     -> print refund
--- @
 module Web.Stripe.PaymentIntent
     ( -- * API
       CreatePaymentIntent
     , createPaymentIntent
     , GetPaymentIntent
     , getPaymentIntent
-    , GetPaymentIntents
-    , getPaymentIntents
     , UpdatePaymentIntent
     , updatePaymentIntent
+    , ConfirmPaymentIntent
+    , confirmPaymentIntent
+    , CapturePaymentIntent
+    , capturePaymentIntent
+    , CancelPaymentIntent
+    , cancelPaymentIntent
+    , GetPaymentIntents
+    , getPaymentIntents
       -- * Types
     , Amount       (..)
     , Charge       (..)
@@ -71,7 +46,6 @@ import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (
                                              PaymentIntentId (..),
                                              StartingAfter(..), ExpandParams(..),
                                              StripeList (..))
-import           Web.Stripe.Types.Util      (getChargeId)
 
 ------------------------------------------------------------------------------
 -- | create a `PaymentIntent`
@@ -122,11 +96,54 @@ data UpdatePaymentIntent
 type instance StripeReturn UpdatePaymentIntent = PaymentIntent
 instance StripeHasParam UpdatePaymentIntent MetaData
 
+confirmPaymentIntent
+    :: PaymentIntentId
+    -> StripeRequest ConfirmPaymentIntent
+confirmPaymentIntent
+    (PaymentIntentId paymentIntentid)
+              = request
+  where request = mkStripeRequest POST url params
+        url     = "payment_intents" </> paymentIntentid </> "confirm"
+        params  = []
+
+data ConfirmPaymentIntent
+type instance StripeReturn ConfirmPaymentIntent = PaymentIntent
+instance StripeHasParam ConfirmPaymentIntent MetaData
+
+capturePaymentIntent
+    :: PaymentIntentId
+    -> StripeRequest CapturePaymentIntent
+capturePaymentIntent
+    (PaymentIntentId paymentIntentid)
+              = request
+  where request = mkStripeRequest POST url params
+        url     = "payment_intents" </> paymentIntentid </> "capture"
+        params  = []
+
+data CapturePaymentIntent
+type instance StripeReturn CapturePaymentIntent = PaymentIntent
+instance StripeHasParam CapturePaymentIntent MetaData
+
+cancelPaymentIntent
+    :: PaymentIntentId
+    -> StripeRequest CancelPaymentIntent
+cancelPaymentIntent
+    (PaymentIntentId paymentIntentid)
+              = request
+  where request = mkStripeRequest POST url params
+        url     = "payment_intents" </> paymentIntentid </> "cancel"
+        params  = []
+
+data CancelPaymentIntent
+type instance StripeReturn CancelPaymentIntent = PaymentIntent
+instance StripeHasParam CancelPaymentIntent MetaData
+
 ------------------------------------------------------------------------------
--- | Retrieve a lot of PaymentIntents by `ChargeId`
+-- | Retrieve a list of PaymentIntents
 getPaymentIntents
     :: StripeRequest GetPaymentIntents
 getPaymentIntents
+        = request
   where request = mkStripeRequest GET url params
         url     = "payment_intents"
         params  = []
