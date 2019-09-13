@@ -79,20 +79,19 @@ import           Web.Stripe.Types.Util      (getChargeId)
 ------------------------------------------------------------------------------
 -- | create a `PaymentIntent`
 createPaymentIntent
-    :: ChargeId -- ^ `ChargeId` associated with the `Charge` to be refunded
+    :: Amount
+    -> Currency
     -> StripeRequest CreatePaymentIntent
 createPaymentIntent
-    chargeid    = request
+    amount
+    currency    = request
   where request = mkStripeRequest POST url params
-        url     = "charges" </> getChargeId chargeid </> "refunds"
-        params  = []
+        url     = "payment_intents"
+        params  = toStripeParam amount $
+                  toStripeParam currency
 
 data CreatePaymentIntent
 type instance StripeReturn CreatePaymentIntent = PaymentIntent
-instance StripeHasParam CreatePaymentIntent Amount
-instance StripeHasParam CreatePaymentIntent PaymentIntentApplicationFee
-instance StripeHasParam CreatePaymentIntent PaymentIntentReason
-instance StripeHasParam CreatePaymentIntent MetaData
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `PaymentIntent` by `ChargeId` and `PaymentIntentId`

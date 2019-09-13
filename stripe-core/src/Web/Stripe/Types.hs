@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving    #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE RecordWildCards      #-}
@@ -18,7 +19,7 @@ module Web.Stripe.Types where
 ------------------------------------------------------------------------------
 import           Control.Applicative (pure, (<$>), (<*>), (<|>))
 import           Control.Monad       (mzero)
-import           Data.Aeson          (FromJSON (parseJSON), ToJSON(..),
+import           Data.Aeson          (FromJSON (parseJSON), ToJSON(..), withText, withObject,
                                       Value (String, Object, Bool), (.:),
                                       (.:?))
 import           Data.Aeson.Types    (typeMismatch)
@@ -26,7 +27,9 @@ import           Data.Data           (Data, Typeable)
 import qualified Data.HashMap.Strict as H
 import           Data.Ratio          ((%))
 import           Data.Text           (Text)
+import qualified Data.Text           as T
 import           Data.Time           (UTCTime)
+import           Data.Monoid         ((<>))
 import           Numeric             (fromRat, showFFloat)
 import           Text.Read           (lexP, pfail)
 import qualified Text.Read           as R
@@ -51,11 +54,13 @@ deriving instance (Eq   id, Eq   (ExpandsTo id)) => Eq   (Expandable id)
 deriving instance (Ord  id, Ord  (ExpandsTo id)) => Ord  (Expandable id)
 
 type instance ExpandsTo AccountId       = Account
+type instance ExpandsTo ApplicationId   = Application
 type instance ExpandsTo CardId          = Card
 type instance ExpandsTo ChargeId        = Charge
 type instance ExpandsTo CustomerId      = Customer
 type instance ExpandsTo InvoiceId       = Invoice
 type instance ExpandsTo InvoiceItemId   = InvoiceItem
+type instance ExpandsTo PaymentMethodId = PaymentMethod
 type instance ExpandsTo RecipientId     = Recipient
 type instance ExpandsTo RecipientCardId = RecipientCard
 type instance ExpandsTo TransactionId   = BalanceTransaction
@@ -1413,7 +1418,7 @@ newtype ApplicationFeeAmount = ApplicationFeeAmount Integer
 ------------------------------------------------------------------------------
 -- | `ApplicationId` object
 newtype ApplicationId =
-  ApplicationId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+  ApplicationId Text deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `ApplicationFee`
@@ -1775,6 +1780,7 @@ instance FromJSON EventType where
    parseJSON (String "transfer.failed") = pure TransferFailedEvent
    parseJSON (String "ping") = pure PingEvent
    parseJSON (String t) = pure $ UnknownEvent t
+   parseJSON _ = mempty
 
 ------------------------------------------------------------------------------
 -- | `EventId` of an `Event`
@@ -1914,11 +1920,11 @@ data PaymentIntent = PaymentIntent {
     , paymentIntentMetadata                  :: Maybe MetaData
     , paymentIntentNextAction                :: Maybe TODO
     , paymentIntentOnBehalfOf                :: Maybe (Expandable AccountId)
-    , paymentIntentPaymentMethod             :: Maybe (Expandable PaymentMethodId)
-    , paymentIntentPaymentOptions            :: Maybe (Expandable PaymentMethodOptionsId)
+    , paymentIntentPaymentMethod             :: Maybe TODO
+    , paymentIntentPaymentOptions            :: Maybe TODO
     , paymentIntentPaymentMethodTypes        :: [Text]
     , paymentIntentReceiptEmail              :: Maybe ReceiptEmail
-    , paymentIntentReview                    :: Maybe (Expandable TODO)
+    , paymentIntentReview                    :: Maybe TODO
     , paymentIntentSetupFutureUsage          :: Maybe Text
     , paymentIntentShipping                  :: Maybe TODO
     , paymentIntentStatementDescriptor       :: Maybe StatementDescription
@@ -1934,45 +1940,56 @@ data PaymentIntent = PaymentIntent {
 instance FromJSON PaymentIntent where
   parseJSON = withObject "PaymentIntent" $ \o ->
     PaymentIntent
-      <$> o .: "id"
+      <$> (PaymentIntentId <$> o .: "id")
       <*> o .: "amount"
-      <*> o .: "amount_capturable"
-      <*> o .: "amount_received"
-      <*> o .: "application"
-      <*> o .: "application_fee_amount"
-      <*> o .: "canceled_at"
-      <*> o .: "cancellation_reason"
+      <*> o .:? "amount_capturable"
+      <*> o .:? "amount_received"
+      <*> o .:? "application"
+      <*> o .:? "application_fee_amount"
+      <*> o .:? "canceled_at"
+      <*> o .:? "cancellation_reason"
       <*> o .: "capture_method"
-      <*> o .: "charges"
-      <*> o .: "client_secret"
+      <*> o .:? "charges"
+      <*> o .:? "client_secret"
       <*> o .: "confirmation_method"
       <*> o .: "created"
       <*> o .: "currency"
-      <*> o .: "customer"
-      <*> o .: "invoice"
-      <*> o .: "last_payment_error"
-      <*> o .: "live_mode"
-      <*> o .: "metadata"
-      <*> o .: "next_action"
-      <*> o .: "on_behalf_of"
-      <*> o .: "payment_method"
-      <*> o .: "payment_options"
+      <*> o .:? "customer"
+      <*> o .:? "invoice"
+      <*> o .:? "last_payment_error"
+      <*> o .:? "live_mode"
+      <*> o .:? "metadata"
+      <*> o .:? "next_action"
+      <*> o .:? "on_behalf_of"
+      <*> o .:? "payment_method"
+      <*> o .:? "payment_options"
       <*> o .: "payment_method_types"
-      <*> o .: "receipt_email"
-      <*> o .: "review"
-      <*> o .: "setup_future_usage"
-      <*> o .: "shipping"
-      <*> o .: "statement_descriptor"
-      <*> o .: "statement_descriptor_suffix"
+      <*> (fmap ReceiptEmail <$> o .:? "receipt_email")
+      <*> o .:? "review"
+      <*> o .:? "setup_future_usage"
+      <*> o .:? "shipping"
+      <*> o .:? "statement_descriptor"
+      <*> o .:? "statement_descriptor_suffix"
       <*> o .: "status"
-      <*> o .: "transfer_data"
-      <*> o .: "transfer_group"
+      <*> o .:? "transfer_data"
+      <*> o .:? "transfer_group"
 
 data TODO = TODO
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 instance FromJSON TODO where
   parseJSON _ = pure TODO
+
+data Application = Application {
+    applicationId :: ApplicationId
+  , applicationName :: Maybe Text
+  } deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON Application where
+  parseJSON = withObject "Application" $ \o ->
+    Application
+      <$> ApplicationId <$> (o .: "id")
+      <*> o .:? "name"
 
 data CancellationReason
   = CancellationReasonDuplicate
@@ -1985,7 +2002,7 @@ data CancellationReason
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 instance FromJSON CancellationReason where
-  parseJSON = withText $ \t -> case t of
+  parseJSON = withText "CancellationReason" $ \t -> case t of
     "duplicate" -> pure CancellationReasonDuplicate
     "fraudulent" -> pure CancellationReasonFraudulent
     "requestedByCustomer" -> pure CancellationReasonRequestedByCustomer
@@ -1993,7 +2010,7 @@ instance FromJSON CancellationReason where
     "failedInvoice" -> pure CancellationReasonFailedInvoice
     "voidInvoice" -> pure CancellationReasonVoidInvoice
     "automatic" -> pure CancellationReasonAutomatic
-    _ -> fail $ "unknown CancellationReason: " <> t
+    _ -> fail $ "unknown CancellationReason: " <> T.unpack t
 
 
 data CaptureMethod
@@ -2005,6 +2022,7 @@ instance FromJSON CaptureMethod where
   parseJSON = withText "CaptureMethod" $ \t -> case t of
     "automatic" -> pure CaptureMethodAutomatic
     "manual" -> pure CaptureMethodManual
+    _ -> fail $ "Unknown CaptureMethod: " <> T.unpack t
 
 data ConfirmationMethod
   = ConfirmationMethodAutomatic
@@ -2015,6 +2033,7 @@ instance FromJSON ConfirmationMethod where
   parseJSON = withText "ConfirmationMethod" $ \t -> case t of
     "automatic" -> pure ConfirmationMethodAutomatic
     "manual" -> pure ConfirmationMethodManual
+    _ -> fail $ "Unknown ConfirmationMethod: " <> T.unpack t
 
 data PaymentIntentStatus
   = PaymentIntentStatusCanceled
@@ -2035,7 +2054,7 @@ instance FromJSON PaymentIntentStatus where
     "requiresConfirmation" -> pure PaymentIntentStatusRequiresConfirmation
     "requiresPaymentMethod" -> pure PaymentIntentStatusRequiresPaymentMethod
     "succeeded" -> pure PaymentIntentStatusSucceeded
-    _ -> fail $ "Unknown PaymentIntentStatus: " <> t
+    _ -> fail $ "Unknown PaymentIntentStatus: " <> T.unpack t
 
 newtype PaymentMethodId =
   PaymentMethodId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -2061,12 +2080,7 @@ instance FromJSON PaymentMethodType where
   parseJSON = withText "PaymentMethodType" $ \t -> case t of
     "PaymentMethodTypeCard" -> pure PaymentMethodTypeCard
     "PaymentMethodTypeCardPresent" -> pure PaymentMethodTypeCardPresent
-    _ -> fail $ "Unknown PaymentMethodType: " <> t
-
-
-newtype PaymentMethodOptionsId =
-  PaymentMethodOptionsId Text
-  deriving (Read, Show, Eq, Ord, Data, Typeable)
+    _ -> fail $ "Unknown PaymentMethodType: " <> T.unpack t
 
 
 ------------------------------------------------------------------------------
