@@ -1,6 +1,6 @@
 stripe
 ========
-![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg)
+[![Financial Contributors on Open Collective](https://opencollective.com/haskell-stripe/all/badge.svg?label=financial+contributors)](https://opencollective.com/haskell-stripe) ![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg)
 ![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
 [![MIT LICENSE](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/dmjio/stripe/blob/master/stripe-haskell/LICENSE)
 [![Join the chat at https://gitter.im/dmjio/stripe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dmjio/stripe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -128,3 +128,33 @@ main = do
 ## [Issues](https://github.com/dmjio/stripe-haskell/issues)
   Any API recommendations or bugs can be reported on the GitHub issue tracker.
   Pull requests welcome!
+
+## Contributors
+
+### Code Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="https://github.com/dmjio/stripe/graphs/contributors"><img src="https://opencollective.com/haskell-stripe/contributors.svg?width=890&button=false" /></a>
+
+### Financial Contributors
+
+Become a financial contributor and help us sustain our community. [[Contribute](https://opencollective.com/haskell-stripe/contribute)]
+
+#### Individuals
+
+<a href="https://opencollective.com/haskell-stripe"><img src="https://opencollective.com/haskell-stripe/individuals.svg?width=890"></a>
+
+#### Organizations
+
+Support this project with your organization. Your logo will show up here with a link to your website. [[Contribute](https://opencollective.com/haskell-stripe/contribute)]
+
+<a href="https://opencollective.com/haskell-stripe/organization/0/website"><img src="https://opencollective.com/haskell-stripe/organization/0/avatar.svg"></a>
+<a href="https://opencollective.com/haskell-stripe/organization/1/website"><img src="https://opencollective.com/haskell-stripe/organization/1/avatar.svg"></a>
+<a href="https://opencollective.com/haskell-stripe/organization/2/website"><img src="https://opencollective.com/haskell-stripe/organization/2/avatar.svg"></a>
+<a href="https://opencollective.com/haskell-stripe/organization/3/website"><img src="https://opencollective.com/haskell-stripe/organization/3/avatar.svg"></a>
+<a href="https://opencollective.com/haskell-stripe/organization/4/website"><img src="https://opencollective.com/haskell-stripe/organization/4/avatar.svg"></a>
+<a href="https://opencollective.com/haskell-stripe/organization/5/website"><img src="https://opencollective.com/haskell-stripe/organization/5/avatar.svg"></a>
+<a href="https://opencollective.com/haskell-stripe/organization/6/website"><img src="https://opencollective.com/haskell-stripe/organization/6/avatar.svg"></a>
+<a href="https://opencollective.com/haskell-stripe/organization/7/website"><img src="https://opencollective.com/haskell-stripe/organization/7/avatar.svg"></a>
+<a href="https://opencollective.com/haskell-stripe/organization/8/website"><img src="https://opencollective.com/haskell-stripe/organization/8/avatar.svg"></a>
+<a href="https://opencollective.com/haskell-stripe/organization/9/website"><img src="https://opencollective.com/haskell-stripe/organization/9/avatar.svg"></a>
