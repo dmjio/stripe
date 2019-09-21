@@ -1,6 +1,6 @@
 stripe
 ========
-[![Financial Contributors on Open Collective](https://opencollective.com/haskell-stripe/all/badge.svg?label=financial+contributors)](https://opencollective.com/haskell-stripe) ![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg)
+![Hackage](https://img.shields.io/hackage/v/stripe-haskell.svg)
 ![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
 [![MIT LICENSE](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/dmjio/stripe/blob/master/stripe-haskell/LICENSE)
 [![Join the chat at https://gitter.im/dmjio/stripe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dmjio/stripe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
