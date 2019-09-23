@@ -548,6 +548,15 @@ instance FromJSON SubscriptionId where
     parseJSON (String x)   = pure (SubscriptionId x)
     parseJSON _            = mzero
 
+
+data Session = Session {
+      sessionId                         :: SessionId
+
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+newtype SessionId = SessionId { getSessionId :: Text }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
 ------------------------------------------------------------------------------
 -- | Subscription Object
 data Subscription = Subscription {

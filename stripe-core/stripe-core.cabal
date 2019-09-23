@@ -51,6 +51,7 @@ library
                        Web.Stripe.Plan
                        Web.Stripe.Recipient
                        Web.Stripe.Refund
+                       Web.Stripe.Sessions
                        Web.Stripe.StripeRequest
                        Web.Stripe.Subscription
                        Web.Stripe.Token
