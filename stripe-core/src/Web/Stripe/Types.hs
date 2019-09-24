@@ -557,6 +557,25 @@ data Session = Session {
 newtype SessionId = SessionId { getSessionId :: Text }
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
+newtype SuccessUrl = SucessUrl { getSuccessUrl :: Text }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+newtype CancelUrl = CancelUrl { getCancelUrl :: Text }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+newtype LineItems = LineItems { getLineItems :: [LineItem] }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+data LineItem = LineItem
+  { lineItemAmount :: Amount
+  , lineItemCurrency :: Currency
+  , lineItemName :: Text
+  , lineItemQuantity :: Int
+  , lineItemDescription :: Maybe Text
+  , lineItemImages :: Maybe [TODO]
+  }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+
 ------------------------------------------------------------------------------
 -- | Subscription Object
 data Subscription = Subscription {

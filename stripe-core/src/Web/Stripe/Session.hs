@@ -33,27 +33,30 @@ import           Web.Stripe.Util            ((</>))
 import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..), Currency(..),
                                              EndingBefore(..), Limit(..),
                                              MetaData(..), Session (..),
-                                             SessionId (..),
+                                             SessionId (..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..), CustomerId(..),
                                              StartingAfter(..), ExpandParams(..),
                                              StripeList (..))
 
 ------------------------------------------------------------------------------
 -- | create a `Session`
 createSession
-    :: Amount
-    -> Currency
+    :: SuccessUrl -- ^ Success url
+    -> CancelUrl -- ^ Cancel url
     -> StripeRequest CreateSession
 createSession
-    amount
-    currency    = request
+    successUrl
+    cancelUrl   = request
   where request = mkStripeRequest POST url params
         url     = "checkout" </> "sessions"
-        params  = toStripeParam amount $
-                  toStripeParam currency $
+        params  = toStripeParam successUrl $
+                  toStripeParam cancelUrl $
+                  (("payment_method_types[]", "card") :) $
                   []
 
 data CreateSession
 type instance StripeReturn CreateSession = Session
+instance StripeHasParam CreateSession LineItems
+instance StripeHasParam CreateSession CustomerId
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Session` by `ChargeId` and `SessionId`

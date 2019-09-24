@@ -72,7 +72,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      TaxPercent(..), TimeRange(..),
                                      TokenId(..), TransactionId(..),
                                      TransactionType(..), TransferId(..),
-                                     TransferStatus(..), TrialEnd(..),
+                                     TransferStatus(..), TrialEnd(..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..),
                                      TrialPeriodDays(..))
 import           Web.Stripe.Util    (toBytestring, toExpandable,toMetaData,
                                      toSeconds, getParams, toText)
@@ -430,6 +430,18 @@ instance ToStripeParam TransferStatus where
 instance ToStripeParam TrialPeriodDays where
   toStripeParam (TrialPeriodDays days) =
     (("trial_period_days", toBytestring days) :)
+
+instance ToStripeParam SuccessUrl where
+  toStripeParam (SucessUrl url) =
+    (("success_url", toBytestring url) :)
+
+instance ToStripeParam CancelUrl where
+  toStripeParam (CancelUrl url) =
+    (("cancel_url", toBytestring url) :)
+
+instance ToStripeParam LineItems where
+  toStripeParam (LineItems is) =
+    (("line_items", toBytestring is) :)
 
 instance ToStripeParam MetaData where
   toStripeParam (MetaData kvs) =
