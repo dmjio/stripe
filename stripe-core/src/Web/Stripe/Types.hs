@@ -554,6 +554,10 @@ data Session = Session {
 
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
+instance FromJSON Session where
+  parseJSON = withObject "Session" $ \o ->
+    Session <$> (SessionId <$> o .: "id")
+
 newtype SessionId = SessionId { getSessionId :: Text }
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 

@@ -433,11 +433,11 @@ instance ToStripeParam TrialPeriodDays where
 
 instance ToStripeParam SuccessUrl where
   toStripeParam (SucessUrl url) =
-    (("success_url", toBytestring url) :)
+    (("success_url", Text.encodeUtf8 url) :)
 
 instance ToStripeParam CancelUrl where
   toStripeParam (CancelUrl url) =
-    (("cancel_url", toBytestring url) :)
+    (("cancel_url", Text.encodeUtf8 url) :)
 
 instance ToStripeParam LineItems where
   toStripeParam (LineItems is) =
