@@ -16,7 +16,12 @@ module Web.Stripe.Session
     , GetSession
     , getSession
       -- * Types
+    , SessionId(..)
+    , SuccessUrl(..)
+    , CancelUrl(..)
     , Amount       (..)
+    , LineItems(..)
+    , LineItem(..)
     , Charge       (..)
     , ChargeId     (..)
     , EndingBefore (..)

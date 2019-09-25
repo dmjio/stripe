@@ -14,6 +14,7 @@ module Web.Stripe.Util
     , toTextLower
     , getParams
     , toBytestring
+    , encodeList
     , (</>)
     , toMetaData
     , toExpandable
@@ -91,6 +92,15 @@ getParams xs = [ (x, T.encodeUtf8 y) | (x, Just y) <- xs ]
 -- | Convert APITVersion to a ByteString
 toBytestring :: Show a => a -> ByteString
 toBytestring = B8.pack . show
+
+------------------------------------------------------------------------------
+-- | EncodeList
+encodeList :: Text -> [a] -> (a -> [(ByteString, ByteString)]) -> [(ByteString, ByteString)]
+encodeList name items func =
+  concat $ map (uncurry go) $ zip [0..] $ map func items
+  where
+    go :: Int -> [(ByteString, ByteString)] -> [(ByteString, ByteString)]
+    go i = map $ \(key, val) -> (T.encodeUtf8 name <> "[" <> toBytestring i <> "][" <> key <> "]", val)
 
 ------------------------------------------------------------------------------
 -- | To MetaData

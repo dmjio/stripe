@@ -74,7 +74,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      TransactionType(..), TransferId(..),
                                      TransferStatus(..), TrialEnd(..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..),
                                      TrialPeriodDays(..))
-import           Web.Stripe.Util    (toBytestring, toExpandable,toMetaData,
+import           Web.Stripe.Util    (toBytestring, toExpandable,toMetaData, encodeList,
                                      toSeconds, getParams, toText)
 
 ------------------------------------------------------------------------------
@@ -441,7 +441,20 @@ instance ToStripeParam CancelUrl where
 
 instance ToStripeParam LineItems where
   toStripeParam (LineItems is) =
-    (("line_items", toBytestring is) :)
+    encodeListStripeParam "line_items" is
+
+encodeListStripeParam :: ToStripeParam a => Text -> [a] -> ([(ByteString, ByteString)] -> [(ByteString, ByteString)])
+encodeListStripeParam name items = ((encodeList name items $ (\a -> toStripeParam a [])) ++)
+
+instance ToStripeParam LineItem where
+  toStripeParam LineItem{..} =
+    ((getParams
+      [ ("amount", Just $ (\(Amount i) -> toText i) $ lineItemAmount)
+      , ("currency", Just $ toText lineItemCurrency)
+      , ("name", Just lineItemName)
+      , ("quantity", Just $ toText lineItemQuantity)
+      , ("description", lineItemDescription)
+      ]) ++)
 
 instance ToStripeParam MetaData where
   toStripeParam (MetaData kvs) =
