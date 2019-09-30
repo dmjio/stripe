@@ -93,17 +93,17 @@ handleStream
 handleStream decodeValue statusCode r =
   case statusCode of
     200 -> case r of
-      Error message -> parseFail message
+      Error message -> parseFail message Nothing
       (Success value) ->
         case decodeValue value of
-          (Error message) -> parseFail message
+          (Error message) -> parseFail message (Just value)
           (Success a)     -> (Right a)
     code | code >= 400 ->
       case r of
-      Error message -> parseFail message
+      Error message -> parseFail message Nothing
       (Success value) ->
         case fromJSON value of
-          (Error message) -> parseFail message
+          (Error message) -> parseFail message (Just value)
           (Success stripeError) ->
             Left $ setErrorHTTP code stripeError
     _ -> unknownCode
@@ -119,16 +119,17 @@ attemptDecode code = code == 200 || code >= 400
 -- | lift a parser error to be a StripeError
 parseFail
     :: String  -- ^ error message
+    -> Maybe Value
     -> Either StripeError a
-parseFail errorMessage  =
-      Left $ StripeError ParseFailure (T.pack errorMessage) Nothing Nothing Nothing
+parseFail errorMessage mval =
+      Left $ StripeError ParseFailure (T.pack errorMessage) Nothing Nothing Nothing mval
 
 ------------------------------------------------------------------------------
 -- | `StripeError` to return when we don't know what to do with the
 -- received HTTP status code.
 unknownCode :: Either StripeError a
 unknownCode =
-      Left $ StripeError UnknownErrorType mempty Nothing Nothing Nothing
+      Left $ StripeError UnknownErrorType mempty Nothing Nothing Nothing Nothing
 
 ------------------------------------------------------------------------------
 -- | set the `errorHTTP` field of the `StripeError` based on the HTTP
