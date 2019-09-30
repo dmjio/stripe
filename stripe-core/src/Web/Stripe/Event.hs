@@ -50,7 +50,7 @@ import           Web.Stripe.StripeRequest (Method (GET),
 import           Web.Stripe.Util          ((</>))
 import           Web.Stripe.Types         (Created(..), Event (..),
                                            EventId (..), Limit,
-                                           EventData(..),
+                                           EventData(..), ExpandParams(..),
                                            EventType(..), StripeList (..),
                                            Limit(..), StartingAfter(..),
                                            EndingBefore(..))
@@ -84,4 +84,4 @@ instance StripeHasParam GetEvents Created
 instance StripeHasParam GetEvents (EndingBefore EventId)
 instance StripeHasParam GetEvents Limit
 instance StripeHasParam GetEvents (StartingAfter EventId)
--- instance StripeHasParam GetEvents EventType -- FIXME
+instance StripeHasParam GetEvents EventType

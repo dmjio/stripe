@@ -73,7 +73,7 @@ getPaymentIntent
 getPaymentIntent
    (PaymentIntentId paymentIntentid) = request
    where request = mkStripeRequest GET url params
-         url     = "payment_intents" </> paymentIntentid </> "refunds"
+         url     = "payment_intents" </> paymentIntentid
          params  = []
 
 data GetPaymentIntent

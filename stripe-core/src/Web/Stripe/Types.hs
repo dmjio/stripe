@@ -19,9 +19,8 @@ module Web.Stripe.Types where
 ------------------------------------------------------------------------------
 import           Control.Applicative (pure, (<$>), (<*>), (<|>))
 import           Data.Aeson          (FromJSON (parseJSON), ToJSON(..), withText, withObject,
-                                      Value (String, Object, Bool), (.:),
+                                      Value (String, Bool), (.:),
                                       (.:?))
-import           Data.Aeson.Types    (typeMismatch)
 import           Data.Data           (Data, Typeable)
 import qualified Data.HashMap.Strict as H
 import           Data.Ratio          ((%))
@@ -63,6 +62,7 @@ type instance ExpandsTo PaymentMethodId = PaymentMethod
 type instance ExpandsTo RecipientId     = Recipient
 type instance ExpandsTo RecipientCardId = RecipientCard
 type instance ExpandsTo TransactionId   = BalanceTransaction
+type instance ExpandsTo PaymentIntentId = PaymentIntent
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Expandable`
@@ -516,20 +516,29 @@ newtype SubscriptionId = SubscriptionId { getSubscriptionId :: Text }
 
 data Session = Session {
       sessionId                         :: SessionId
-
+    , sessionCancelUrl :: CancelUrl
+    , sessionSuccessUrl :: SuccessUrl
+    , sessionLivemode :: Bool
+    , sessionPaymentIntent :: Expandable PaymentIntentId
+    , sessionCustomer :: Expandable CustomerId
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 instance FromJSON Session where
   parseJSON = withObject "Session" $ \o ->
     Session <$> (SessionId <$> o .: "id")
+            <*> o .: "cancel_url"
+            <*> o .: "success_url"
+            <*> o .: "livemode"
+            <*> o .: "payment_intent"
+            <*> o .: "customer"
 
 newtype SessionId = SessionId { getSessionId :: Text }
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 newtype SuccessUrl = SucessUrl { getSuccessUrl :: Text }
-  deriving (Read, Show, Eq, Ord, Data, Typeable)
+  deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON)
 newtype CancelUrl = CancelUrl { getCancelUrl :: Text }
-  deriving (Read, Show, Eq, Ord, Data, Typeable)
+  deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON)
 
 newtype LineItems = LineItems { getLineItems :: [LineItem] }
   deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -1668,6 +1677,7 @@ data EventType =
   | CustomerDiscountCreatedEvent
   | CustomerDiscountUpdatedEvent
   | CustomerDiscountDeletedEvent
+  | CheckoutSessionCompletedEvent
   | InvoiceCreatedEvent
   | InvoiceUpdatedEvent
   | InvoicePaymentSucceededEvent
@@ -1696,57 +1706,114 @@ data EventType =
 ------------------------------------------------------------------------------
 -- | Event Types JSON Instance
 instance FromJSON EventType where
-   parseJSON (String "account.updated") = pure AccountUpdatedEvent
-   parseJSON (String "account.application.deauthorized") = pure AccountApplicationDeauthorizedEvent
-   parseJSON (String "application_fee.created") = pure ApplicationFeeCreatedEvent
-   parseJSON (String "application_fee.refunded") = pure ApplicationFeeRefundedEvent
-   parseJSON (String "balance.available") = pure BalanceAvailableEvent
-   parseJSON (String "charge.succeeded") = pure ChargeSucceededEvent
-   parseJSON (String "charge.failed") = pure ChargeFailedEvent
-   parseJSON (String "charge.refunded") = pure ChargeRefundedEvent
-   parseJSON (String "charge.captured") = pure ChargeCapturedEvent
-   parseJSON (String "charge.updated") = pure ChargeUpdatedEvent
-   parseJSON (String "charge.dispute.created") = pure ChargeDisputeCreatedEvent
-   parseJSON (String "charge.dispute.updated") = pure ChargeDisputeUpdatedEvent
-   parseJSON (String "charge.dispute.closed") = pure ChargeDisputeClosedEvent
-   parseJSON (String "charge.dispute.funds_withdrawn") = pure ChargeDisputeFundsWithdrawnEvent
-   parseJSON (String "charge.dispute.funds_reinstated") = pure ChargeDisputeFundsReinstatedEvent
-   parseJSON (String "customer.created") = pure CustomerCreatedEvent
-   parseJSON (String "customer.updated") = pure CustomerUpdatedEvent
-   parseJSON (String "customer.deleted") = pure CustomerDeletedEvent
-   parseJSON (String "customer.card.created") = pure CustomerCardCreatedEvent
-   parseJSON (String "customer.card.updated") = pure CustomerCardUpdatedEvent
-   parseJSON (String "customer.card.deleted") = pure CustomerCardDeletedEvent
-   parseJSON (String "customer.subscription.created") = pure CustomerSubscriptionCreatedEvent
-   parseJSON (String "customer.subscription.updated") = pure CustomerSubscriptionUpdatedEvent
-   parseJSON (String "customer.subscription.deleted") = pure CustomerSubscriptionDeletedEvent
-   parseJSON (String "customer.subscription.trial_will_end") = pure CustomerSubscriptionTrialWillEndEvent
-   parseJSON (String "customer.discount.created") = pure CustomerDiscountCreatedEvent
-   parseJSON (String "customer.discount.updated") = pure CustomerDiscountUpdatedEvent
-   parseJSON (String "invoice.created") = pure InvoiceCreatedEvent
-   parseJSON (String "invoice.updated") = pure InvoiceUpdatedEvent
-   parseJSON (String "invoice.payment_succeeded") = pure InvoicePaymentSucceededEvent
-   parseJSON (String "invoice.payment_failed") = pure InvoicePaymentFailedEvent
-   parseJSON (String "invoiceitem.created") = pure InvoiceItemCreatedEvent
-   parseJSON (String "invoiceitem.updated") = pure InvoiceItemUpdatedEvent
-   parseJSON (String "invoiceitem.deleted") = pure InvoiceItemDeletedEvent
-   parseJSON (String "plan.created") = pure PlanCreatedEvent
-   parseJSON (String "plan.updated") = pure PlanUpdatedEvent
-   parseJSON (String "plan.deleted") = pure PlanDeletedEvent
-   parseJSON (String "coupon.created") = pure CouponCreatedEvent
-   parseJSON (String "coupon.updated") = pure CouponUpdatedEvent
-   parseJSON (String "coupon.deleted") = pure CouponDeletedEvent
-   parseJSON (String "recipient.created") = pure RecipientCreatedEvent
-   parseJSON (String "recipient.updated") = pure RecipientUpdatedEvent
-   parseJSON (String "recipient.deleted") = pure RecipientDeletedEvent
-   parseJSON (String "transfer.created") = pure TransferCreatedEvent
-   parseJSON (String "transfer.updated") = pure TransferUpdatedEvent
-   parseJSON (String "transfer.canceled") = pure TransferCanceledEvent
-   parseJSON (String "transfer.paid") = pure TransferPaidEvent
-   parseJSON (String "transfer.failed") = pure TransferFailedEvent
-   parseJSON (String "ping") = pure PingEvent
-   parseJSON (String t) = pure $ UnknownEvent t
-   parseJSON _ = mempty
+   parseJSON = withText "EventType" $ \t -> case t of
+     "account.updated" -> pure AccountUpdatedEvent
+     "account.application.deauthorized" -> pure AccountApplicationDeauthorizedEvent
+     "application_fee.created" -> pure ApplicationFeeCreatedEvent
+     "application_fee.refunded" -> pure ApplicationFeeRefundedEvent
+     "balance.available" -> pure BalanceAvailableEvent
+     "charge.succeeded" -> pure ChargeSucceededEvent
+     "charge.failed" -> pure ChargeFailedEvent
+     "charge.refunded" -> pure ChargeRefundedEvent
+     "charge.captured" -> pure ChargeCapturedEvent
+     "charge.updated" -> pure ChargeUpdatedEvent
+     "charge.dispute.created" -> pure ChargeDisputeCreatedEvent
+     "charge.dispute.updated" -> pure ChargeDisputeUpdatedEvent
+     "charge.dispute.closed" -> pure ChargeDisputeClosedEvent
+     "charge.dispute.funds_withdrawn" -> pure ChargeDisputeFundsWithdrawnEvent
+     "charge.dispute.funds_reinstated" -> pure ChargeDisputeFundsReinstatedEvent
+     "customer.created" -> pure CustomerCreatedEvent
+     "customer.updated" -> pure CustomerUpdatedEvent
+     "customer.deleted" -> pure CustomerDeletedEvent
+     "customer.card.created" -> pure CustomerCardCreatedEvent
+     "customer.card.updated" -> pure CustomerCardUpdatedEvent
+     "customer.card.deleted" -> pure CustomerCardDeletedEvent
+     "customer.subscription.created" -> pure CustomerSubscriptionCreatedEvent
+     "customer.subscription.updated" -> pure CustomerSubscriptionUpdatedEvent
+     "customer.subscription.deleted" -> pure CustomerSubscriptionDeletedEvent
+     "checkout.session.completed" -> pure CheckoutSessionCompletedEvent
+     "customer.subscription.trial_will_end" -> pure CustomerSubscriptionTrialWillEndEvent
+     "customer.discount.created" -> pure CustomerDiscountCreatedEvent
+     "customer.discount.updated" -> pure CustomerDiscountUpdatedEvent
+     "invoice.created" -> pure InvoiceCreatedEvent
+     "invoice.updated" -> pure InvoiceUpdatedEvent
+     "invoice.payment_succeeded" -> pure InvoicePaymentSucceededEvent
+     "invoice.payment_failed" -> pure InvoicePaymentFailedEvent
+     "invoiceitem.created" -> pure InvoiceItemCreatedEvent
+     "invoiceitem.updated" -> pure InvoiceItemUpdatedEvent
+     "invoiceitem.deleted" -> pure InvoiceItemDeletedEvent
+     "plan.created" -> pure PlanCreatedEvent
+     "plan.updated" -> pure PlanUpdatedEvent
+     "plan.deleted" -> pure PlanDeletedEvent
+     "coupon.created" -> pure CouponCreatedEvent
+     "coupon.updated" -> pure CouponUpdatedEvent
+     "coupon.deleted" -> pure CouponDeletedEvent
+     "recipient.created" -> pure RecipientCreatedEvent
+     "recipient.updated" -> pure RecipientUpdatedEvent
+     "recipient.deleted" -> pure RecipientDeletedEvent
+     "transfer.created" -> pure TransferCreatedEvent
+     "transfer.updated" -> pure TransferUpdatedEvent
+     "transfer.canceled" -> pure TransferCanceledEvent
+     "transfer.paid" -> pure TransferPaidEvent
+     "transfer.failed" -> pure TransferFailedEvent
+     "ping" -> pure PingEvent
+     _ -> pure $ UnknownEvent t
+
+
+eventTypeText :: EventType -> Text
+eventTypeText et = case et of
+     AccountUpdatedEvent -> "account.updated"
+     AccountApplicationDeauthorizedEvent -> "account.application.deauthorized"
+     ApplicationFeeCreatedEvent -> "application_fee.created"
+     ApplicationFeeRefundedEvent -> "application_fee.refunded"
+     BalanceAvailableEvent -> "balance.available"
+     ChargeSucceededEvent -> "charge.succeeded"
+     ChargeFailedEvent -> "charge.failed"
+     ChargeRefundedEvent -> "charge.refunded"
+     ChargeCapturedEvent -> "charge.captured"
+     ChargeUpdatedEvent -> "charge.updated"
+     ChargeDisputeCreatedEvent -> "charge.dispute.created"
+     ChargeDisputeUpdatedEvent -> "charge.dispute.updated"
+     ChargeDisputeClosedEvent -> "charge.dispute.closed"
+     ChargeDisputeFundsWithdrawnEvent -> "charge.dispute.funds_withdrawn"
+     ChargeDisputeFundsReinstatedEvent -> "charge.dispute.funds_reinstated"
+     CustomerCreatedEvent -> "customer.created"
+     CustomerUpdatedEvent -> "customer.updated"
+     CustomerDeletedEvent -> "customer.deleted"
+     CustomerCardCreatedEvent -> "customer.card.created"
+     CustomerCardUpdatedEvent -> "customer.card.updated"
+     CustomerCardDeletedEvent -> "customer.card.deleted"
+     CustomerSubscriptionCreatedEvent -> "customer.subscription.created"
+     CustomerSubscriptionUpdatedEvent -> "customer.subscription.updated"
+     CustomerSubscriptionDeletedEvent -> "customer.subscription.deleted"
+     CustomerSubscriptionTrialWillEndEvent -> "customer.subscription.trial_will_end"
+     CustomerDiscountCreatedEvent -> "customer.discount.created"
+     CustomerDiscountUpdatedEvent -> "customer.discount.updated"
+     CustomerDiscountDeletedEvent -> "customer.discount.deleted"
+     CheckoutSessionCompletedEvent -> "checkout.session.completed"
+     InvoiceCreatedEvent -> "invoice.created"
+     InvoiceUpdatedEvent -> "invoice.updated"
+     InvoicePaymentSucceededEvent -> "invoice.payment_succeeded"
+     InvoicePaymentFailedEvent -> "invoice.payment_failed"
+     InvoiceItemCreatedEvent -> "invoiceitem.created"
+     InvoiceItemUpdatedEvent -> "invoiceitem.updated"
+     InvoiceItemDeletedEvent -> "invoiceitem.deleted"
+     PlanCreatedEvent -> "plan.created"
+     PlanUpdatedEvent -> "plan.updated"
+     PlanDeletedEvent -> "plan.deleted"
+     CouponCreatedEvent -> "coupon.created"
+     CouponUpdatedEvent -> "coupon.updated"
+     CouponDeletedEvent -> "coupon.deleted"
+     RecipientCreatedEvent -> "recipient.created"
+     RecipientUpdatedEvent -> "recipient.updated"
+     RecipientDeletedEvent -> "recipient.deleted"
+     TransferCreatedEvent -> "transfer.created"
+     TransferUpdatedEvent -> "transfer.updated"
+     TransferCanceledEvent -> "transfer.canceled"
+     TransferPaidEvent -> "transfer.paid"
+     TransferFailedEvent -> "transfer.failed"
+     PingEvent -> "ping"
+     UnknownEvent t -> t
 
 ------------------------------------------------------------------------------
 -- | `EventId` of an `Event`
@@ -1771,9 +1838,10 @@ data EventData =
   | SubscriptionEvent Subscription
   | DiscountEvent Discount
   | InvoiceItemEvent InvoiceItem
-  | UnknownEventData
+  | CheckoutEvent Session
+  | UnknownEventData Value
   | Ping
-  deriving (Read, Show, Eq, Ord, Data, Typeable)
+  deriving (Read, Show, Eq, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `Event` Object
@@ -1786,7 +1854,7 @@ data Event = Event {
     , eventObject          :: Text
     , eventPendingWebHooks :: Int
     , eventRequest         :: Maybe Text
-} deriving (Read, Show, Eq, Ord, Data, Typeable)
+} deriving (Read, Show, Eq, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Event`
@@ -1797,8 +1865,8 @@ instance FromJSON Event where
      eventLiveMode <- o .: "livemode"
      eventType <- o .: "type"
      String etype <- o .: "type"
-     obj <- o .: "data"
-     eventData <-
+     dataVal <- o .: "data"
+     eventData <- flip (withObject "EventData") dataVal $ \obj ->
        case etype of
         "account.updated" -> AccountEvent <$> obj .: "object"
         "account.application.deauthorized" -> AccountApplicationEvent <$> obj .: "object"
@@ -1828,6 +1896,7 @@ instance FromJSON Event where
         "customer.discount.created" -> DiscountEvent <$> obj .: "object"
         "customer.discount.updated" -> DiscountEvent <$> obj .: "object"
         "customer.discount.deleted" -> DiscountEvent <$> obj .: "object"
+        "checkout.session.completed" -> CheckoutEvent <$> obj .: "object"
         "invoice.created" -> InvoiceEvent <$> obj .: "object"
         "invoice.updated" -> InvoiceEvent <$> obj .: "object"
         "invoice.payment_succeeded" -> InvoiceEvent <$> obj .: "object"
@@ -1850,7 +1919,7 @@ instance FromJSON Event where
         "transfer.paid" -> TransferEvent <$> obj .: "object"
         "transfer.failed" -> TransferEvent <$> obj .: "object"
         "ping" -> pure Ping
-        _        -> pure UnknownEventData
+        _        -> pure $ UnknownEventData dataVal
      eventObject <- o .: "object"
      eventPendingWebHooks <- o .: "pending_webhooks"
      eventRequest <- o .:? "request"
@@ -1859,7 +1928,7 @@ instance FromJSON Event where
 ------------------------------------------------------------------------------
 -- | `PaymentIntentId` for `PaymentIntent`
 newtype PaymentIntentId =
-  PaymentIntentId { getPaymentIntentId :: Text } deriving (Read, Show, Eq, Ord, Data, Typeable)
+  PaymentIntentId { getPaymentIntentId :: Text } deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON)
 
 ------------------------------------------------------------------------------
 -- | `PaymentIntent` Object
@@ -1911,13 +1980,13 @@ instance FromJSON PaymentIntent where
       <*> o .:? "amount_received"
       <*> o .:? "application"
       <*> o .:? "application_fee_amount"
-      <*> o .:? "canceled_at"
+      <*> (fmap fromSeconds <$> o .:? "canceled_at")
       <*> o .:? "cancellation_reason"
       <*> o .: "capture_method"
       <*> o .:? "charges"
       <*> o .:? "client_secret"
       <*> o .: "confirmation_method"
-      <*> o .: "created"
+      <*> (fromSeconds <$> o .: "created")
       <*> o .: "currency"
       <*> o .:? "customer"
       <*> o .:? "invoice"

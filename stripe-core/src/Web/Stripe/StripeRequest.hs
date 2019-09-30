@@ -51,7 +51,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      CustomerId(..), CVC(..), Date(..),
                                      DefaultCard(..), Description(..),
                                      Duration(..), DurationInMonths(..),
-                                     Email(..), EndingBefore(..), EventId(..),
+                                     Email(..), EndingBefore(..), EventId(..), EventType(..),
                                      Evidence(..), Expandable(..),
                                      ExpandParams(..), ExpMonth(..),
                                      ExpYear(..), Forgiven(..), Interval(..),
@@ -73,7 +73,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      TokenId(..), TransactionId(..),
                                      TransactionType(..), TransferId(..),
                                      TransferStatus(..), TrialEnd(..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..),
-                                     TrialPeriodDays(..))
+                                     TrialPeriodDays(..), eventTypeText)
 import           Web.Stripe.Util    (toBytestring, toExpandable,toMetaData, encodeList,
                                      toSeconds, getParams, toText)
 
@@ -237,6 +237,10 @@ instance ToStripeParam Email where
 instance ToStripeParam EventId where
   toStripeParam (EventId eid) =
     (("event", Text.encodeUtf8 eid) :)
+
+instance ToStripeParam EventType where
+  toStripeParam et =
+    (("type", Text.encodeUtf8 (eventTypeText et)) :)
 
 instance ToStripeParam Evidence where
   toStripeParam (Evidence txt) =
