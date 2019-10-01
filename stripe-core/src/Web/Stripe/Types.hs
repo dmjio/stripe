@@ -533,7 +533,7 @@ instance FromJSON Session where
             <*> o .: "customer"
 
 newtype SessionId = SessionId { getSessionId :: Text }
-  deriving (Read, Show, Eq, Ord, Data, Typeable)
+  deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON )
 
 newtype SuccessUrl = SucessUrl { getSuccessUrl :: Text }
   deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON)
@@ -1817,7 +1817,7 @@ eventTypeText et = case et of
 
 ------------------------------------------------------------------------------
 -- | `EventId` of an `Event`
-newtype EventId = EventId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+newtype EventId = EventId Text deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON)
 
 ------------------------------------------------------------------------------
 -- | EventData
