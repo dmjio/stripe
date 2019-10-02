@@ -543,6 +543,12 @@ newtype CancelUrl = CancelUrl { getCancelUrl :: Text }
 newtype LineItems = LineItems { getLineItems :: [LineItem] }
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
+newtype ClientReferenceId = ClientReferenceId { getClientReferenceId :: Text }
+  deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON)
+
+newtype CustomerEmail = CustomerEmail { getCustomerEmail :: Text }
+  deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON)
+
 data LineItem = LineItem
   { lineItemAmount :: Amount
   , lineItemCurrency :: Currency
@@ -1846,7 +1852,7 @@ data EventData =
 ------------------------------------------------------------------------------
 -- | `Event` Object
 data Event = Event {
-      eventId              :: Maybe EventId
+      eventId              :: EventId
     , eventCreated         :: UTCTime
     , eventLiveMode        :: Bool
     , eventType            :: EventType
@@ -1860,7 +1866,7 @@ data Event = Event {
 -- | JSON Instance for `Event`
 instance FromJSON Event where
    parseJSON = withObject "Event" $ \o -> do
-     eventId <- fmap EventId <$> o .:? "id"
+     eventId <- EventId <$> o .: "id"
      eventCreated <- fromSeconds <$> o .: "created"
      eventLiveMode <- o .: "livemode"
      eventType <- o .: "type"

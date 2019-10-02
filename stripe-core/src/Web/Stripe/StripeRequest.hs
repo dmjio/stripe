@@ -48,7 +48,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      Capture(..), ChargeId(..), Closed(..),
                                      CouponId(..),
                                      Country(..), Created(..), Currency(..),
-                                     CustomerId(..), CVC(..), Date(..),
+                                     CustomerId(..), CustomerEmail(..), ClientReferenceId(..), CVC(..), Date(..),
                                      DefaultCard(..), Description(..),
                                      Duration(..), DurationInMonths(..),
                                      Email(..), EndingBefore(..), EventId(..), EventType(..),
@@ -201,6 +201,14 @@ instance ToStripeParam Currency where
 instance ToStripeParam CustomerId where
   toStripeParam (CustomerId cid) =
     (("customer", Text.encodeUtf8 cid) :)
+
+instance ToStripeParam ClientReferenceId where
+  toStripeParam (ClientReferenceId cid) =
+    (("client_reference_id", Text.encodeUtf8 cid) :)
+
+instance ToStripeParam CustomerEmail where
+  toStripeParam (CustomerEmail cid) =
+    (("customer_email", Text.encodeUtf8 cid) :)
 
 instance ToStripeParam CouponId where
   toStripeParam (CouponId cid) =

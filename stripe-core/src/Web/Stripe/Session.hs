@@ -19,6 +19,8 @@ module Web.Stripe.Session
     , SessionId(..)
     , SuccessUrl(..)
     , CancelUrl(..)
+    , ClientReferenceId(..)
+    , CustomerEmail(..)
     , Amount       (..)
     , LineItems(..)
     , LineItem(..)
@@ -38,7 +40,7 @@ import           Web.Stripe.Util            ((</>))
 import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..), Currency(..),
                                              EndingBefore(..), Limit(..),
                                              MetaData(..), Session (..),
-                                             SessionId (..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..), CustomerId(..),
+                                             SessionId (..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..), CustomerId(..), CustomerEmail(..), ClientReferenceId(..),
                                              StartingAfter(..), ExpandParams(..),
                                              StripeList (..))
 
@@ -62,6 +64,8 @@ data CreateSession
 type instance StripeReturn CreateSession = Session
 instance StripeHasParam CreateSession LineItems
 instance StripeHasParam CreateSession CustomerId
+instance StripeHasParam CreateSession ClientReferenceId
+instance StripeHasParam CreateSession CustomerEmail
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Session` by `ChargeId` and `SessionId`
