@@ -66,6 +66,7 @@ instance StripeHasParam CreateSession LineItems
 instance StripeHasParam CreateSession CustomerId
 instance StripeHasParam CreateSession ClientReferenceId
 instance StripeHasParam CreateSession CustomerEmail
+instance StripeHasParam CreateSession ExpandParams
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `Session` by `ChargeId` and `SessionId`

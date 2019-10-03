@@ -520,7 +520,9 @@ data Session = Session {
     , sessionSuccessUrl :: SuccessUrl
     , sessionLivemode :: Bool
     , sessionPaymentIntent :: Expandable PaymentIntentId
-    , sessionCustomer :: Expandable CustomerId
+    , sessionCustomer :: Maybe (Expandable CustomerId)
+    , sessionClientReferenceId :: Maybe ClientReferenceId
+    , sessionCustomerEmail :: Maybe CustomerEmail
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 instance FromJSON Session where
@@ -530,7 +532,9 @@ instance FromJSON Session where
             <*> o .: "success_url"
             <*> o .: "livemode"
             <*> o .: "payment_intent"
-            <*> o .: "customer"
+            <*> o .:? "customer"
+            <*> o .:? "client_reference_id"
+            <*> o .:? "customer_email"
 
 newtype SessionId = SessionId { getSessionId :: Text }
   deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON )
@@ -2081,6 +2085,7 @@ data PaymentIntentStatus
   | PaymentIntentStatusRequiresAction
   | PaymentIntentStatusRequiresCapture
   | PaymentIntentStatusRequiresConfirmation
+  | PaymentIntentStatusRequiresSource
   | PaymentIntentStatusRequiresPaymentMethod
   | PaymentIntentStatusSucceeded
   deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -2089,10 +2094,11 @@ instance FromJSON PaymentIntentStatus where
   parseJSON = withText "PaymentIntentStatus" $ \t -> case t of
     "canceled" -> pure PaymentIntentStatusCanceled
     "processing" -> pure PaymentIntentStatusProcessing
-    "requiresAction" -> pure PaymentIntentStatusRequiresAction
-    "requiresCapture" -> pure PaymentIntentStatusRequiresCapture
-    "requiresConfirmation" -> pure PaymentIntentStatusRequiresConfirmation
-    "requiresPaymentMethod" -> pure PaymentIntentStatusRequiresPaymentMethod
+    "requires_action" -> pure PaymentIntentStatusRequiresAction
+    "requires_capture" -> pure PaymentIntentStatusRequiresCapture
+    "requires_confirmation" -> pure PaymentIntentStatusRequiresConfirmation
+    "requires_payment_method" -> pure PaymentIntentStatusRequiresPaymentMethod
+    "requires_source" -> pure PaymentIntentStatusRequiresSource
     "succeeded" -> pure PaymentIntentStatusSucceeded
     _ -> fail $ "Unknown PaymentIntentStatus: " <> T.unpack t
 
