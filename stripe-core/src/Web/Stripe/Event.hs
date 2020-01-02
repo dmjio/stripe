@@ -50,7 +50,7 @@ import           Web.Stripe.StripeRequest (Method (GET),
 import           Web.Stripe.Util          ((</>))
 import           Web.Stripe.Types         (Created(..), Event (..),
                                            EventId (..), Limit,
-                                           EventData(..), ExpandParams(..),
+                                           EventData(..),
                                            EventType(..), StripeList (..),
                                            Limit(..), StartingAfter(..),
                                            EndingBefore(..))

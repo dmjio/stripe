@@ -58,11 +58,12 @@ type instance ExpandsTo ChargeId        = Charge
 type instance ExpandsTo CustomerId      = Customer
 type instance ExpandsTo InvoiceId       = Invoice
 type instance ExpandsTo InvoiceItemId   = InvoiceItem
-type instance ExpandsTo PaymentMethodId = PaymentMethod
-type instance ExpandsTo RecipientId     = Recipient
-type instance ExpandsTo RecipientCardId = RecipientCard
-type instance ExpandsTo TransactionId   = BalanceTransaction
 type instance ExpandsTo PaymentIntentId = PaymentIntent
+type instance ExpandsTo PaymentMethodId = PaymentMethod
+type instance ExpandsTo RecipientCardId = RecipientCard
+type instance ExpandsTo RecipientId     = Recipient
+type instance ExpandsTo SubscriptionId  = Subscription
+type instance ExpandsTo TransactionId   = BalanceTransaction
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Expandable`
@@ -519,22 +520,62 @@ data Session = Session {
     , sessionCancelUrl :: CancelUrl
     , sessionSuccessUrl :: SuccessUrl
     , sessionLivemode :: Bool
-    , sessionPaymentIntent :: Expandable PaymentIntentId
-    , sessionCustomer :: Maybe (Expandable CustomerId)
     , sessionClientReferenceId :: Maybe ClientReferenceId
     , sessionCustomerEmail :: Maybe CustomerEmail
+    , sessionBillingAddressCollection :: Maybe TODO
+    , sessionDisplayItems :: Maybe [TODO]
+    , sessionLocale :: Maybe TODO
+    , sessionPaymentMethodTypes :: Maybe [Text]
+    , sessionSubmitType :: Maybe TODO
+    , sessionData :: SessionData
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
+data SessionMode
+  = SessionModePayment
+  | SessionModeSetup
+  | SessionModeSubscription
+  | UnknownSessionMode Text
+  deriving (Show, Read, Eq, Ord, Data, Typeable)
+
+parseSessionMode :: Text -> SessionMode
+parseSessionMode t =
+  case t of
+    "payment" -> SessionModePayment
+    "setup" -> SessionModeSetup
+    "subscription" -> SessionModeSubscription
+    _ -> UnknownSessionMode t
+
+instance FromJSON SessionMode where
+  parseJSON = withText "SessionMode" $ pure . parseSessionMode
+
+data SessionData
+  = SessionPayment (Expandable CustomerId) (Expandable PaymentIntentId)
+  | SessionSetup TODO
+  | SessionSubscription (Expandable CustomerId) (Expandable SubscriptionId)
+  | UnknownSession Text
+  deriving (Show, Read, Eq, Ord, Data, Typeable)
+
+
 instance FromJSON Session where
-  parseJSON = withObject "Session" $ \o ->
+  parseJSON = withObject "Session" $ \o -> do
+    mode <- o .: "mode"
+    sessionData <- case mode of
+      SessionModePayment -> SessionPayment <$> o .: "customer" <*> o .: "payment_intent"
+      SessionModeSetup -> pure $ SessionSetup TODO
+      SessionModeSubscription -> SessionSubscription <$> o .: "customer" <*>  o .: "subscription"
+      UnknownSessionMode t -> pure $ UnknownSession t
     Session <$> (SessionId <$> o .: "id")
             <*> o .: "cancel_url"
             <*> o .: "success_url"
             <*> o .: "livemode"
-            <*> o .: "payment_intent"
-            <*> o .:? "customer"
             <*> o .:? "client_reference_id"
             <*> o .:? "customer_email"
+            <*> o .:? "billing_address_collection"
+            <*> o .:? "display_items"
+            <*> o .:? "locale"
+            <*> o .:? "payment_method_types"
+            <*> o .:? "submit_type"
+            <*> pure sessionData
 
 newtype SessionId = SessionId { getSessionId :: Text }
   deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON )

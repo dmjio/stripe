@@ -16,7 +16,6 @@ module Web.Stripe.Session
     , GetSession
     , getSession
       -- * Types
-    , SessionId(..)
     , SuccessUrl(..)
     , CancelUrl(..)
     , ClientReferenceId(..)
@@ -30,6 +29,7 @@ module Web.Stripe.Session
     , ExpandParams (..)
     , Session       (..)
     , SessionId     (..)
+    , SessionData   (..)
     , StripeList   (..)
     ) where
 
@@ -37,11 +37,11 @@ import           Web.Stripe.StripeRequest   (Method (GET, POST),
                                              StripeHasParam, StripeReturn,
                                              StripeRequest (..), toStripeParam, mkStripeRequest)
 import           Web.Stripe.Util            ((</>))
-import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..), Currency(..),
-                                             EndingBefore(..), Limit(..),
-                                             MetaData(..), Session (..),
-                                             SessionId (..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..), CustomerId(..), CustomerEmail(..), ClientReferenceId(..),
-                                             StartingAfter(..), ExpandParams(..),
+import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..),
+                                             EndingBefore(..),
+                                             Session (..),
+                                             SessionId (..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..), CustomerId(..), CustomerEmail(..), ClientReferenceId(..), SessionData(..),
+                                             ExpandParams(..),
                                              StripeList (..))
 
 ------------------------------------------------------------------------------
