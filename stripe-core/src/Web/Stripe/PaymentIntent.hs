@@ -33,6 +33,8 @@ module Web.Stripe.PaymentIntent
     , ExpandParams (..)
     , PaymentIntent       (..)
     , PaymentIntentId     (..)
+    , PaymentMethodTypes     (..)
+    , PaymentMethodType     (..)
     , StripeList   (..)
     ) where
 
@@ -40,10 +42,10 @@ import           Web.Stripe.StripeRequest   (Method (GET, POST),
                                              StripeHasParam, StripeReturn,
                                              StripeRequest (..), toStripeParam, mkStripeRequest)
 import           Web.Stripe.Util            ((</>))
-import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..), Currency(..),
+import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..), Currency(..), CustomerId(..),
                                              EndingBefore(..), Limit(..),
-                                             MetaData(..), PaymentIntent (..),
-                                             PaymentIntentId (..),
+                                             MetaData(..), PaymentIntent (..), PaymentMethodTypes(..), PaymentMethodType(..),
+                                             PaymentIntentId (..), ReceiptEmail(..),
                                              StartingAfter(..), ExpandParams(..),
                                              StripeList (..))
 
@@ -64,6 +66,9 @@ createPaymentIntent
 
 data CreatePaymentIntent
 type instance StripeReturn CreatePaymentIntent = PaymentIntent
+instance StripeHasParam CreatePaymentIntent CustomerId
+instance StripeHasParam CreatePaymentIntent ReceiptEmail
+instance StripeHasParam CreatePaymentIntent PaymentMethodTypes
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `PaymentIntent` by `ChargeId` and `PaymentIntentId`

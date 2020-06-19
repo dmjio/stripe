@@ -58,7 +58,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      IntervalCount(..),
                                      InvoiceId(..), InvoiceItemId(..),
                                      InvoiceLineItemId(..),
-                                     IsVerified(..), MetaData(..), PaymentIntentId(..), PlanId(..),
+                                     IsVerified(..), MetaData(..), PaymentIntentId(..), PaymentMethodTypes(..), PaymentMethodType(..), PlanId(..),
                                      PlanName(..), Prorate(..), Limit(..),
                                      MaxRedemptions(..), Name(..),
                                      NewBankAccount(..), NewCard(..),
@@ -455,6 +455,14 @@ instance ToStripeParam LineItems where
   toStripeParam (LineItems is) =
     encodeListStripeParam "line_items" is
 
+instance ToStripeParam PaymentMethodTypes where
+  toStripeParam (PaymentMethodTypes pmts) =
+    let t pmt = case pmt of
+            PaymentMethodTypeCard -> "card"
+            PaymentMethodTypeCardPresent -> "card_present"
+            PaymentMethodTypeSepaDebit -> "sepa_debit"
+    in ((map (\pmt-> ("payment_method_types[]", t pmt)) pmts) ++)
+
 encodeListStripeParam :: ToStripeParam a => Text -> [a] -> ([(ByteString, ByteString)] -> [(ByteString, ByteString)])
 encodeListStripeParam name items = ((encodeList name items $ (\a -> toStripeParam a [])) ++)
 
@@ -467,6 +475,7 @@ instance ToStripeParam LineItem where
       , ("quantity", Just $ toText lineItemQuantity)
       , ("description", lineItemDescription)
       ]) ++)
+
 
 instance ToStripeParam MetaData where
   toStripeParam (MetaData kvs) =

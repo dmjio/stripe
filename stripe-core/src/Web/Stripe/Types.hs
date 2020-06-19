@@ -1736,6 +1736,12 @@ data EventType =
   | InvoiceItemCreatedEvent
   | InvoiceItemUpdatedEvent
   | InvoiceItemDeletedEvent
+  | PaymentIntentAmountCapturableUpdated
+  | PaymentIntentCanceled
+  | PaymentIntentCreated
+  | PaymentIntentPaymentFailed
+  | PaymentIntentProcessing
+  | PaymentIntentSucceeded
   | PlanCreatedEvent
   | PlanUpdatedEvent
   | PlanDeletedEvent
@@ -1793,6 +1799,12 @@ instance FromJSON EventType where
      "invoiceitem.created" -> pure InvoiceItemCreatedEvent
      "invoiceitem.updated" -> pure InvoiceItemUpdatedEvent
      "invoiceitem.deleted" -> pure InvoiceItemDeletedEvent
+     "payment_intent.amount_capturable_updated" -> pure PaymentIntentAmountCapturableUpdated
+     "payment_intent.canceled" -> pure PaymentIntentCanceled
+     "payment_intent.created" -> pure PaymentIntentCreated
+     "payment_intent.payment_failed" -> pure PaymentIntentPaymentFailed
+     "payment_intent.processing" -> pure PaymentIntentProcessing
+     "payment_intent.succeeded" -> pure PaymentIntentSucceeded
      "plan.created" -> pure PlanCreatedEvent
      "plan.updated" -> pure PlanUpdatedEvent
      "plan.deleted" -> pure PlanDeletedEvent
@@ -1849,6 +1861,12 @@ eventTypeText et = case et of
      InvoiceItemCreatedEvent -> "invoiceitem.created"
      InvoiceItemUpdatedEvent -> "invoiceitem.updated"
      InvoiceItemDeletedEvent -> "invoiceitem.deleted"
+     PaymentIntentAmountCapturableUpdated -> "payment_intent.amount_capturable_updated"
+     PaymentIntentCanceled -> "payment_intent.canceled"
+     PaymentIntentCreated -> "payment_intent.created"
+     PaymentIntentPaymentFailed -> "payment_intent.payment_failed"
+     PaymentIntentProcessing -> "payment_intent.processing"
+     PaymentIntentSucceeded -> "payment_intent.succeeded"
      PlanCreatedEvent -> "plan.created"
      PlanUpdatedEvent -> "plan.updated"
      PlanDeletedEvent -> "plan.deleted"
@@ -1889,6 +1907,7 @@ data EventData =
   | SubscriptionEvent Subscription
   | DiscountEvent Discount
   | InvoiceItemEvent InvoiceItem
+  | PaymentIntentEvent PaymentIntent
   | CheckoutEvent Session
   | UnknownEventData Value
   | Ping
@@ -1955,6 +1974,12 @@ instance FromJSON Event where
         "invoiceitem.created" -> InvoiceItemEvent <$> obj .: "object"
         "invoiceitem.updated" -> InvoiceItemEvent <$> obj .: "object"
         "invoiceitem.deleted" -> InvoiceItemEvent <$> obj .: "object"
+        "payment_intent.amount_capturable_updated" -> PaymentIntentEvent <$> obj .: "object"
+        "payment_intent.canceled" -> PaymentIntentEvent <$> obj .: "object"
+        "payment_intent.created" -> PaymentIntentEvent <$> obj .: "object"
+        "payment_intent.payment_failed" -> PaymentIntentEvent <$> obj .: "object"
+        "payment_intent.processing" -> PaymentIntentEvent <$> obj .: "object"
+        "payment_intent.succeeded" -> PaymentIntentEvent <$> obj .: "object"
         "plan.created" -> PlanEvent <$> obj .: "object"
         "plan.updated" -> PlanEvent <$> obj .: "object"
         "plan.deleted" -> PlanEvent <$> obj .: "object"
@@ -2161,12 +2186,14 @@ data PaymentMethod = PaymentMethod {
 data PaymentMethodType
   = PaymentMethodTypeCard
   | PaymentMethodTypeCardPresent
+  | PaymentMethodTypeSepaDebit
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 instance FromJSON PaymentMethodType where
   parseJSON = withText "PaymentMethodType" $ \t -> case t of
     "PaymentMethodTypeCard" -> pure PaymentMethodTypeCard
     "PaymentMethodTypeCardPresent" -> pure PaymentMethodTypeCardPresent
+    "PaymentMethodTypeSepaDebit" -> pure PaymentMethodTypeSepaDebit
     _ -> fail $ "Unknown PaymentMethodType: " <> T.unpack t
 
 
@@ -2354,6 +2381,10 @@ newtype Email = Email Text deriving (Read, Show, Eq, Ord, Data, Typeable)
 ------------------------------------------------------------------------------
 -- | `Email` to send receipt to
 newtype ReceiptEmail = ReceiptEmail Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | `Email` to send receipt to
+newtype PaymentMethodTypes = PaymentMethodTypes [PaymentMethodType] deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | Stripe supports 138 currencies
