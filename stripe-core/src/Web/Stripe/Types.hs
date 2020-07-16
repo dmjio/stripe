@@ -549,7 +549,7 @@ instance FromJSON SessionMode where
   parseJSON = withText "SessionMode" $ pure . parseSessionMode
 
 data SessionData
-  = SessionPayment (Expandable CustomerId) (Expandable PaymentIntentId)
+  = SessionPayment (Maybe (Expandable CustomerId)) (Expandable PaymentIntentId)
   | SessionSetup TODO
   | SessionSubscription (Expandable CustomerId) (Expandable SubscriptionId)
   | UnknownSession Text
@@ -560,7 +560,7 @@ instance FromJSON Session where
   parseJSON = withObject "Session" $ \o -> do
     mode <- o .: "mode"
     sessionData <- case mode of
-      SessionModePayment -> SessionPayment <$> o .: "customer" <*> o .: "payment_intent"
+      SessionModePayment -> SessionPayment <$> o .:? "customer" <*> o .: "payment_intent"
       SessionModeSetup -> pure $ SessionSetup TODO
       SessionModeSubscription -> SessionSubscription <$> o .: "customer" <*>  o .: "subscription"
       UnknownSessionMode t -> pure $ UnknownSession t
@@ -2186,6 +2186,13 @@ data PaymentMethod = PaymentMethod {
 data PaymentMethodType
   = PaymentMethodTypeCard
   | PaymentMethodTypeCardPresent
+  | PaymentMethodTypeIdeal
+  | PaymentMethodTypeFPX
+  | PaymentMethodTypeBacsDebit
+  | PaymentMethodTypeBancontact
+  | PaymentMethodTypeGiropay
+  | PaymentMethodTypeP24
+  | PaymentMethodTypeEPS
   | PaymentMethodTypeSepaDebit
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
@@ -2193,6 +2200,12 @@ instance FromJSON PaymentMethodType where
   parseJSON = withText "PaymentMethodType" $ \t -> case t of
     "PaymentMethodTypeCard" -> pure PaymentMethodTypeCard
     "PaymentMethodTypeCardPresent" -> pure PaymentMethodTypeCardPresent
+    "PaymentMethodTypeIdeal" -> pure PaymentMethodTypeIdeal
+    "PaymentMethodTypeFPX" -> pure PaymentMethodTypeFPX
+    "PaymentMethodTypeBacsDebit" -> pure PaymentMethodTypeBacsDebit
+    "PaymentMethodTypeBancontact" -> pure PaymentMethodTypeBancontact
+    "PaymentMethodTypeGiropay" -> pure PaymentMethodTypeGiropay
+    "PaymentMethodTypeP24" -> pure PaymentMethodTypeP24
     "PaymentMethodTypeSepaDebit" -> pure PaymentMethodTypeSepaDebit
     _ -> fail $ "Unknown PaymentMethodType: " <> T.unpack t
 

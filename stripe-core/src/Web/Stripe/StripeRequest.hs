@@ -460,6 +460,13 @@ instance ToStripeParam PaymentMethodTypes where
     let t pmt = case pmt of
             PaymentMethodTypeCard -> "card"
             PaymentMethodTypeCardPresent -> "card_present"
+            PaymentMethodTypeIdeal -> "ideal"
+            PaymentMethodTypeFPX -> "fpx"
+            PaymentMethodTypeBacsDebit -> "bacs_debit"
+            PaymentMethodTypeBancontact -> "bancontact"
+            PaymentMethodTypeGiropay -> "giropay"
+            PaymentMethodTypeP24 -> "p24"
+            PaymentMethodTypeEPS -> "eps"
             PaymentMethodTypeSepaDebit -> "sepa_debit"
     in ((map (\pmt-> ("payment_method_types[]", t pmt)) pmts) ++)
 

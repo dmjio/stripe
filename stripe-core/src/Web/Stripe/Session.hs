@@ -31,6 +31,7 @@ module Web.Stripe.Session
     , SessionId     (..)
     , SessionData   (..)
     , StripeList   (..)
+    , PaymentMethodTypes(..)
     ) where
 
 import           Web.Stripe.StripeRequest   (Method (GET, POST),
@@ -40,7 +41,7 @@ import           Web.Stripe.Util            ((</>))
 import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..),
                                              EndingBefore(..),
                                              Session (..),
-                                             SessionId (..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..), CustomerId(..), CustomerEmail(..), ClientReferenceId(..), SessionData(..),
+                                             SessionId (..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..), CustomerId(..), CustomerEmail(..), ClientReferenceId(..), SessionData(..), PaymentMethodTypes(..),
                                              ExpandParams(..),
                                              StripeList (..))
 
@@ -49,15 +50,17 @@ import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (
 createSession
     :: SuccessUrl -- ^ Success url
     -> CancelUrl -- ^ Cancel url
+    -> PaymentMethodTypes
     -> StripeRequest CreateSession
 createSession
     successUrl
-    cancelUrl   = request
+    cancelUrl
+    paymentMethodTypes = request
   where request = mkStripeRequest POST url params
         url     = "checkout" </> "sessions"
         params  = toStripeParam successUrl $
                   toStripeParam cancelUrl $
-                  (("payment_method_types[]", "card") :) $
+                  toStripeParam paymentMethodTypes $
                   []
 
 data CreateSession
@@ -66,6 +69,7 @@ instance StripeHasParam CreateSession LineItems
 instance StripeHasParam CreateSession CustomerId
 instance StripeHasParam CreateSession ClientReferenceId
 instance StripeHasParam CreateSession CustomerEmail
+instance StripeHasParam CreateSession PaymentMethodTypes
 instance StripeHasParam CreateSession ExpandParams
 
 ------------------------------------------------------------------------------
