@@ -1,4 +1,4 @@
-{ compiler ? "ghc865", check ? false }:
+{ compiler ? "ghc865", check ? false, nixpkgs ? <nixpkgs> }:
 let
    config = {
      packageOverrides = pkgs: with pkgs.haskell.lib; {
@@ -22,7 +22,7 @@ let
       };
     };
 in
-  with (import <nixpkgs> { inherit config; }).haskell.packages.${compiler}; {
+  with (import nixpkgs { inherit config; }).haskell.packages.${compiler}; {
     inherit stripe-core stripe-tests stripe-haskell stripe-http-client;
   }
 
