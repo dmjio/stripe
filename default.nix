@@ -1,4 +1,4 @@
-{ compiler ? "ghc865", check ? false, nixpkgs ? <nixpkgs> }:
+{ compiler ? "ghc884", check ? false, nixpkgs ? <nixpkgs> }:
 let
    config = {
      packageOverrides = pkgs: with pkgs.haskell.lib; {

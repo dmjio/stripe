@@ -12,7 +12,6 @@ accountTests :: StripeSpec
 accountTests stripe = do
   describe "Account tests" $ do
     it "Succesfully retrieves account information" $ do
-      result <- stripe $ do d <- getAccountDetails             
+      result <- stripe $ do d <- getAccountDetails
                             return d
       result `shouldSatisfy` isRight
-

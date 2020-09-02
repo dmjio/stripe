@@ -114,7 +114,7 @@ m >>= f = (stripeLift m) M.>>= f
 void :: (FromJSON (StripeReturn a)) => StripeRequest a -> Stripe ()
 void req = M.void (stripeLift req)
 
-fail :: (M.Monad m) => String -> m a
+fail :: (M.MonadFail m) => String -> m a
 fail = M.fail
 
 return :: (M.Monad m) => a -> m a

@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RankNTypes #-}
 module Web.Stripe.Test.Transfer where
 
 import           Data.Maybe

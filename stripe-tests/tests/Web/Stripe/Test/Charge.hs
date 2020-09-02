@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax  #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE RankNTypes #-}
 module Web.Stripe.Test.Charge where
 
 import           Data.Either

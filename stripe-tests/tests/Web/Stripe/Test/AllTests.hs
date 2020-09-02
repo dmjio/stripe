@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE RankNTypes #-}
 module Web.Stripe.Test.AllTests where
 
 import           Test.Hspec                            (hspec)
