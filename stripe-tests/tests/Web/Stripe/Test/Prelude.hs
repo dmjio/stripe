@@ -47,6 +47,7 @@ import           Prelude         (Bool(..), Eq(..), Functor(..), ($), IO, Char, 
 import           Test.Hspec
 import           Test.Hspec.Core.Spec (SpecM)
 import qualified Control.Monad       as M
+import qualified Control.Monad.Fail  as MF
 import qualified Control.Monad.Trans as M
 import           Control.Monad.Trans.Free (FreeT(..), liftF)
 import           Web.Stripe.Client
@@ -114,8 +115,8 @@ m >>= f = (stripeLift m) M.>>= f
 void :: (FromJSON (StripeReturn a)) => StripeRequest a -> Stripe ()
 void req = M.void (stripeLift req)
 
-fail :: (M.MonadFail m) => String -> m a
-fail = M.fail
+fail :: (MF.MonadFail m) => String -> m a
+fail = MF.fail
 
 return :: (M.Monad m) => a -> m a
 return = M.return
