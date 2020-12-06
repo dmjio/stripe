@@ -1,10 +1,12 @@
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE DeriveDataTypeable   #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE RecordWildCards      #-}
-{-# LANGUAGE StandaloneDeriving   #-}
-{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+
 ------------------------------------------------------------------------------
 -- |
 -- Module      : Web.Stripe.Types
@@ -361,25 +363,32 @@ newtype IsVerified = IsVerified { getVerified :: Bool }
 
 ------------------------------------------------------------------------------
 -- | Credit / Debit Card Brand
-data Brand = Visa
-           | AMEX
-           | MasterCard
-           | Discover
-           | JCB
-           | DinersClub
-           | Unknown
-             deriving (Read, Show, Eq, Ord, Data, Typeable)
+--
+-- https://stripe.com/docs/api/cards/object
+data Brand =
+    AMEX
+  | DinersClub
+  | Discover
+  | JCB
+  | MasterCard
+  | UnionPay
+  | Visa
+  | Unknown
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Brand`
 instance FromJSON Brand where
-   parseJSON (String "American Express") = pure AMEX
-   parseJSON (String "MasterCard") = pure MasterCard
-   parseJSON (String "Discover") = pure Discover
-   parseJSON (String "JCB") = pure JCB
-   parseJSON (String "Visa") = pure Visa
-   parseJSON (String "DinersClub") = pure DinersClub
-   parseJSON _ = mzero
+  parseJSON = \case
+    String "American Express" -> pure AMEX
+    String "Diners Club"      -> pure DinersClub
+    String "Discover"         -> pure Discover
+    String "JCB"              -> pure JCB
+    String "MasterCard"       -> pure MasterCard
+    String "UnionPay"         -> pure UnionPay
+    String "Visa"             -> pure Visa
+    String "Unknown"          -> pure Unknown
+    brand                     -> fail $ "Failed to parse brand: " <> show brand
 
 ------------------------------------------------------------------------------
 -- | `Card` Object
