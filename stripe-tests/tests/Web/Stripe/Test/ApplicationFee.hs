@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RankNTypes #-}
 module Web.Stripe.Test.ApplicationFee where
 
 import Test.Hspec

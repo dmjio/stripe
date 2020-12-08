@@ -4,7 +4,7 @@
 }:
 mkDerivation {
   pname = "stripe-http-client";
-  version = "2.4.1";
+  version = "2.6.2";
   src = ./.;
   libraryHaskellDepends = [
     aeson base bytestring http-client http-client-tls http-types

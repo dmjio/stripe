@@ -1,11 +1,12 @@
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving    #-}
-{-# LANGUAGE DeriveDataTypeable   #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE RecordWildCards      #-}
-{-# LANGUAGE StandaloneDeriving   #-}
-{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+
 ------------------------------------------------------------------------------
 -- |
 -- Module      : Web.Stripe.Types
@@ -17,21 +18,25 @@
 ------------------------------------------------------------------------------
 module Web.Stripe.Types where
 ------------------------------------------------------------------------------
-import           Control.Applicative (pure, (<$>), (<*>), (<|>))
-import           Data.Aeson          (FromJSON (parseJSON), ToJSON(..), withText, withObject,
-                                      Value (String, Bool), (.:),
-                                      (.:?))
-import           Data.Data           (Data, Typeable)
+import Control.Applicative (pure, (<$>), (<*>), (<|>))
+import Control.Monad (mzero)
+import Data.Aeson
+       ( FromJSON(parseJSON)
+       , ToJSON(..)
+       , Value(Bool, Object, String)
+       , (.:)
+       , (.:?)
+       )
+import Data.Aeson.Types (typeMismatch)
+import Data.Data (Data, Typeable)
 import qualified Data.HashMap.Strict as H
-import           Data.Ratio          ((%))
-import           Data.Text           (Text)
-import qualified Data.Text           as T
-import           Data.Time           (UTCTime)
-import           Data.Monoid         ((<>))
-import           Numeric             (fromRat, showFFloat)
-import           Text.Read           (lexP, pfail)
-import qualified Text.Read           as R
-import           Web.Stripe.Util     (fromSeconds)
+import Data.Ratio ((%))
+import Data.Text (Text)
+import Data.Time (UTCTime)
+import Numeric (fromRat, showFFloat)
+import Text.Read (lexP, pfail)
+import qualified Text.Read as R
+import Web.Stripe.Util (fromSeconds)
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -339,26 +344,32 @@ newtype IsVerified = IsVerified { getVerified :: Bool }
 
 ------------------------------------------------------------------------------
 -- | Credit / Debit Card Brand
-data Brand = Visa
-           | AMEX
-           | MasterCard
-           | Discover
-           | JCB
-           | DinersClub
-           | Unknown
-             deriving (Read, Show, Eq, Ord, Data, Typeable)
+--
+-- https://stripe.com/docs/api/cards/object
+data Brand =
+    AMEX
+  | DinersClub
+  | Discover
+  | JCB
+  | MasterCard
+  | UnionPay
+  | Visa
+  | Unknown
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | JSON Instance for `Brand`
 instance FromJSON Brand where
-   parseJSON = withText "Brand" $ \t -> case t of
-     "American Express" -> pure AMEX
-     "MasterCard" -> pure MasterCard
-     "Discover" -> pure Discover
-     "JCB" -> pure JCB
-     "Visa" -> pure Visa
-     "DinersClub" -> pure DinersClub
-     _ -> fail $ "Unknown brand: " <> T.unpack t
+  parseJSON = \case
+    String "American Express" -> pure AMEX
+    String "Diners Club"      -> pure DinersClub
+    String "Discover"         -> pure Discover
+    String "JCB"              -> pure JCB
+    String "MasterCard"       -> pure MasterCard
+    String "UnionPay"         -> pure UnionPay
+    String "Visa"             -> pure Visa
+    String "Unknown"          -> pure Unknown
+    brand                     -> fail $ "Failed to parse brand: " <> show brand
 
 ------------------------------------------------------------------------------
 -- | `Card` Object
@@ -1296,12 +1307,11 @@ data BankAccountStatus =
 ------------------------------------------------------------------------------
 -- | `BankAccountStatus` JSON instance
 instance FromJSON BankAccountStatus where
-   parseJSON = withText "BankAccountStatus" $ \t -> case t of
-     "new" -> pure $ New
-     "validated" -> pure Validated
-     "verified" -> pure Verified
-     "errored" -> pure Errored
-     _ -> fail $ "Unknown BankAccountStatus: " <> T.unpack t
+   parseJSON (String "new") = pure New
+   parseJSON (String "validated") = pure Validated
+   parseJSON (String "verified") = pure Verified
+   parseJSON (String "errored") = pure Errored
+   parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | Routing Number for Bank Account
@@ -2334,7 +2344,7 @@ newtype MetaData = MetaData [ (Text,Text) ]
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 instance FromJSON MetaData where
-  parseJSON j = (MetaData . H.toList) <$> (parseJSON j)
+  parseJSON j = MetaData . H.toList <$> parseJSON j
 
 ------------------------------------------------------------------------------
 -- | Type of Expansion Parameters for use on `Stripe` objects
@@ -2751,12 +2761,13 @@ data Transactions = Transactions {
 ------------------------------------------------------------------------------
 -- | Bitcoin Transactions data
 instance FromJSON Transactions where
-   parseJSON = withObject "Transactions" $ \o ->
+   parseJSON (Object o) =
      Transactions <$> o .: "object"
                   <*> o .: "total_count"
                   <*> o .: "has_more"
                   <*> o .: "url"
                   <*> o .: "data"
+   parseJSON _ = mzero
 
 ------------------------------------------------------------------------------
 -- | Bitcoin Transaction
@@ -2843,4 +2854,4 @@ currencyDivisor cur =
     _   -> error $ "please submit a patch to currencyDivisor for this currency: " ++ show cur
   where
     zeroCurrency = fromIntegral
-    hundred v    = fromRat $ (fromIntegral v) % (100 :: Integer)
+    hundred v    = fromRat $ fromIntegral v % (100 :: Integer)
