@@ -281,9 +281,9 @@ instance FromJSON Customer where
            <*> o .:? "subscriptions"
            <*> o .:? "discount"
            <*> o .: "account_balance"
-           <*> o .: "cards"
+           <*> o .: "sources"
            <*> o .:? "currency"
-           <*> o .:? "default_card"
+           <*> o .:? "default_source"
            <*> o .: "metadata")
 
 ------------------------------------------------------------------------------
@@ -1431,8 +1431,8 @@ instance FromJSON Recipient where
                  <*> o .: "name"
                  <*> o .: "verified"
                  <*> o .:? "active_account"
-                 <*> o .: "cards"
-                 <*> o .:? "default_card"
+                 <*> o .: "sources"
+                 <*> o .:? "default_source"
       )
       <|> DeletedRecipient
                  <$> o .:? "deleted"
