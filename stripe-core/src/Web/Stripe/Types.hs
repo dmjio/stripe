@@ -1458,7 +1458,6 @@ data ApplicationFee = ApplicationFee {
     , applicationFeeAccountId          :: Expandable AccountId
     , applicationFeeApplicationId      :: ApplicationId
     , applicationFeeChargeId           :: Expandable ChargeId
-    , applicationFeeMetaData           :: MetaData
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
@@ -1494,7 +1493,6 @@ instance FromJSON ApplicationFee where
                       <*> o .: "account"
                       <*> (ApplicationId <$> o .: "application")
                       <*> o .: "charge"
-                      <*> o .: "metadata"
 
 ------------------------------------------------------------------------------
 -- | `FeeId` for objects with Fees
