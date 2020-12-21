@@ -6,6 +6,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 ------------------------------------------------------------------------------
 -- |
@@ -26,12 +27,15 @@ import Data.Aeson
        , Value(Bool, Object, String)
        , (.:)
        , (.:?)
+       , withObject
+       , withText
        )
 import Data.Aeson.Types (typeMismatch)
 import Data.Data (Data, Typeable)
 import qualified Data.HashMap.Strict as H
 import Data.Ratio ((%))
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Numeric (fromRat, showFFloat)
 import Text.Read (lexP, pfail)
