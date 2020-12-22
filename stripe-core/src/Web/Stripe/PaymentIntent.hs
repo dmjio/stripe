@@ -107,6 +107,8 @@ data UpdatePaymentIntent
 type instance StripeReturn UpdatePaymentIntent = PaymentIntent
 instance StripeHasParam UpdatePaymentIntent MetaData
 instance StripeHasParam UpdatePaymentIntent PaymentMethodId
+instance StripeHasParam UpdatePaymentIntent Amount
+instance StripeHasParam UpdatePaymentIntent Currency
 
 confirmPaymentIntent
     :: PaymentIntentId
