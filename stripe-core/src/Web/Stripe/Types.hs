@@ -2047,7 +2047,7 @@ data PaymentIntent = PaymentIntent {
     , paymentIntentPaymentMethodTypes        :: [Text]
     , paymentIntentReceiptEmail              :: Maybe ReceiptEmail
     , paymentIntentReview                    :: Maybe TODO
-    , paymentIntentSetupFutureUsage          :: Maybe Text
+    , paymentIntentSetupFutureUsage          :: Maybe SetupFutureUsage
     , paymentIntentShipping                  :: Maybe TODO
     , paymentIntentStatementDescriptor       :: Maybe StatementDescription
     , paymentIntentStatementDescriptorSuffix :: Maybe StatementDescription
@@ -2095,6 +2095,15 @@ instance FromJSON PaymentIntent where
       <*> o .: "status"
       <*> o .:? "transfer_data"
       <*> o .:? "transfer_group"
+
+data SetupFutureUsage = OnSession | OffSession
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON SetupFutureUsage where
+  parseJSON = withText "SetupFutureUsage" $ \t -> case t of
+    "on_session" -> pure OnSession
+    "off_session" -> pure OffSession
+    _ -> fail $ "unknown SetupFutureUsage: " <> T.unpack t
 
 data TODO = TODO
   deriving (Read, Show, Eq, Ord, Data, Typeable)

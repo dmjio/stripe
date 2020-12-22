@@ -18,7 +18,7 @@ paymentIntentTests stripe = do
   describe "Payment intent tests" $ do
     it "Succesfully creates a PaymentIntent" $ do
       result <- stripe $ do
-        paymentIntent <- createPaymentIntent (Amount 100) USD
+        paymentIntent <- createPaymentIntent (Amount 100) USD -&- OffSession
         void $ cancelPaymentIntent (paymentIntentId paymentIntent)
         return paymentIntent
       result `shouldSatisfy` isRight

@@ -66,7 +66,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      RecipientId(..), RecipientType(..), RedeemBy(..),
                                      RefundId(..),
                                      RefundApplicationFee(..), RefundReason(..),
-                                     RoutingNumber(..), StartingAfter(..),
+                                     RoutingNumber(..), SetupFutureUsage(..), StartingAfter(..),
                                      StatementDescription(..), Source(..),
                                      SubscriptionId(..), TaxID(..),
                                      TaxPercent(..), TimeRange(..),
@@ -333,6 +333,12 @@ instance ToStripeParam NewCard where
 instance ToStripeParam PaymentIntentId where
   toStripeParam (PaymentIntentId rid) =
     (("payment_intent", Text.encodeUtf8 rid) :)
+
+instance ToStripeParam SetupFutureUsage where
+  toStripeParam OffSession =
+    (("setup_future_usage", "off_session") :)
+  toStripeParam OnSession =
+    (("setup_future_usage", "on_session") :)
 
 instance ToStripeParam (Param Text Text) where
   toStripeParam (Param (k,v)) =
