@@ -27,27 +27,31 @@ module Web.Stripe.PaymentIntent
     , getPaymentIntents
       -- * Types
     , Amount       (..)
+    , CardId       (..)
     , Charge       (..)
     , ChargeId     (..)
+    , Currency     (..)
     , EndingBefore (..)
     , ExpandParams (..)
     , PaymentIntent       (..)
     , PaymentIntentId     (..)
+    , PaymentMethodId     (..)
     , PaymentMethodTypes     (..)
     , PaymentMethodType     (..)
     , StripeList   (..)
+    , Token (..)
     ) where
 
 import           Web.Stripe.StripeRequest   (Method (GET, POST),
                                              StripeHasParam, StripeReturn,
                                              StripeRequest (..), toStripeParam, mkStripeRequest)
 import           Web.Stripe.Util            ((</>))
-import           Web.Stripe.Types           (Amount(..), Charge (..), ChargeId (..), Currency(..), CustomerId(..),
+import           Web.Stripe.Types           (Amount(..), Charge (..), CardId (..), ChargeId (..), Currency(..), CustomerId(..),
                                              EndingBefore(..), Limit(..),
-                                             MetaData(..), PaymentIntent (..), PaymentMethodTypes(..), PaymentMethodType(..),
+                                             MetaData(..), PaymentIntent (..), PaymentMethodId (..), PaymentMethodTypes(..), PaymentMethodType(..),
                                              PaymentIntentId (..), ReceiptEmail(..),
                                              StartingAfter(..), ExpandParams(..),
-                                             StripeList (..))
+                                             StripeList (..), Token (..))
 
 ------------------------------------------------------------------------------
 -- | create a `PaymentIntent`
@@ -100,6 +104,7 @@ updatePaymentIntent
 data UpdatePaymentIntent
 type instance StripeReturn UpdatePaymentIntent = PaymentIntent
 instance StripeHasParam UpdatePaymentIntent MetaData
+instance StripeHasParam UpdatePaymentIntent PaymentMethodId
 
 confirmPaymentIntent
     :: PaymentIntentId
@@ -114,6 +119,7 @@ confirmPaymentIntent
 data ConfirmPaymentIntent
 type instance StripeReturn ConfirmPaymentIntent = PaymentIntent
 instance StripeHasParam ConfirmPaymentIntent MetaData
+instance StripeHasParam ConfirmPaymentIntent PaymentMethodId
 
 capturePaymentIntent
     :: PaymentIntentId

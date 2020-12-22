@@ -58,7 +58,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      IntervalCount(..),
                                      InvoiceId(..), InvoiceItemId(..),
                                      InvoiceLineItemId(..),
-                                     IsVerified(..), MetaData(..), PaymentIntentId(..), PaymentMethodTypes(..), PaymentMethodType(..), PlanId(..),
+                                     IsVerified(..), MetaData(..), PaymentIntentId(..),  PaymentMethodId(..), PaymentMethodTypes(..), PaymentMethodType(..), PlanId(..),
                                      PlanName(..), Prorate(..), Limit(..),
                                      MaxRedemptions(..), Name(..),
                                      NewBankAccount(..), NewCard(..),
@@ -454,6 +454,10 @@ instance ToStripeParam CancelUrl where
 instance ToStripeParam LineItems where
   toStripeParam (LineItems is) =
     encodeListStripeParam "line_items" is
+
+instance ToStripeParam PaymentMethodId where
+  toStripeParam (PaymentMethodId pid) =
+    (("payment_method", Text.encodeUtf8 pid) :)
 
 instance ToStripeParam PaymentMethodTypes where
   toStripeParam (PaymentMethodTypes pmts) =
