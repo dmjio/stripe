@@ -48,7 +48,7 @@ import           Web.Stripe.StripeRequest   (Method (GET, POST),
                                              StripeRequest (..), toStripeParam, mkStripeRequest)
 import           Web.Stripe.Util            ((</>))
 import           Web.Stripe.Types           (Amount(..), Charge (..), CardId (..), ChargeId (..), Currency(..), CustomerId(..),
-                                             EndingBefore(..), Limit(..),
+                                             Description(..), EndingBefore(..), Limit(..),
                                              MetaData(..), PaymentIntent (..), PaymentMethodId (..), PaymentMethodTypes(..), PaymentMethodType(..),
                                              PaymentIntentId (..), ReceiptEmail(..),
                                              SetupFutureUsage (..), StartingAfter(..), ExpandParams(..),
@@ -72,6 +72,7 @@ createPaymentIntent
 data CreatePaymentIntent
 type instance StripeReturn CreatePaymentIntent = PaymentIntent
 instance StripeHasParam CreatePaymentIntent CustomerId
+instance StripeHasParam CreatePaymentIntent Description
 instance StripeHasParam CreatePaymentIntent ReceiptEmail
 instance StripeHasParam CreatePaymentIntent PaymentMethodTypes
 instance StripeHasParam CreatePaymentIntent SetupFutureUsage
