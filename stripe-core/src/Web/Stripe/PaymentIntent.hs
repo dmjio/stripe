@@ -110,6 +110,12 @@ instance StripeHasParam UpdatePaymentIntent MetaData
 instance StripeHasParam UpdatePaymentIntent PaymentMethodId
 instance StripeHasParam UpdatePaymentIntent Amount
 instance StripeHasParam UpdatePaymentIntent Currency
+instance StripeHasParam UpdatePaymentIntent CustomerId
+instance StripeHasParam UpdatePaymentIntent Description
+instance StripeHasParam UpdatePaymentIntent PaymentMethodTypes
+instance StripeHasParam UpdatePaymentIntent ReceiptEmail
+instance StripeHasParam UpdatePaymentIntent SetupFutureUsage
+-- TODO shipping, statement descriptor, statement descriptor suffix
 
 confirmPaymentIntent
     :: PaymentIntentId
