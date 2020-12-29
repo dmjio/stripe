@@ -25,10 +25,15 @@ paymentIntentTests stripe = do
     it "Successfully updates a PaymentIntent" $ do
       result <- stripe $ do
         paymentIntent <- createPaymentIntent (Amount 100) USD
+        Customer { customerId = cid } <- createCustomer
         updatedPaymentIntent <-
           updatePaymentIntent (paymentIntentId paymentIntent)
             -&- (Amount 100) -&- USD
+            -&- cid
+            -&- Description "some description"
+            -&- OffSession
         void $ cancelPaymentIntent (paymentIntentId paymentIntent)
+        void $ deleteCustomer cid
         return updatedPaymentIntent
       result `shouldSatisfy` isRight
     it "Successfully cancels a PaymentIntent" $ do
