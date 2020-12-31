@@ -31,6 +31,8 @@ module Web.Stripe.PaymentIntent
     , Charge       (..)
     , ChargeId     (..)
     , Currency     (..)
+    , CustomerId   (..)
+    , Description  (..)
     , EndingBefore (..)
     , ExpandParams (..)
     , PaymentIntent       (..)
