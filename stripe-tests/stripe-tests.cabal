@@ -57,6 +57,7 @@ library
                        Web.Stripe.Test.Prelude
                        Web.Stripe.Test.Recipient
                        Web.Stripe.Test.Refund
+                       Web.Stripe.Test.SetupIntent
                        Web.Stripe.Test.Subscription
                        Web.Stripe.Test.Token
                        Web.Stripe.Test.Transfer

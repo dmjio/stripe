@@ -18,7 +18,7 @@ paymentIntentTests stripe = do
   describe "Payment intent tests" $ do
     it "Succesfully creates a PaymentIntent" $ do
       result <- stripe $ do
-        paymentIntent <- createPaymentIntent (Amount 100) USD -&- OffSession
+        paymentIntent <- createPaymentIntent (Amount 100) USD -&- (PaymentIntentUsage OffSession)
         void $ cancelPaymentIntent (paymentIntentId paymentIntent)
         return paymentIntent
       result `shouldSatisfy` isRight
@@ -31,7 +31,7 @@ paymentIntentTests stripe = do
             -&- (Amount 100) -&- USD
             -&- cid
             -&- Description "some description"
-            -&- OffSession
+            -&- (PaymentIntentUsage OffSession)
         void $ cancelPaymentIntent (paymentIntentId paymentIntent)
         void $ deleteCustomer cid
         return updatedPaymentIntent
@@ -82,5 +82,5 @@ paymentIntentTests stripe = do
     cardinfo = (mkNewCard credit em ey) { newCardCVC = Just cvc }
     credit = CardNumber "4242424242424242"
     em  = ExpMonth 12
-    ey  = ExpYear 2020
+    ey  = ExpYear 2023
     cvc = CVC "123"

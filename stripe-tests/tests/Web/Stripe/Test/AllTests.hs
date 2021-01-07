@@ -21,6 +21,7 @@ import           Web.Stripe.Test.InvoiceItem           (invoiceItemTests)
 import           Web.Stripe.Test.PaymentIntent         (paymentIntentTests)
 import           Web.Stripe.Test.Plan                  (planTests)
 import           Web.Stripe.Test.Recipient             (recipientTests)
+import           Web.Stripe.Test.SetupIntent           (setupIntentTests)
 import           Web.Stripe.Test.Refund                (refundTests)
 import           Web.Stripe.Test.Subscription          (subscriptionTests)
 import           Web.Stripe.Test.Token                 (tokenTests)
@@ -56,5 +57,6 @@ allTests stripe' = do
     tokenTests stripe
     eventTests stripe
     paymentIntentTests stripe
+    setupIntentTests stripe
 
 

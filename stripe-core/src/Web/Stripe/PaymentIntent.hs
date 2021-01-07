@@ -40,7 +40,8 @@ module Web.Stripe.PaymentIntent
     , PaymentMethodId     (..)
     , PaymentMethodTypes  (..)
     , PaymentMethodType   (..)
-    , SetupFutureUsage    (..)
+    , PaymentIntentUsage    (..)
+    , Usage    (..)
     , StripeList   (..)
     , Token (..)
     ) where
@@ -53,7 +54,7 @@ import           Web.Stripe.Types           (Amount(..), Charge (..), CardId (..
                                              Description(..), EndingBefore(..), Limit(..),
                                              MetaData(..), PaymentIntent (..), PaymentMethodId (..), PaymentMethodTypes(..), PaymentMethodType(..),
                                              PaymentIntentId (..), ReceiptEmail(..),
-                                             SetupFutureUsage (..), StartingAfter(..), ExpandParams(..),
+                                             PaymentIntentUsage(..), Usage (..), StartingAfter(..), ExpandParams(..),
                                              StripeList (..), Token (..))
 
 ------------------------------------------------------------------------------
@@ -77,7 +78,7 @@ instance StripeHasParam CreatePaymentIntent CustomerId
 instance StripeHasParam CreatePaymentIntent Description
 instance StripeHasParam CreatePaymentIntent ReceiptEmail
 instance StripeHasParam CreatePaymentIntent PaymentMethodTypes
-instance StripeHasParam CreatePaymentIntent SetupFutureUsage
+instance StripeHasParam CreatePaymentIntent PaymentIntentUsage
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `PaymentIntent` by `ChargeId` and `PaymentIntentId`
@@ -116,7 +117,7 @@ instance StripeHasParam UpdatePaymentIntent CustomerId
 instance StripeHasParam UpdatePaymentIntent Description
 instance StripeHasParam UpdatePaymentIntent PaymentMethodTypes
 instance StripeHasParam UpdatePaymentIntent ReceiptEmail
-instance StripeHasParam UpdatePaymentIntent SetupFutureUsage
+instance StripeHasParam UpdatePaymentIntent PaymentIntentUsage
 -- TODO shipping, statement descriptor, statement descriptor suffix
 
 confirmPaymentIntent

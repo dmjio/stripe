@@ -2036,7 +2036,7 @@ data PaymentIntent = PaymentIntent {
     , paymentIntentCreated                   :: UTCTime
     , paymentIntentCurrency                  :: Currency
     , paymentIntentCustomer                  :: Maybe (Expandable CustomerId)
-    , paymentInventInvoice                   :: Maybe (Expandable InvoiceId)
+    , paymentIntentInvoice                   :: Maybe (Expandable InvoiceId)
     , paymentIntentLastPaymentError          :: Maybe TODO
     , paymentIntentLiveMode                  :: Maybe Bool
     , paymentIntentMetadata                  :: Maybe MetaData
@@ -2047,11 +2047,11 @@ data PaymentIntent = PaymentIntent {
     , paymentIntentPaymentMethodTypes        :: [Text]
     , paymentIntentReceiptEmail              :: Maybe ReceiptEmail
     , paymentIntentReview                    :: Maybe TODO
-    , paymentIntentSetupFutureUsage          :: Maybe SetupFutureUsage
+    , paymentIntentSetupFutureUsage          :: Maybe PaymentIntentUsage
     , paymentIntentShipping                  :: Maybe TODO
     , paymentIntentStatementDescriptor       :: Maybe StatementDescription
     , paymentIntentStatementDescriptorSuffix :: Maybe StatementDescription
-    , paymentIntentStatus                    :: PaymentIntentStatus
+    , paymentIntentStatus                    :: IntentStatus
     , paymentIntentTransferData              :: Maybe TODO
     , paymentIntentTransferGroup             :: Maybe Text
     } deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -2088,7 +2088,7 @@ instance FromJSON PaymentIntent where
       <*> o .: "payment_method_types"
       <*> (fmap ReceiptEmail <$> o .:? "receipt_email")
       <*> o .:? "review"
-      <*> o .:? "setup_future_usage"
+      <*> (fmap . fmap) PaymentIntentUsage (o .:? "setup_future_usage")
       <*> o .:? "shipping"
       <*> o .:? "statement_descriptor"
       <*> o .:? "statement_descriptor_suffix"
@@ -2096,14 +2096,77 @@ instance FromJSON PaymentIntent where
       <*> o .:? "transfer_data"
       <*> o .:? "transfer_group"
 
-data SetupFutureUsage = OnSession | OffSession
+
+newtype PaymentIntentUsage = PaymentIntentUsage Usage
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
-instance FromJSON SetupFutureUsage where
-  parseJSON = withText "SetupFutureUsage" $ \t -> case t of
+
+newtype SetupIntentUsage = SetupIntentUsage Usage
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+
+data Usage = OnSession | OffSession
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON Usage where
+  parseJSON = withText "Usage" $ \t -> case t of
     "on_session" -> pure OnSession
     "off_session" -> pure OffSession
-    _ -> fail $ "unknown SetupFutureUsage: " <> T.unpack t
+    _ -> fail $ "unknown Usage: " <> T.unpack t
+
+
+------------------------------------------------------------------------------
+-- | `SetupIntentId` for `SetupIntent`
+newtype SetupIntentId =
+  SetupIntentId { getSetupIntentId :: Text } deriving (Read, Show, Eq, Ord, Data, Typeable, FromJSON)
+
+------------------------------------------------------------------------------
+-- | `SetupIntent` Object
+data SetupIntent = SetupIntent {
+      setupIntentId                        :: SetupIntentId
+    , setupIntentApplication               :: Maybe (Expandable ApplicationId)
+    , setupIntentCancellationReason        :: Maybe CancellationReason
+    , setupIntentClientSecret              :: Maybe (Text)
+    , setupIntentCreated                   :: UTCTime
+    , setupIntentCustomer                  :: Maybe (Expandable CustomerId)
+    , setupIntentDescription               :: Maybe Text
+    , setupIntentLastSetupError            :: Maybe TODO
+    , setupIntentLiveMode                  :: Maybe Bool
+    , setupIntentMetadata                  :: Maybe MetaData
+    , setupIntentNextAction                :: Maybe TODO
+    , setupIntentOnBehalfOf                :: Maybe (Expandable AccountId)
+    , setupIntentPaymentMethod             :: Maybe TODO
+    , setupIntentPaymentOptions            :: Maybe TODO
+    , setupIntentPaymentMethodTypes        :: [Text]
+    , setupIntentSingleUseMandate          :: Maybe TODO
+    , setupIntentStatus                    :: IntentStatus
+    , setupIntentUsage                     :: Maybe SetupIntentUsage
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+------------------------------------------------------------------------------
+-- | JSON Instance for `SetupIntent`
+instance FromJSON SetupIntent where
+  parseJSON = withObject "SetupIntent" $ \o ->
+    SetupIntent
+      <$> (SetupIntentId <$> o .: "id")
+      <*> o .:? "application"
+      <*> o .:? "cancellation_reason"
+      <*> o .:? "client_secret"
+      <*> (fromSeconds <$> o .: "created")
+      <*> o .:? "customer"
+      <*> o .:? "description"
+      <*> o .:? "last_setup_error"
+      <*> o .:? "live_mode"
+      <*> o .:? "metadata"
+      <*> o .:? "next_action"
+      <*> o .:? "on_behalf_of"
+      <*> o .:? "payment_method"
+      <*> o .:? "payment_options"
+      <*> o .:  "payment_method_types"
+      <*> o .:? "single_use_mandate"
+      <*> o .:  "status"
+      <*> (fmap.fmap) SetupIntentUsage (o .:? "usage")
+
 
 data TODO = TODO
   deriving (Read, Show, Eq, Ord, Data, Typeable)
@@ -2166,28 +2229,28 @@ instance FromJSON ConfirmationMethod where
     "manual" -> pure ConfirmationMethodManual
     _ -> fail $ "Unknown ConfirmationMethod: " <> T.unpack t
 
-data PaymentIntentStatus
-  = PaymentIntentStatusCanceled
-  | PaymentIntentStatusProcessing
-  | PaymentIntentStatusRequiresAction
-  | PaymentIntentStatusRequiresCapture
-  | PaymentIntentStatusRequiresConfirmation
-  | PaymentIntentStatusRequiresSource
-  | PaymentIntentStatusRequiresPaymentMethod
-  | PaymentIntentStatusSucceeded
+data IntentStatus
+  = IntentStatusCanceled
+  | IntentStatusProcessing
+  | IntentStatusRequiresAction
+  | IntentStatusRequiresCapture
+  | IntentStatusRequiresConfirmation
+  | IntentStatusRequiresSource
+  | IntentStatusRequiresPaymentMethod
+  | IntentStatusSucceeded
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
-instance FromJSON PaymentIntentStatus where
-  parseJSON = withText "PaymentIntentStatus" $ \t -> case t of
-    "canceled" -> pure PaymentIntentStatusCanceled
-    "processing" -> pure PaymentIntentStatusProcessing
-    "requires_action" -> pure PaymentIntentStatusRequiresAction
-    "requires_capture" -> pure PaymentIntentStatusRequiresCapture
-    "requires_confirmation" -> pure PaymentIntentStatusRequiresConfirmation
-    "requires_payment_method" -> pure PaymentIntentStatusRequiresPaymentMethod
-    "requires_source" -> pure PaymentIntentStatusRequiresSource
-    "succeeded" -> pure PaymentIntentStatusSucceeded
-    _ -> fail $ "Unknown PaymentIntentStatus: " <> T.unpack t
+instance FromJSON IntentStatus where
+  parseJSON = withText "IntentStatus" $ \t -> case t of
+    "canceled" -> pure IntentStatusCanceled
+    "processing" -> pure IntentStatusProcessing
+    "requires_action" -> pure IntentStatusRequiresAction
+    "requires_capture" -> pure IntentStatusRequiresCapture
+    "requires_confirmation" -> pure IntentStatusRequiresConfirmation
+    "requires_payment_method" -> pure IntentStatusRequiresPaymentMethod
+    "requires_source" -> pure IntentStatusRequiresSource
+    "succeeded" -> pure IntentStatusSucceeded
+    _ -> fail $ "Unknown IntentStatus: " <> T.unpack t
 
 newtype PaymentMethodId =
   PaymentMethodId Text deriving (Read, Show, Eq, Ord, Data, Typeable)

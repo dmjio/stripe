@@ -58,7 +58,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      IntervalCount(..),
                                      InvoiceId(..), InvoiceItemId(..),
                                      InvoiceLineItemId(..),
-                                     IsVerified(..), MetaData(..), PaymentIntentId(..),  PaymentMethodId(..), PaymentMethodTypes(..), PaymentMethodType(..), PlanId(..),
+                                     IsVerified(..), MetaData(..), PaymentIntentId(..),  PaymentIntentUsage(..), PaymentMethodId(..), PaymentMethodTypes(..), PaymentMethodType(..), PlanId(..),
                                      PlanName(..), Prorate(..), Limit(..),
                                      MaxRedemptions(..), Name(..),
                                      NewBankAccount(..), NewCard(..),
@@ -66,7 +66,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      RecipientId(..), RecipientType(..), RedeemBy(..),
                                      RefundId(..),
                                      RefundApplicationFee(..), RefundReason(..),
-                                     RoutingNumber(..), SetupFutureUsage(..), StartingAfter(..),
+                                     RoutingNumber(..), SetupIntentId(..), SetupIntentUsage(..), Usage(..), StartingAfter(..),
                                      StatementDescription(..), Source(..),
                                      SubscriptionId(..), TaxID(..),
                                      TaxPercent(..), TimeRange(..),
@@ -334,11 +334,17 @@ instance ToStripeParam PaymentIntentId where
   toStripeParam (PaymentIntentId rid) =
     (("payment_intent", Text.encodeUtf8 rid) :)
 
-instance ToStripeParam SetupFutureUsage where
-  toStripeParam OffSession =
+instance ToStripeParam PaymentIntentUsage where
+  toStripeParam (PaymentIntentUsage OffSession) =
     (("setup_future_usage", "off_session") :)
-  toStripeParam OnSession =
+  toStripeParam (PaymentIntentUsage OnSession) =
     (("setup_future_usage", "on_session") :)
+
+instance ToStripeParam SetupIntentUsage where
+  toStripeParam (SetupIntentUsage OffSession) =
+    (("usage", "off_session") :)
+  toStripeParam (SetupIntentUsage OnSession) =
+    (("usage", "on_session") :)
 
 instance ToStripeParam (Param Text Text) where
   toStripeParam (Param (k,v)) =
@@ -508,6 +514,10 @@ instance ToStripeParam RefundReason where
          RefundDuplicate -> "duplicate"
          RefundFraudulent -> "fraudulent"
          RefundRequestedByCustomer -> "requested_by_customer") :)
+
+instance ToStripeParam SetupIntentId where
+  toStripeParam (SetupIntentId siid) =
+    (("setup_intent", Text.encodeUtf8 siid) :)
 
 instance ToStripeParam StatementDescription where
   toStripeParam (StatementDescription txt) =
