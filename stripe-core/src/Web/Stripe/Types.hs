@@ -366,13 +366,21 @@ data Brand =
 instance FromJSON Brand where
   parseJSON = \case
     String "American Express" -> pure AMEX
+    String "amex"             -> pure AMEX
     String "Diners Club"      -> pure DinersClub
+    String "diners"           -> pure DinersClub
     String "Discover"         -> pure Discover
+    String "discover"         -> pure Discover
     String "JCB"              -> pure JCB
+    String "jcb"              -> pure JCB
     String "MasterCard"       -> pure MasterCard
+    String "mastercard"       -> pure MasterCard
     String "UnionPay"         -> pure UnionPay
+    String "unionpay"         -> pure UnionPay
     String "Visa"             -> pure Visa
+    String "visa"             -> pure Visa
     String "Unknown"          -> pure Unknown
+    String "unknown"          -> pure Unknown
     brand                     -> fail $ "Failed to parse brand: " <> show brand
 
 ------------------------------------------------------------------------------
@@ -476,7 +484,36 @@ instance FromJSON RecipientCard where
              <*> o .:? "address_zip_check"
              <*> o .:? "recipient"
 
-
+------------------------------------------------------------------------------
+-- | `Card` Hash - When embedded in a PaymentMethod
+data CardHash = CardHash {
+      cardHashBrand         :: Brand
+    , cardHashChecks        :: Maybe TODO
+    , cardHashCountry       :: Maybe Text
+    , cardHashExpMonth      :: ExpMonth
+    , cardHashExpYear       :: ExpYear
+    , cardHashFingerprint   :: Maybe Text
+    , cardHashFunding       :: Text
+    , cardHashGeneratedFrom :: Maybe TODO
+    , cardHashLastFour      :: Text
+    , cardHashNetworks      :: Maybe TODO
+    , cardHash3DSUsage      :: Maybe TODO
+    } deriving (Read, Show, Eq, Ord, Data, Typeable)
+------------------------------------------------------------------------------
+-- | JSON Instance for `Card`
+instance FromJSON CardHash where
+    parseJSON = withObject "CardHash" $ \o ->
+        CardHash <$> o .: "brand"
+                 <*> o .:? "checks"
+                 <*> o .:? "country"
+                 <*> (ExpMonth <$> o .: "exp_month")
+                 <*> (ExpYear <$> o .: "exp_year")
+                 <*> o .:? "fingerprint"
+                 <*> o .: "funding"
+                 <*> o .:? "generated_from"
+                 <*>o .: "last4"
+                 <*> o .:? "networks"
+                 <*> o .:? "three_d_secure_usage"
 ------------------------------------------------------------------------------
 -- | `NewCard` contains the data needed to create a new `Card`
 data NewCard = NewCard
@@ -2252,14 +2289,14 @@ instance FromJSON IntentStatus where
     "succeeded" -> pure IntentStatusSucceeded
     _ -> fail $ "Unknown IntentStatus: " <> T.unpack t
 
-newtype PaymentMethodId =
-  PaymentMethodId Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+newtype PaymentMethodId = PaymentMethodId { getPaymentMethodId :: Text }
+ deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 
 data PaymentMethod = PaymentMethod {
       paymentMethodId                        :: PaymentMethodId
     , paymentMethodBillingDetails            :: TODO
-    , paymentMethodCard                      :: Maybe TODO
+    , paymentMethodCard                      :: Maybe CardHash
     , paymentMethodCardPresent               :: Maybe TODO
     , paymentMethodCreated                   :: UTCTime
     , paymentMethodCustomer                  :: Maybe (Expandable CustomerId)
@@ -2282,17 +2319,30 @@ data PaymentMethodType
 
 instance FromJSON PaymentMethodType where
   parseJSON = withText "PaymentMethodType" $ \t -> case t of
-    "PaymentMethodTypeCard" -> pure PaymentMethodTypeCard
-    "PaymentMethodTypeCardPresent" -> pure PaymentMethodTypeCardPresent
-    "PaymentMethodTypeIdeal" -> pure PaymentMethodTypeIdeal
-    "PaymentMethodTypeFPX" -> pure PaymentMethodTypeFPX
-    "PaymentMethodTypeBacsDebit" -> pure PaymentMethodTypeBacsDebit
-    "PaymentMethodTypeBancontact" -> pure PaymentMethodTypeBancontact
-    "PaymentMethodTypeGiropay" -> pure PaymentMethodTypeGiropay
-    "PaymentMethodTypeP24" -> pure PaymentMethodTypeP24
-    "PaymentMethodTypeSepaDebit" -> pure PaymentMethodTypeSepaDebit
+    "card" -> pure PaymentMethodTypeCard
+    "ideal" -> pure PaymentMethodTypeIdeal
+    "fpx" -> pure PaymentMethodTypeFPX
+    "bacs_debit" -> pure PaymentMethodTypeBacsDebit
+    "bancontact" -> pure PaymentMethodTypeBancontact
+    "giropay" -> pure PaymentMethodTypeGiropay
+    "p24" -> pure PaymentMethodTypeP24
+    "sepa_debit" -> pure PaymentMethodTypeSepaDebit
     _ -> fail $ "Unknown PaymentMethodType: " <> T.unpack t
 
+
+------------------------------------------------------------------------------
+-- | JSON Instance for `PaymentMethod`
+instance FromJSON PaymentMethod where
+  parseJSON = withObject "PaymentMethod" $ \o ->
+    PaymentMethod
+      <$> (PaymentMethodId <$> o .: "id")
+      <*> o .: "billing_details"
+      <*> o .:? "card"
+      <*> o .:? "card_present"
+      <*> (fromSeconds <$> o .: "created")
+      <*> o .:? "customer"
+      <*> o .: "livemode"
+      <*> o .: "type"
 
 ------------------------------------------------------------------------------
 -- | Connect Application
@@ -2309,6 +2359,11 @@ instance FromJSON ConnectApp where
      ConnectApp <$> o .:? "id"
                 <*> o .: "object"
                 <*> o .: "name"
+
+------------------------------------------------------------------------------
+-- | Wrapper for `TokenId` `PaymentMethod` param
+newtype CardToken = CardToken TokenId
+    deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 ------------------------------------------------------------------------------
 -- | `TokenId` of a `Token`

@@ -19,6 +19,7 @@ import           Web.Stripe.Test.Dispute               (disputeTests)
 import           Web.Stripe.Test.Invoice               (invoiceTests)
 import           Web.Stripe.Test.InvoiceItem           (invoiceItemTests)
 import           Web.Stripe.Test.PaymentIntent         (paymentIntentTests)
+import           Web.Stripe.Test.PaymentMethod         (paymentMethodTests)
 import           Web.Stripe.Test.Plan                  (planTests)
 import           Web.Stripe.Test.Recipient             (recipientTests)
 import           Web.Stripe.Test.SetupIntent           (setupIntentTests)
@@ -58,5 +59,6 @@ allTests stripe' = do
     eventTests stripe
     paymentIntentTests stripe
     setupIntentTests stripe
+    paymentMethodTests stripe
 
 

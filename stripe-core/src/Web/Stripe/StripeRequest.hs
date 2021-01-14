@@ -44,7 +44,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      ApplicationFeePercent(..),
                                      AtPeriodEnd(..),
                                      AvailableOn(..), BankAccountId(..),
-                                     CardId(..), CardNumber(..),
+                                     CardId(..), CardNumber(..), CardToken(..),
                                      Capture(..), ChargeId(..), Closed(..),
                                      CouponId(..),
                                      Country(..), Created(..), Currency(..),
@@ -430,6 +430,11 @@ instance ToStripeParam a => ToStripeParam (TimeRange a) where
         case f [] of
           [(k,v)] -> ((k <> "[" <> n <> "]", v) :)
           lst'       -> error $ "toRecord in ToStripeRange (TimeRange a) expected exactly one element in this list. " ++ show lst'
+
+
+instance ToStripeParam CardToken where
+  toStripeParam (CardToken (TokenId tid)) =
+    (("card[token]", Text.encodeUtf8 tid) :)
 
 instance ToStripeParam TokenId where
   toStripeParam (TokenId tid) =

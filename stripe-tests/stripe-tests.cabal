@@ -53,6 +53,7 @@ library
                        Web.Stripe.Test.Invoice
                        Web.Stripe.Test.InvoiceItem
                        Web.Stripe.Test.PaymentIntent
+                       Web.Stripe.Test.PaymentMethod
                        Web.Stripe.Test.Plan
                        Web.Stripe.Test.Prelude
                        Web.Stripe.Test.Recipient
