@@ -146,7 +146,7 @@ data Charge = Charge {
     , chargeBalanceTransaction   :: Maybe (Expandable TransactionId)
     , chargeFailureMessage       :: Maybe Text
     , chargeFailureCode          :: Maybe Text
-    , chargeAmountRefunded       :: Int
+    , chargeAmountRefunded       :: Int -- Is this a mistake? Not an Amount?
     , chargeCustomerId           :: Maybe (Expandable CustomerId)
     , chargeInvoice              :: Maybe (Expandable InvoiceId)
     , chargeDescription          :: Maybe Description
@@ -2142,14 +2142,22 @@ newtype SetupIntentUsage = SetupIntentUsage Usage
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 
-data Usage = OnSession | OffSession
+data Usage = UseOnSession | UseOffSession
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 instance FromJSON Usage where
   parseJSON = withText "Usage" $ \t -> case t of
-    "on_session" -> pure OnSession
-    "off_session" -> pure OffSession
+    "on_session" -> pure UseOnSession
+    "off_session" -> pure UseOffSession
     _ -> fail $ "unknown Usage: " <> T.unpack t
+
+
+newtype OffSession = OffSession Bool
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+
+newtype Confirm = Confirm Bool
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 
 ------------------------------------------------------------------------------

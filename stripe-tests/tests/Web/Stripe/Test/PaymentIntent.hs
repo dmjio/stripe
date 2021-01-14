@@ -10,6 +10,7 @@ import           Web.Stripe.Test.Prelude
 
 import           Web.Stripe.PaymentIntent
 import           Web.Stripe.Card
+import           Web.Stripe.PaymentMethod
 import           Web.Stripe.Customer
 import           Web.Stripe.Token
 
@@ -18,9 +19,34 @@ paymentIntentTests stripe = do
   describe "Payment intent tests" $ do
     it "Succesfully creates a PaymentIntent" $ do
       result <- stripe $ do
-        paymentIntent <- createPaymentIntent (Amount 100) USD -&- (PaymentIntentUsage OffSession)
+        paymentIntent <- createPaymentIntent (Amount 100) USD -&- (PaymentIntentUsage UseOffSession)
         void $ cancelPaymentIntent (paymentIntentId paymentIntent)
         return paymentIntent
+      result `shouldSatisfy` isRight
+    it "Succesfully creates a PaymentIntent and immediately confirms" $ do
+      result <- stripe $ do
+        PaymentMethod { paymentMethodId = pmid } <- createPaymentMethod cardinfo
+        paymentIntent <- createPaymentIntent (Amount 100) USD
+          -&- Confirm True
+          -&- pmid
+        return paymentIntent
+      result `shouldSatisfy` isRight
+    it "Succesfully creates a second PaymentIntent and confirms off-session" $ do
+      result <- stripe $ do
+        Customer { customerId = cid } <- createCustomer
+        PaymentMethod { paymentMethodId = pmid } <- createPaymentMethod cardinfo
+        paymentIntent <- createPaymentIntent (Amount 100) USD
+          -&- pmid
+          -&- cid
+          -&- PaymentIntentUsage UseOffSession
+        void $ confirmPaymentIntent (paymentIntentId paymentIntent)
+        newPaymentIntent <- createPaymentIntent (Amount 100) USD
+          -&- pmid
+          -&- cid
+        newConfirmedPaymentIntent <-
+          confirmPaymentIntent (paymentIntentId newPaymentIntent)
+            -&- OffSession True
+        return newConfirmedPaymentIntent
       result `shouldSatisfy` isRight
     it "Successfully updates a PaymentIntent" $ do
       result <- stripe $ do
@@ -31,7 +57,7 @@ paymentIntentTests stripe = do
             -&- (Amount 100) -&- USD
             -&- cid
             -&- Description "some description"
-            -&- (PaymentIntentUsage OffSession)
+            -&- (PaymentIntentUsage UseOffSession)
         void $ cancelPaymentIntent (paymentIntentId paymentIntent)
         void $ deleteCustomer cid
         return updatedPaymentIntent

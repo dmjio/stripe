@@ -46,7 +46,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      AvailableOn(..), BankAccountId(..),
                                      CardId(..), CardNumber(..), CardToken(..),
                                      Capture(..), ChargeId(..), Closed(..),
-                                     CouponId(..),
+                                     CouponId(..), Confirm(..),
                                      Country(..), Created(..), Currency(..),
                                      CustomerId(..), CustomerEmail(..), ClientReferenceId(..), CVC(..), Date(..),
                                      DefaultCard(..), Description(..),
@@ -62,6 +62,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      PlanName(..), Prorate(..), Limit(..),
                                      MaxRedemptions(..), Name(..),
                                      NewBankAccount(..), NewCard(..),
+                                     OffSession(..),
                                      PercentOff(..), Quantity(..), ReceiptEmail(..),
                                      RecipientId(..), RecipientType(..), RedeemBy(..),
                                      RefundId(..),
@@ -74,7 +75,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      TransactionType(..), TransferId(..),
                                      TransferStatus(..), TrialEnd(..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..),
                                      TrialPeriodDays(..), eventTypeText)
-import           Web.Stripe.Util    (toBytestring, toExpandable,toMetaData, encodeList,
+import           Web.Stripe.Util    (toBytestring, toBytestringLower, toExpandable,toMetaData, encodeList,
                                      toSeconds, getParams, toText)
 
 ------------------------------------------------------------------------------
@@ -335,16 +336,20 @@ instance ToStripeParam PaymentIntentId where
     (("payment_intent", Text.encodeUtf8 rid) :)
 
 instance ToStripeParam PaymentIntentUsage where
-  toStripeParam (PaymentIntentUsage OffSession) =
+  toStripeParam (PaymentIntentUsage UseOffSession) =
     (("setup_future_usage", "off_session") :)
-  toStripeParam (PaymentIntentUsage OnSession) =
+  toStripeParam (PaymentIntentUsage UseOnSession) =
     (("setup_future_usage", "on_session") :)
 
 instance ToStripeParam SetupIntentUsage where
-  toStripeParam (SetupIntentUsage OffSession) =
+  toStripeParam (SetupIntentUsage UseOffSession) =
     (("usage", "off_session") :)
-  toStripeParam (SetupIntentUsage OnSession) =
+  toStripeParam (SetupIntentUsage UseOnSession) =
     (("usage", "on_session") :)
+
+instance ToStripeParam OffSession where
+  toStripeParam (OffSession offSession) =
+    (("off_session", toBytestringLower offSession) :)
 
 instance ToStripeParam (Param Text Text) where
   toStripeParam (Param (k,v)) =
@@ -476,6 +481,22 @@ instance ToStripeParam PaymentMethodId where
   toStripeParam (PaymentMethodId pid) =
     (("payment_method", Text.encodeUtf8 pid) :)
 
+instance ToStripeParam PaymentMethodType where
+  toStripeParam pmt =
+    let typ = case pmt of
+                PaymentMethodTypeCard -> "card"
+                PaymentMethodTypeCardPresent -> "card_present"
+                PaymentMethodTypeIdeal -> "ideal"
+                PaymentMethodTypeFPX -> "fpx"
+                PaymentMethodTypeBacsDebit -> "bacs_debit"
+                PaymentMethodTypeBancontact -> "bancontact"
+                PaymentMethodTypeGiropay -> "giropay"
+                PaymentMethodTypeP24 -> "p24"
+                PaymentMethodTypeEPS -> "eps"
+                PaymentMethodTypeSepaDebit -> "sepa_debit"
+    in (("type", Text.encodeUtf8 typ) :)
+
+
 instance ToStripeParam PaymentMethodTypes where
   toStripeParam (PaymentMethodTypes pmts) =
     let t pmt = case pmt of
@@ -541,6 +562,9 @@ instance ToStripeParam TransactionType where
                 TransferCancelTxn  -> "transfer_cancel"
                 TransferFailureTxn -> "transfer_failure") :)
 
+instance ToStripeParam Confirm where
+  toStripeParam (Confirm conf) =
+    (("confirm", toBytestringLower conf) :)
 
 instance (ToStripeParam param) => ToStripeParam (StartingAfter param) where
   toStripeParam (StartingAfter param) =

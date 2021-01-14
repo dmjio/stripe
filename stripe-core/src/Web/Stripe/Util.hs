@@ -14,6 +14,7 @@ module Web.Stripe.Util
     , toTextLower
     , getParams
     , toBytestring
+    , toBytestringLower
     , encodeList
     , (</>)
     , toMetaData
@@ -23,6 +24,7 @@ module Web.Stripe.Util
 import           Data.ByteString       (ByteString)
 import qualified Data.ByteString.Char8 as B8
 import           Data.Monoid           (Monoid, mconcat, mempty, (<>))
+import qualified Data.Char             as Char
 import           Data.String           (IsString)
 import           Data.Text             (Text)
 import qualified Data.Text             as T
@@ -92,6 +94,11 @@ getParams xs = [ (x, T.encodeUtf8 y) | (x, Just y) <- xs ]
 -- | Convert APITVersion to a ByteString
 toBytestring :: Show a => a -> ByteString
 toBytestring = B8.pack . show
+
+------------------------------------------------------------------------------
+-- | Convert APITVersion to a ByteString - for, e.g., Boolean -> "true" or "false"
+toBytestringLower :: Show a => a -> ByteString
+toBytestringLower = B8.pack . map Char.toLower . show
 
 ------------------------------------------------------------------------------
 -- | EncodeList

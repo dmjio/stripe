@@ -9,6 +9,7 @@ import           Web.Stripe.Test.Util     (makePlanId)
 import           Web.Stripe.Test.Prelude
 
 import           Web.Stripe.SetupIntent
+import           Web.Stripe.PaymentIntent
 import           Web.Stripe.Card
 import           Web.Stripe.Customer
 import           Web.Stripe.Token
@@ -18,7 +19,7 @@ setupIntentTests stripe = do
   describe "Setup intent tests" $ do
     it "Succesfully creates a SetupIntent" $ do
       result <- stripe $ do
-        setupIntent <- createSetupIntent -&- (SetupIntentUsage OffSession)
+        setupIntent <- createSetupIntent -&- (SetupIntentUsage UseOffSession)
         void $ cancelSetupIntent (setupIntentId setupIntent)
         return setupIntent
       result `shouldSatisfy` isRight
@@ -60,6 +61,24 @@ setupIntentTests stripe = do
           confirmSetupIntent (setupIntentId setupIntent) -&- (PaymentMethodId cardid)
         void $ deleteCustomer cid
         return confirmedSetupIntent
+      result `shouldSatisfy` isRight
+    it "Successfully confirms a SetupIntent and charges off-session"$ do
+      result <- stripe $ do
+        Customer { customerId = cid } <- createCustomer
+        setupIntent <- createSetupIntent -&- cid
+            -&- SetupIntentUsage UseOffSession
+        Token    { tokenId = tkid   } <- createCardToken (Just cardinfo)
+        Card { cardId = CardId cardid } <- createCustomerCardByToken cid tkid
+        confirmedSetupIntent <-
+          confirmSetupIntent (setupIntentId setupIntent)
+            -&- PaymentMethodId cardid
+        paymentIntent <- createPaymentIntent (Amount 100) USD
+          -&- PaymentMethodId cardid
+          -&- OffSession True
+          -&- cid
+          -&- Confirm True
+        void $ deleteCustomer cid
+        return paymentIntent
       result `shouldSatisfy` isRight
     {- need to do a separate authorization and capture to test this
        https://stripe.com/docs/payments/capture-later

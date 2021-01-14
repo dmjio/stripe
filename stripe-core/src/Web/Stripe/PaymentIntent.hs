@@ -35,6 +35,8 @@ module Web.Stripe.PaymentIntent
     , Description  (..)
     , EndingBefore (..)
     , ExpandParams (..)
+    , Confirm      (..)
+    , OffSession   (..)
     , PaymentIntent       (..)
     , PaymentIntentId     (..)
     , PaymentMethodId     (..)
@@ -50,10 +52,11 @@ import           Web.Stripe.StripeRequest   (Method (GET, POST),
                                              StripeHasParam, StripeReturn,
                                              StripeRequest (..), toStripeParam, mkStripeRequest)
 import           Web.Stripe.Util            ((</>))
-import           Web.Stripe.Types           (Amount(..), Charge (..), CardId (..), ChargeId (..), Currency(..), CustomerId(..),
+import           Web.Stripe.Types           (Amount(..), Charge (..), CardId (..), ChargeId (..),
+                                             Confirm(..), Currency(..), CustomerId(..),
                                              Description(..), EndingBefore(..), Limit(..),
                                              MetaData(..), PaymentIntent (..), PaymentMethodId (..), PaymentMethodTypes(..), PaymentMethodType(..),
-                                             PaymentIntentId (..), ReceiptEmail(..),
+                                             PaymentIntentId (..), OffSession(..), ReceiptEmail(..),
                                              PaymentIntentUsage(..), Usage (..), StartingAfter(..), ExpandParams(..),
                                              StripeList (..), Token (..))
 
@@ -79,6 +82,10 @@ instance StripeHasParam CreatePaymentIntent Description
 instance StripeHasParam CreatePaymentIntent ReceiptEmail
 instance StripeHasParam CreatePaymentIntent PaymentMethodTypes
 instance StripeHasParam CreatePaymentIntent PaymentIntentUsage
+instance StripeHasParam CreatePaymentIntent PaymentMethodId
+instance StripeHasParam CreatePaymentIntent Confirm
+instance StripeHasParam CreatePaymentIntent MetaData
+instance StripeHasParam CreatePaymentIntent OffSession
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `PaymentIntent` by `ChargeId` and `PaymentIntentId`
@@ -133,6 +140,7 @@ confirmPaymentIntent
 data ConfirmPaymentIntent
 type instance StripeReturn ConfirmPaymentIntent = PaymentIntent
 instance StripeHasParam ConfirmPaymentIntent MetaData
+instance StripeHasParam ConfirmPaymentIntent OffSession
 instance StripeHasParam ConfirmPaymentIntent PaymentMethodId
 
 capturePaymentIntent
