@@ -1497,7 +1497,7 @@ instance FromJSON AccountId where
 -- | `Account` Object
 data Account = Account {
        accountId                   :: AccountId
-     , accountEmail                :: Email
+     , accountEmail                :: Maybe Email
      , accountStatementDescriptor  :: Maybe Description
      , accountDisplayName          :: Maybe Text
      , accountTimeZone             :: Text
@@ -1519,7 +1519,7 @@ data Account = Account {
 instance FromJSON Account where
    parseJSON (Object o) =
        Account <$> (AccountId <$> o .:  "id")
-               <*> (Email <$> o .:  "email")
+               <*> (fmap Email <$> o .:?  "email")
                <*> o .:? "statement_descriptor"
                <*> o .:  "display_name"
                <*> o .:  "timezone"
