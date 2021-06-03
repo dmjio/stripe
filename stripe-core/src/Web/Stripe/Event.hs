@@ -84,4 +84,4 @@ instance StripeHasParam GetEvents Created
 instance StripeHasParam GetEvents (EndingBefore EventId)
 instance StripeHasParam GetEvents Limit
 instance StripeHasParam GetEvents (StartingAfter EventId)
--- instance StripeHasParam GetEvents EventType -- FIXME
+instance StripeHasParam GetEvents EventType

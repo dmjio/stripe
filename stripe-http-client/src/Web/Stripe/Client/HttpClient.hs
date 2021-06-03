@@ -113,7 +113,7 @@ callAPI man fromJSON' config stripeRequest = do
 
     else do
         case A.eitherDecode (Http.responseBody res) of
-            Left e  -> pure $ parseFail e
+            Left e  -> pure $ parseFail e Nothing
             Right a -> pure $ handleStream fromJSON' status $ return a
   where
     mkStripeRequest =

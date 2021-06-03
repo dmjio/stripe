@@ -69,6 +69,7 @@ data StripeError = StripeError {
     , errorCode  :: Maybe StripeErrorCode
     , errorParam :: Maybe Text
     , errorHTTP  :: Maybe StripeErrorHTTPCode
+    , errorValue :: Maybe Value
     } deriving (Show, Typeable)
 
 instance Exception StripeError
@@ -109,5 +110,6 @@ instance FromJSON StripeError where
         msg   <- e .: "message"
         code  <- fmap toErrorCode <$> e .:? "code"
         param <- e .:? "param"
-        return $ StripeError typ msg code param Nothing
+        value <- e .:? "value"
+        return $ StripeError typ msg code param Nothing value
     parseJSON _ = mzero

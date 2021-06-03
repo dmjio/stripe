@@ -44,37 +44,38 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      ApplicationFeePercent(..),
                                      AtPeriodEnd(..),
                                      AvailableOn(..), BankAccountId(..),
-                                     CardId(..), CardNumber(..),
+                                     CardId(..), CardNumber(..), CardToken(..),
                                      Capture(..), ChargeId(..), Closed(..),
-                                     CouponId(..),
+                                     CouponId(..), Confirm(..),
                                      Country(..), Created(..), Currency(..),
-                                     CustomerId(..), CVC(..), Date(..),
+                                     CustomerId(..), CustomerEmail(..), ClientReferenceId(..), CVC(..), Date(..),
                                      DefaultCard(..), Description(..),
                                      Duration(..), DurationInMonths(..),
-                                     Email(..), EndingBefore(..), EventId(..),
+                                     Email(..), EndingBefore(..), EventId(..), EventType(..),
                                      Evidence(..), Expandable(..),
                                      ExpandParams(..), ExpMonth(..),
                                      ExpYear(..), Forgiven(..), Interval(..),
                                      IntervalCount(..),
                                      InvoiceId(..), InvoiceItemId(..),
                                      InvoiceLineItemId(..),
-                                     IsVerified(..), MetaData(..), PlanId(..),
+                                     IsVerified(..), MetaData(..), PaymentIntentId(..),  PaymentIntentUsage(..), PaymentMethodId(..), PaymentMethodTypes(..), PaymentMethodType(..), PlanId(..),
                                      PlanName(..), Prorate(..), Limit(..),
                                      MaxRedemptions(..), Name(..),
                                      NewBankAccount(..), NewCard(..),
+                                     OffSession(..),
                                      PercentOff(..), Quantity(..), ReceiptEmail(..),
                                      RecipientId(..), RecipientType(..), RedeemBy(..),
                                      RefundId(..),
                                      RefundApplicationFee(..), RefundReason(..),
-                                     RoutingNumber(..), StartingAfter(..),
+                                     RoutingNumber(..), SetupIntentId(..), SetupIntentUsage(..), Usage(..), StartingAfter(..),
                                      StatementDescription(..), Source(..),
-                                     SubscriptionId(..), TaxID(..), 
+                                     SubscriptionId(..), TaxID(..),
                                      TaxPercent(..), TimeRange(..),
                                      TokenId(..), TransactionId(..),
                                      TransactionType(..), TransferId(..),
-                                     TransferStatus(..), TrialEnd(..),
-                                     TrialPeriodDays(..))
-import           Web.Stripe.Util    (toBytestring, toExpandable,toMetaData,
+                                     TransferStatus(..), TrialEnd(..), SuccessUrl(..), CancelUrl(..), LineItems(..), LineItem(..),
+                                     TrialPeriodDays(..), eventTypeText)
+import           Web.Stripe.Util    (toBytestring, toBytestringLower, toExpandable,toMetaData, encodeList,
                                      toSeconds, getParams, toText)
 
 ------------------------------------------------------------------------------
@@ -202,6 +203,14 @@ instance ToStripeParam CustomerId where
   toStripeParam (CustomerId cid) =
     (("customer", Text.encodeUtf8 cid) :)
 
+instance ToStripeParam ClientReferenceId where
+  toStripeParam (ClientReferenceId cid) =
+    (("client_reference_id", Text.encodeUtf8 cid) :)
+
+instance ToStripeParam CustomerEmail where
+  toStripeParam (CustomerEmail cid) =
+    (("customer_email", Text.encodeUtf8 cid) :)
+
 instance ToStripeParam CouponId where
   toStripeParam (CouponId cid) =
     (("coupon", Text.encodeUtf8 cid) :)
@@ -237,6 +246,10 @@ instance ToStripeParam Email where
 instance ToStripeParam EventId where
   toStripeParam (EventId eid) =
     (("event", Text.encodeUtf8 eid) :)
+
+instance ToStripeParam EventType where
+  toStripeParam et =
+    (("type", Text.encodeUtf8 (eventTypeText et)) :)
 
 instance ToStripeParam Evidence where
   toStripeParam (Evidence txt) =
@@ -317,6 +330,26 @@ instance ToStripeParam NewCard where
         , ("card[address_state]", (\(AddressState x) -> x) <$> newCardAddressState )
         , ("card[address_zip]", (\(AddressZip x) -> x) <$> newCardAddressZip )
         ]) ++)
+
+instance ToStripeParam PaymentIntentId where
+  toStripeParam (PaymentIntentId rid) =
+    (("payment_intent", Text.encodeUtf8 rid) :)
+
+instance ToStripeParam PaymentIntentUsage where
+  toStripeParam (PaymentIntentUsage UseOffSession) =
+    (("setup_future_usage", "off_session") :)
+  toStripeParam (PaymentIntentUsage UseOnSession) =
+    (("setup_future_usage", "on_session") :)
+
+instance ToStripeParam SetupIntentUsage where
+  toStripeParam (SetupIntentUsage UseOffSession) =
+    (("usage", "off_session") :)
+  toStripeParam (SetupIntentUsage UseOnSession) =
+    (("usage", "on_session") :)
+
+instance ToStripeParam OffSession where
+  toStripeParam (OffSession offSession) =
+    (("off_session", toBytestringLower offSession) :)
 
 instance ToStripeParam (Param Text Text) where
   toStripeParam (Param (k,v)) =
@@ -403,6 +436,11 @@ instance ToStripeParam a => ToStripeParam (TimeRange a) where
           [(k,v)] -> ((k <> "[" <> n <> "]", v) :)
           lst'       -> error $ "toRecord in ToStripeRange (TimeRange a) expected exactly one element in this list. " ++ show lst'
 
+
+instance ToStripeParam CardToken where
+  toStripeParam (CardToken (TokenId tid)) =
+    (("card[token]", Text.encodeUtf8 tid) :)
+
 instance ToStripeParam TokenId where
   toStripeParam (TokenId tid) =
     (("card", Text.encodeUtf8 tid) :)
@@ -427,6 +465,67 @@ instance ToStripeParam TrialPeriodDays where
   toStripeParam (TrialPeriodDays days) =
     (("trial_period_days", toBytestring days) :)
 
+instance ToStripeParam SuccessUrl where
+  toStripeParam (SucessUrl url) =
+    (("success_url", Text.encodeUtf8 url) :)
+
+instance ToStripeParam CancelUrl where
+  toStripeParam (CancelUrl url) =
+    (("cancel_url", Text.encodeUtf8 url) :)
+
+instance ToStripeParam LineItems where
+  toStripeParam (LineItems is) =
+    encodeListStripeParam "line_items" is
+
+instance ToStripeParam PaymentMethodId where
+  toStripeParam (PaymentMethodId pid) =
+    (("payment_method", Text.encodeUtf8 pid) :)
+
+instance ToStripeParam PaymentMethodType where
+  toStripeParam pmt =
+    let typ = case pmt of
+                PaymentMethodTypeCard -> "card"
+                PaymentMethodTypeCardPresent -> "card_present"
+                PaymentMethodTypeIdeal -> "ideal"
+                PaymentMethodTypeFPX -> "fpx"
+                PaymentMethodTypeBacsDebit -> "bacs_debit"
+                PaymentMethodTypeBancontact -> "bancontact"
+                PaymentMethodTypeGiropay -> "giropay"
+                PaymentMethodTypeP24 -> "p24"
+                PaymentMethodTypeEPS -> "eps"
+                PaymentMethodTypeSepaDebit -> "sepa_debit"
+    in (("type", Text.encodeUtf8 typ) :)
+
+
+instance ToStripeParam PaymentMethodTypes where
+  toStripeParam (PaymentMethodTypes pmts) =
+    let t pmt = case pmt of
+            PaymentMethodTypeCard -> "card"
+            PaymentMethodTypeCardPresent -> "card_present"
+            PaymentMethodTypeIdeal -> "ideal"
+            PaymentMethodTypeFPX -> "fpx"
+            PaymentMethodTypeBacsDebit -> "bacs_debit"
+            PaymentMethodTypeBancontact -> "bancontact"
+            PaymentMethodTypeGiropay -> "giropay"
+            PaymentMethodTypeP24 -> "p24"
+            PaymentMethodTypeEPS -> "eps"
+            PaymentMethodTypeSepaDebit -> "sepa_debit"
+    in ((map (\pmt-> ("payment_method_types[]", t pmt)) pmts) ++)
+
+encodeListStripeParam :: ToStripeParam a => Text -> [a] -> ([(ByteString, ByteString)] -> [(ByteString, ByteString)])
+encodeListStripeParam name items = ((encodeList name items $ (\a -> toStripeParam a [])) ++)
+
+instance ToStripeParam LineItem where
+  toStripeParam LineItem{..} =
+    ((getParams
+      [ ("amount", Just $ (\(Amount i) -> toText i) $ lineItemAmount)
+      , ("currency", Just $ toText lineItemCurrency)
+      , ("name", Just lineItemName)
+      , ("quantity", Just $ toText lineItemQuantity)
+      , ("description", lineItemDescription)
+      ]) ++)
+
+
 instance ToStripeParam MetaData where
   toStripeParam (MetaData kvs) =
     (toMetaData kvs ++)
@@ -441,6 +540,10 @@ instance ToStripeParam RefundReason where
          RefundDuplicate -> "duplicate"
          RefundFraudulent -> "fraudulent"
          RefundRequestedByCustomer -> "requested_by_customer") :)
+
+instance ToStripeParam SetupIntentId where
+  toStripeParam (SetupIntentId siid) =
+    (("setup_intent", Text.encodeUtf8 siid) :)
 
 instance ToStripeParam StatementDescription where
   toStripeParam (StatementDescription txt) =
@@ -459,6 +562,9 @@ instance ToStripeParam TransactionType where
                 TransferCancelTxn  -> "transfer_cancel"
                 TransferFailureTxn -> "transfer_failure") :)
 
+instance ToStripeParam Confirm where
+  toStripeParam (Confirm conf) =
+    (("confirm", toBytestringLower conf) :)
 
 instance (ToStripeParam param) => ToStripeParam (StartingAfter param) where
   toStripeParam (StartingAfter param) =

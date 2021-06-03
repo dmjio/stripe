@@ -18,8 +18,11 @@ import           Web.Stripe.Test.Discount              (discountTests)
 import           Web.Stripe.Test.Dispute               (disputeTests)
 import           Web.Stripe.Test.Invoice               (invoiceTests)
 import           Web.Stripe.Test.InvoiceItem           (invoiceItemTests)
+import           Web.Stripe.Test.PaymentIntent         (paymentIntentTests)
+import           Web.Stripe.Test.PaymentMethod         (paymentMethodTests)
 import           Web.Stripe.Test.Plan                  (planTests)
 import           Web.Stripe.Test.Recipient             (recipientTests)
+import           Web.Stripe.Test.SetupIntent           (setupIntentTests)
 import           Web.Stripe.Test.Refund                (refundTests)
 import           Web.Stripe.Test.Subscription          (subscriptionTests)
 import           Web.Stripe.Test.Token                 (tokenTests)
@@ -54,5 +57,8 @@ allTests stripe' = do
     balanceTests stripe
     tokenTests stripe
     eventTests stripe
+    paymentIntentTests stripe
+    setupIntentTests stripe
+    paymentMethodTests stripe
 
 

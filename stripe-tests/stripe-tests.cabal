@@ -1,5 +1,5 @@
 name:                stripe-tests
-version:             2.6.2
+version:             2.7.0
 synopsis:            Tests for Stripe API bindings for Haskell
 license:             MIT
 license-file:        LICENSE
@@ -52,10 +52,13 @@ library
                        Web.Stripe.Test.Event
                        Web.Stripe.Test.Invoice
                        Web.Stripe.Test.InvoiceItem
+                       Web.Stripe.Test.PaymentIntent
+                       Web.Stripe.Test.PaymentMethod
                        Web.Stripe.Test.Plan
                        Web.Stripe.Test.Prelude
                        Web.Stripe.Test.Recipient
                        Web.Stripe.Test.Refund
+                       Web.Stripe.Test.SetupIntent
                        Web.Stripe.Test.Subscription
                        Web.Stripe.Test.Token
                        Web.Stripe.Test.Transfer
