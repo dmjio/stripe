@@ -32,7 +32,7 @@ tokenTests stripe = do
   where
     cn  = CardNumber "4242424242424242"
     em  = ExpMonth 12
-    ey  = ExpYear 2020
+    ey  = ExpYear 2025
     cvc = CVC "123"
     cardinfo = (mkNewCard cn em ey) { newCardCVC = Just cvc }
     bankinfo = NewBankAccount

@@ -89,7 +89,7 @@ disputeTests stripe = do
   where
     cn  = CardNumber "4000000000000259"
     em  = ExpMonth 12
-    ey  = ExpYear 2020
+    ey  = ExpYear 2025
     cvc = CVC "123"
     win  = Evidence "winning_evidence"
     lose = Evidence "losing_evidence"

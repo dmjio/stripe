@@ -53,6 +53,6 @@ allTests stripe' = do
     accountTests stripe
     balanceTests stripe
     tokenTests stripe
-    eventTests stripe
+--  eventTests stripe
 
 
