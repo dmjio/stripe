@@ -27,7 +27,7 @@ library
                      , bytestring           >= 0.10  && < 0.11
                      , free                 >= 4.10  && < 6
                      , mtl                  >= 2.1.2 && < 2.3
-                     , random               >= 1.1   && < 1.2
+                     , random               >= 1.1   && < 1.3
                      , hspec                >= 2.1.0 && < 2.8
                      , hspec-core           >= 2.1.0 && < 2.8
                      , stripe-core
