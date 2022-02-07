@@ -57,6 +57,7 @@ module Web.Stripe.Customer
     , ExpandParams       (..)
     , ExpMonth           (..)
     , ExpYear            (..)
+    , InvoiceSettings    (..)
     , Limit              (..)
     , MetaData           (..)
     , mkNewCard
@@ -80,8 +81,8 @@ import           Web.Stripe.Types           (AccountBalance(..), CVC (..),
                                              CustomerId (..), DefaultCard(..),
                                              Description(..), Email (..),
                                              EndingBefore(..), ExpMonth (..),
-                                             ExpYear (..), Limit(..), PlanId (..),
-                                             Quantity (..), MetaData(..),
+                                             ExpYear (..), Limit(..), InvoiceSettings (..),
+                                             PlanId (..), Quantity (..), MetaData(..),
                                              mkNewCard, NewCard(..), StartingAfter(..),
                                              StripeDeleteResult (..),
                                              StripeList (..), TokenId (..),

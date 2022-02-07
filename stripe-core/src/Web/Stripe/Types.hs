@@ -260,20 +260,21 @@ newtype CustomerId
 ------------------------------------------------------------------------------
 -- | `Customer` object
 data Customer = Customer {
-      customerObject         :: Text
-    , customerCreated        :: UTCTime
-    , customerId             :: CustomerId
-    , customerLiveMode       :: Bool
-    , customerDescription    :: Maybe Description
-    , customerEmail          :: Maybe Email
-    , customerDelinquent     :: Bool
-    , customerSubscriptions  :: Maybe (StripeList Subscription)
-    , customerDiscount       :: Maybe Discount
-    , customerAccountBalance :: Int
-    , customerCards          :: StripeList Card
-    , customerCurrency       :: Maybe Currency
-    , customerDefaultCard    :: Maybe (Expandable CardId)
-    , customerMetaData       :: MetaData
+      customerObject          :: Text
+    , customerCreated         :: UTCTime
+    , customerId              :: CustomerId
+    , customerLiveMode        :: Bool
+    , customerDescription     :: Maybe Description
+    , customerEmail           :: Maybe Email
+    , customerDelinquent      :: Bool
+    , customerSubscriptions   :: Maybe (StripeList Subscription)
+    , customerDiscount        :: Maybe Discount
+    , customerAccountBalance  :: Int
+    , customerCards           :: StripeList Card
+    , customerCurrency        :: Maybe Currency
+    , customerDefaultCard     :: Maybe (Expandable CardId)
+    , customerInvoiceSettings :: InvoiceSettings
+    , customerMetaData        :: MetaData
     } | DeletedCustomer {
       deletedCustomer   :: Bool
     , deletedCustomerId :: CustomerId
@@ -300,6 +301,7 @@ instance FromJSON Customer where
            <*> o .: "sources"
            <*> o .:? "currency"
            <*> o .:? "default_source"
+           <*> o .: "invoice_settings"
            <*> o .: "metadata")
 
 ------------------------------------------------------------------------------
@@ -311,6 +313,16 @@ newtype AccountBalance = AccountBalance Int
 -- | CardId for a `Customer`
 newtype CardId = CardId Text
   deriving (Eq, Ord, Read, Show, Data, Typeable, FromJSON)
+
+------------------------------------------------------------------------------
+-- | InvoiceSettings for a `Customer`
+data InvoiceSettings = InvoiceSettings {
+    invoiceSettingsDefaultPaymentMethod :: Maybe (Expandable PaymentMethodId)
+  } deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON InvoiceSettings where
+    parseJSON = withObject "InvoiceSettings" $ \o ->
+        InvoiceSettings <$> o .:? "default_payment_method"
 
 ------------------------------------------------------------------------------
 -- | CardId for a `Recipient`
@@ -2316,6 +2328,9 @@ instance FromJSON IntentStatus where
 newtype PaymentMethodId = PaymentMethodId { getPaymentMethodId :: Text }
  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
+instance FromJSON PaymentMethodId where
+  parseJSON = withText "PaymentMethodId" $ \t ->
+    return $ PaymentMethodId t
 
 data PaymentMethod = PaymentMethod {
       paymentMethodId                        :: PaymentMethodId
