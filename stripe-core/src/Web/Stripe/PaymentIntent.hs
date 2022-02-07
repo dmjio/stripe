@@ -58,7 +58,7 @@ import           Web.Stripe.Types           (Amount(..), Charge (..), CardId (..
                                              MetaData(..), PaymentIntent (..), PaymentMethodId (..), PaymentMethodTypes(..), PaymentMethodType(..),
                                              PaymentIntentId (..), OffSession(..), ReceiptEmail(..),
                                              PaymentIntentUsage(..), Usage (..), StartingAfter(..), ExpandParams(..),
-                                             StripeList (..), Token (..))
+                                             StripeList (..), Token (..), StatementDescriptor(..), StatementDescriptorSuffix(..))
 
 ------------------------------------------------------------------------------
 -- | create a `PaymentIntent`
@@ -86,6 +86,8 @@ instance StripeHasParam CreatePaymentIntent PaymentMethodId
 instance StripeHasParam CreatePaymentIntent Confirm
 instance StripeHasParam CreatePaymentIntent MetaData
 instance StripeHasParam CreatePaymentIntent OffSession
+instance StripeHasParam CreatePaymentIntent StatementDescriptor
+instance StripeHasParam CreatePaymentIntent StatementDescriptorSuffix
 
 ------------------------------------------------------------------------------
 -- | Retrieve a `PaymentIntent` by `ChargeId` and `PaymentIntentId`
@@ -125,6 +127,8 @@ instance StripeHasParam UpdatePaymentIntent Description
 instance StripeHasParam UpdatePaymentIntent PaymentMethodTypes
 instance StripeHasParam UpdatePaymentIntent ReceiptEmail
 instance StripeHasParam UpdatePaymentIntent PaymentIntentUsage
+instance StripeHasParam UpdatePaymentIntent StatementDescriptor
+instance StripeHasParam UpdatePaymentIntent StatementDescriptorSuffix
 -- TODO shipping, statement descriptor, statement descriptor suffix
 
 confirmPaymentIntent

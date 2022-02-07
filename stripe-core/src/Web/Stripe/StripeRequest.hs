@@ -68,7 +68,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      RefundId(..),
                                      RefundApplicationFee(..), RefundReason(..),
                                      RoutingNumber(..), SetupIntentId(..), SetupIntentUsage(..), Usage(..), StartingAfter(..),
-                                     StatementDescription(..), Source(..),
+                                     StatementDescription(..), StatementDescriptor(..), StatementDescriptorSuffix(..), Source(..),
                                      SubscriptionId(..), TaxID(..),
                                      TaxPercent(..), TimeRange(..),
                                      TokenId(..), TransactionId(..),
@@ -548,6 +548,14 @@ instance ToStripeParam SetupIntentId where
 instance ToStripeParam StatementDescription where
   toStripeParam (StatementDescription txt) =
     (("statement_description", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam StatementDescriptor where
+  toStripeParam (StatementDescriptor txt) =
+    (("statement_descriptor", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam StatementDescriptorSuffix where
+  toStripeParam (StatementDescriptorSuffix txt) =
+    (("statement_descriptor_suffix", Text.encodeUtf8 txt) :)
 
 instance ToStripeParam TransactionType where
   toStripeParam txn =

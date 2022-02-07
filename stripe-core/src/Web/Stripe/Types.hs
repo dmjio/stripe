@@ -130,6 +130,22 @@ instance FromJSON StatementDescription where
   parseJSON v = StatementDescription <$> parseJSON v
 
 ------------------------------------------------------------------------------
+-- | `StatementDescriptor` to be added to a `PaymentIntent`
+newtype StatementDescriptor =
+  StatementDescriptor Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON StatementDescriptor where
+  parseJSON v = StatementDescriptor <$> parseJSON v
+
+------------------------------------------------------------------------------
+-- | `StatementDescriptorSuffix` to be added to a `PaymentIntent`
+newtype StatementDescriptorSuffix =
+  StatementDescriptorSuffix Text deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance FromJSON StatementDescriptorSuffix where
+  parseJSON v = StatementDescriptorSuffix <$> parseJSON v
+
+------------------------------------------------------------------------------
 -- | `Charge` object in `Stripe` API
 data Charge = Charge {
       chargeId                   :: ChargeId
@@ -2086,8 +2102,8 @@ data PaymentIntent = PaymentIntent {
     , paymentIntentReview                    :: Maybe TODO
     , paymentIntentSetupFutureUsage          :: Maybe PaymentIntentUsage
     , paymentIntentShipping                  :: Maybe TODO
-    , paymentIntentStatementDescriptor       :: Maybe StatementDescription
-    , paymentIntentStatementDescriptorSuffix :: Maybe StatementDescription
+    , paymentIntentStatementDescriptor       :: Maybe StatementDescriptor
+    , paymentIntentStatementDescriptorSuffix :: Maybe StatementDescriptorSuffix
     , paymentIntentStatus                    :: IntentStatus
     , paymentIntentTransferData              :: Maybe TODO
     , paymentIntentTransferGroup             :: Maybe Text
