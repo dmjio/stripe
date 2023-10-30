@@ -75,6 +75,7 @@ module Web.Stripe.Charge
     , MetaData      (..)
     , NewCard       (..)
     , ReceiptEmail  (..)
+    , Source        (..)
     , StartingAfter (..)
     , StatementDescription (..)
     , StripeList    (..)
@@ -95,11 +96,11 @@ import           Web.Stripe.Types           (Amount(..), ApplicationFeeAmount(..
                                              CustomerId (..), Description(..),
                                              EndingBefore(..), ExpMonth (..),
                                              ExpYear (..), Limit(..), MetaData(..),
-                                             NewCard(..), Email (..),
+                                             NewCard(..), Email (..), PaymentMethodId(..),
                                              StartingAfter(..),
                                              ReceiptEmail(..),
                                              StatementDescription(..),
-                                             ExpandParams(..),
+                                             ExpandParams(..), Source(..),
                                              StripeList (..), TokenId (..))
 import           Web.Stripe.Types.Util      (getChargeId)
 
@@ -124,6 +125,7 @@ instance StripeHasParam CreateCharge ExpandParams
 instance StripeHasParam CreateCharge CustomerId
 instance StripeHasParam CreateCharge NewCard
 instance StripeHasParam CreateCharge TokenId
+instance StripeHasParam CreateCharge (Source PaymentMethodId)
 instance StripeHasParam CreateCharge Description
 instance StripeHasParam CreateCharge MetaData
 instance StripeHasParam CreateCharge Capture
