@@ -23,10 +23,10 @@ library
   build-depends:       aeson                >= 0.8 && < 0.10 || >= 0.11 && < 1.6 || >= 2.1 && < 2.2
                      , base                 >= 4.7   && < 5
                      , bytestring           >= 0.10  && < 0.12
-                     , mtl                  >= 2.1.2 && < 2.3
+                     , mtl                  >= 2.1.2 && < 2.4
                      , text                 >= 1.0   && < 2.1
                      , time                 >= 1.4   && < 1.13
-                     , transformers         >= 0.3   && < 0.6
+                     , transformers         >= 0.3   && < 0.7
                      , unordered-containers >= 0.2.5 && < 0.3
 
   default-language:    Haskell2010
