@@ -57,7 +57,7 @@ import           Web.Stripe.Types   (AccountBalance(..), AccountNumber(..),
                                      ExpYear(..), Forgiven(..), Interval(..),
                                      IntervalCount(..),
                                      InvoiceId(..), InvoiceItemId(..),
-                                     InvoiceLineItemId(..),
+                                     InvoiceLineItemId(..), InvoiceSettings(..),
                                      IsVerified(..), MetaData(..), PaymentIntentId(..),  PaymentIntentUsage(..), PaymentMethodId(..), PaymentMethodTypes(..), PaymentMethodType(..), PlanId(..),
                                      PlanName(..), Prorate(..), Limit(..),
                                      MaxRedemptions(..), Name(..),
@@ -290,6 +290,12 @@ instance ToStripeParam InvoiceItemId where
 instance ToStripeParam InvoiceLineItemId where
   toStripeParam (InvoiceLineItemId txt) =
     (("line_item", Text.encodeUtf8 txt) :)
+
+instance ToStripeParam InvoiceSettings where
+  toStripeParam (InvoiceSettings (Just (PaymentMethodId pid))) =
+    (("default_payment_method", Text.encodeUtf8 pid) :)
+  toStripeParam (InvoiceSettings Nothing) =
+    (("default_payment_method", "null") :)
 
 instance ToStripeParam IsVerified where
   toStripeParam (IsVerified b) =

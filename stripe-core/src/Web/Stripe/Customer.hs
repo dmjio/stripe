@@ -142,6 +142,7 @@ instance StripeHasParam UpdateCustomer TokenId
 instance StripeHasParam UpdateCustomer NewCard
 instance StripeHasParam UpdateCustomer CouponId
 instance StripeHasParam UpdateCustomer DefaultCard
+instance StripeHasParam UpdateCustomer InvoiceSettings
 instance StripeHasParam UpdateCustomer Description
 instance StripeHasParam UpdateCustomer Email
 instance StripeHasParam UpdateCustomer MetaData
