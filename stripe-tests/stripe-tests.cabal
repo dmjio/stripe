@@ -1,5 +1,5 @@
 name:                stripe-tests
-version:             2.7.0
+version:             2.7.1
 synopsis:            Tests for Stripe API bindings for Haskell
 license:             MIT
 license-file:        LICENSE
