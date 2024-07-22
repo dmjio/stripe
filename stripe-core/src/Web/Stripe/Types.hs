@@ -317,7 +317,7 @@ newtype CardId = CardId Text
 ------------------------------------------------------------------------------
 -- | InvoiceSettings for a `Customer`
 data InvoiceSettings = InvoiceSettings {
-    invoiceSettingsDefaultPaymentMethod :: Maybe PaymentMethodId
+    invoiceSettingsDefaultPaymentMethod :: Maybe (Expandable PaymentMethodId)
   } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 instance FromJSON InvoiceSettings where

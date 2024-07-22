@@ -292,7 +292,7 @@ instance ToStripeParam InvoiceLineItemId where
     (("line_item", Text.encodeUtf8 txt) :)
 
 instance ToStripeParam InvoiceSettings where
-  toStripeParam (InvoiceSettings (Just (PaymentMethodId pid))) =
+  toStripeParam (InvoiceSettings (Just (Id (PaymentMethodId pid)))) =
     (("invoice_settings[default_payment_method]", Text.encodeUtf8 pid ) :)
   toStripeParam (InvoiceSettings Nothing) =
     (("invoice_settings[default_payment_method]", "null" ) :)
