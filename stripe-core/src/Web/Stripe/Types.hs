@@ -2107,7 +2107,7 @@ data PaymentIntent = PaymentIntent {
     , paymentIntentMetadata                  :: Maybe MetaData
     , paymentIntentNextAction                :: Maybe TODO
     , paymentIntentOnBehalfOf                :: Maybe (Expandable AccountId)
-    , paymentIntentPaymentMethod             :: Maybe TODO
+    , paymentIntentPaymentMethod             :: Maybe (Expandable PaymentMethodId)
     , paymentIntentPaymentOptions            :: Maybe TODO
     , paymentIntentPaymentMethodTypes        :: [Text]
     , paymentIntentReceiptEmail              :: Maybe ReceiptEmail
