@@ -2208,7 +2208,7 @@ data SetupIntent = SetupIntent {
     , setupIntentMetadata                  :: Maybe MetaData
     , setupIntentNextAction                :: Maybe TODO
     , setupIntentOnBehalfOf                :: Maybe (Expandable AccountId)
-    , setupIntentPaymentMethod             :: Maybe TODO
+    , setupIntentPaymentMethod             :: Maybe (Expandable PaymentMethodId)
     , setupIntentPaymentOptions            :: Maybe TODO
     , setupIntentPaymentMethodTypes        :: [Text]
     , setupIntentSingleUseMandate          :: Maybe TODO
