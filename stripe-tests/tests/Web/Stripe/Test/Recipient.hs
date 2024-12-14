@@ -88,7 +88,7 @@ recipientTests stripe = do
       result `shouldSatisfy` isRight
   where name      = Name "David M. Johnson"
         meta      = MetaData [("this", "thing")]
-        email     = Email "djohnson.m@gmail.com"
+        email     = Email "code@dmj.io"
         country   = Country "US"
         description = Description "description"
         routingnumber = RoutingNumber "110000000"

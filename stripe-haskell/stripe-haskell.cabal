@@ -4,7 +4,7 @@ synopsis:            Stripe API for Haskell
 license:             MIT
 license-file:        LICENSE
 author:              David Johnson, Jeremy Shaw
-maintainer:          djohnson.m@gmail.com
+maintainer:          code@dmj.io
 copyright:           Copyright (c) 2016 David M. Johnson, Jeremy Shaw
 homepage:            https://github.com/dmjio/stripe
 bug-reports:         https://github.com/dmjio/stripe/issues

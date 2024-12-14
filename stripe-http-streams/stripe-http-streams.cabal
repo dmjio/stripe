@@ -4,7 +4,7 @@ license:             MIT
 license-file:        LICENSE
 author:              David Johnson, Jeremy Shaw
 synopsis:            Stripe API for Haskell - http-streams backend
-maintainer:          djohnson.m@gmail.com
+maintainer:          code@dmj.io
 copyright:           Copyright (c) 2016 David M. Johnson, Jeremy Shaw
 category:            Web
 build-type:          Simple

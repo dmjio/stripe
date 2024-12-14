@@ -6,7 +6,7 @@
 -- |
 -- Module      : Web.Stripe.Dispute
 -- Copyright   : (c) David Johnson, 2014
--- Maintainer  : djohnson.m@gmail.com
+-- Maintainer  : code@dmj.io
 -- Stability   : experimental
 -- Portability : POSIX
 --

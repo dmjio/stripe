@@ -64,7 +64,7 @@ customerTests stripe =
   where
     bal   = AccountBalance 100
     desc  = Description "hey"
-    email = Email "djohnson.m@gmail.com"
+    email = Email "code@dmj.io"
     meta  = MetaData [("hey","there")]
 
 
