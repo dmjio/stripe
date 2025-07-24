@@ -6,6 +6,12 @@ stripe
 [![Join the chat at https://gitter.im/dmjio/stripe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dmjio/stripe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/dmjio/stripe.svg?branch=master)](https://travis-ci.org/dmjio/stripe)
 
+> [!WARNING]
+> This library is based on an old spec (2014). To use new features we recommend using the `stripeapi` package.
+> [Hackage](https://hackage.haskell.org/package/stripeapi).
+> [Github](https://github.com/Haskell-OpenAPI-Code-Generator/Stripe-Haskell-Library).
+
+
 ## Stripe API coverage for Haskell ([Stripe API](http://stripe.com/docs/api))
 
 All Stripe commands are supported, including but not limited to:
