@@ -1,0 +1,5 @@
+packages:
+  stripe-core
+  stripe-haskell
+  stripe-http-client
+  stripe-tests
